@@ -1,0 +1,930 @@
+{
+  "name": "adaptive",
+  "displayName": "Adaptive",
+  "version": "0.1.0",
+  "description": "A Pulumi provider for managing Adaptive (adaptive.live) infrastructure: resources, endpoints, authorizations, groups, and scripts.",
+  "homepage": "https://adaptive.live",
+  "license": "Apache-2.0",
+  "repository": "https://github.com/adaptive-scale/pulumi-adaptive",
+  "namespace": "adaptive-scale",
+  "language": {
+    "csharp": {
+      "respectSchemaVersion": true
+    },
+    "go": {
+      "generateResourceContainerTypes": true,
+      "importBasePath": "github.com/adaptive-scale/pulumi-adaptive/sdk/go/adaptive",
+      "respectSchemaVersion": true
+    },
+    "nodejs": {
+      "respectSchemaVersion": true
+    },
+    "python": {
+      "pyproject": {
+        "enabled": true
+      },
+      "respectSchemaVersion": true
+    }
+  },
+  "config": {
+    "variables": {
+      "serviceToken": {
+        "type": "string",
+        "description": "Service account token for authenticating with the Adaptive service. If not provided, the provider reads the token from the default adaptive-cli location (~/.adaptive/token).",
+        "default": "",
+        "defaultInfo": {
+          "environment": [
+            "ADAPTIVE_SVC_TOKEN"
+          ]
+        },
+        "secret": true
+      },
+      "workspaceUrl": {
+        "type": "string",
+        "description": "The Adaptive workspace URL. Defaults to https://app.adaptive.live.",
+        "default": "https://app.adaptive.live",
+        "defaultInfo": {
+          "environment": [
+            "ADAPTIVE_URL"
+          ]
+        }
+      }
+    }
+  },
+  "provider": {
+    "properties": {
+      "serviceToken": {
+        "type": "string",
+        "description": "Service account token for authenticating with the Adaptive service. If not provided, the provider reads the token from the default adaptive-cli location (~/.adaptive/token).",
+        "default": "",
+        "defaultInfo": {
+          "environment": [
+            "ADAPTIVE_SVC_TOKEN"
+          ]
+        },
+        "secret": true
+      },
+      "workspaceUrl": {
+        "type": "string",
+        "description": "The Adaptive workspace URL. Defaults to https://app.adaptive.live.",
+        "default": "https://app.adaptive.live",
+        "defaultInfo": {
+          "environment": [
+            "ADAPTIVE_URL"
+          ]
+        }
+      }
+    },
+    "inputProperties": {
+      "serviceToken": {
+        "type": "string",
+        "description": "Service account token for authenticating with the Adaptive service. If not provided, the provider reads the token from the default adaptive-cli location (~/.adaptive/token).",
+        "default": "",
+        "defaultInfo": {
+          "environment": [
+            "ADAPTIVE_SVC_TOKEN"
+          ]
+        },
+        "secret": true
+      },
+      "workspaceUrl": {
+        "type": "string",
+        "description": "The Adaptive workspace URL. Defaults to https://app.adaptive.live.",
+        "default": "https://app.adaptive.live",
+        "defaultInfo": {
+          "environment": [
+            "ADAPTIVE_URL"
+          ]
+        }
+      }
+    }
+  },
+  "resources": {
+    "adaptive:index:Authorization": {
+      "properties": {
+        "description": {
+          "type": "string",
+          "description": "An optional description of the authorization object."
+        },
+        "name": {
+          "type": "string",
+          "description": "The name of the authorization object."
+        },
+        "permissions": {
+          "type": "string",
+          "description": "The permission policy. Format depends on resource type (YAML for postgres/mysql/ssh/k8s, JSON for mongodb)."
+        },
+        "resourceType": {
+          "type": "string",
+          "description": "Resource type to grant permission on, e.g. postgres, mysql, mongodb, kubernetes, ssh."
+        }
+      },
+      "required": [
+        "name",
+        "resourceType",
+        "permissions"
+      ],
+      "inputProperties": {
+        "description": {
+          "type": "string",
+          "description": "An optional description of the authorization object."
+        },
+        "name": {
+          "type": "string",
+          "description": "The name of the authorization object."
+        },
+        "permissions": {
+          "type": "string",
+          "description": "The permission policy. Format depends on resource type (YAML for postgres/mysql/ssh/k8s, JSON for mongodb)."
+        },
+        "resourceType": {
+          "type": "string",
+          "description": "Resource type to grant permission on, e.g. postgres, mysql, mongodb, kubernetes, ssh."
+        }
+      },
+      "requiredInputs": [
+        "name",
+        "resourceType",
+        "permissions"
+      ]
+    },
+    "adaptive:index:Endpoint": {
+      "properties": {
+        "authorization": {
+          "type": "string",
+          "description": "The authorization (by name) to apply to this endpoint."
+        },
+        "cluster": {
+          "type": "string"
+        },
+        "cpu": {
+          "type": "string"
+        },
+        "groups": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        },
+        "idleTimeout": {
+          "type": "string"
+        },
+        "isJitEnabled": {
+          "type": "boolean",
+          "description": "Whether Just-In-Time access approval is enabled."
+        },
+        "jitApprovers": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          },
+          "description": "Emails of users who can approve Just-In-Time access requests."
+        },
+        "memory": {
+          "type": "string"
+        },
+        "name": {
+          "type": "string",
+          "description": "The name of the endpoint to create."
+        },
+        "pauseTimeout": {
+          "type": "string"
+        },
+        "resource": {
+          "type": "string",
+          "description": "The resource (by name) this endpoint grants access to."
+        },
+        "scriptOnlyAccess": {
+          "type": "boolean",
+          "description": "Whether the endpoint is only accessible via script."
+        },
+        "tags": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        },
+        "ttl": {
+          "type": "string",
+          "description": "Time-to-live for the endpoint, e.g. 8h, 7d, 90d."
+        },
+        "type": {
+          "type": "string",
+          "description": "The type of session: direct, client, cli, or services.",
+          "default": "direct"
+        },
+        "users": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        }
+      },
+      "required": [
+        "name",
+        "resource"
+      ],
+      "inputProperties": {
+        "authorization": {
+          "type": "string",
+          "description": "The authorization (by name) to apply to this endpoint."
+        },
+        "cluster": {
+          "type": "string"
+        },
+        "cpu": {
+          "type": "string"
+        },
+        "groups": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        },
+        "idleTimeout": {
+          "type": "string"
+        },
+        "isJitEnabled": {
+          "type": "boolean",
+          "description": "Whether Just-In-Time access approval is enabled."
+        },
+        "jitApprovers": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          },
+          "description": "Emails of users who can approve Just-In-Time access requests."
+        },
+        "memory": {
+          "type": "string"
+        },
+        "name": {
+          "type": "string",
+          "description": "The name of the endpoint to create."
+        },
+        "pauseTimeout": {
+          "type": "string"
+        },
+        "resource": {
+          "type": "string",
+          "description": "The resource (by name) this endpoint grants access to."
+        },
+        "scriptOnlyAccess": {
+          "type": "boolean",
+          "description": "Whether the endpoint is only accessible via script."
+        },
+        "tags": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        },
+        "ttl": {
+          "type": "string",
+          "description": "Time-to-live for the endpoint, e.g. 8h, 7d, 90d."
+        },
+        "type": {
+          "type": "string",
+          "description": "The type of session: direct, client, cli, or services.",
+          "default": "direct"
+        },
+        "users": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        }
+      },
+      "requiredInputs": [
+        "name",
+        "resource"
+      ]
+    },
+    "adaptive:index:Group": {
+      "properties": {
+        "endpoints": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          },
+          "description": "Names of endpoints to add to this group."
+        },
+        "members": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          },
+          "description": "Emails of users to add to the group."
+        },
+        "name": {
+          "type": "string",
+          "description": "Name of the group. Must be unique."
+        }
+      },
+      "required": [
+        "name"
+      ],
+      "inputProperties": {
+        "endpoints": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          },
+          "description": "Names of endpoints to add to this group."
+        },
+        "members": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          },
+          "description": "Emails of users to add to the group."
+        },
+        "name": {
+          "type": "string",
+          "description": "Name of the group. Must be unique."
+        }
+      },
+      "requiredInputs": [
+        "name"
+      ]
+    },
+    "adaptive:index:MSTeamsWorkflow": {
+      "properties": {
+        "name": {
+          "type": "string",
+          "description": "Name of the MS Teams workflow integration."
+        },
+        "webhookUrl": {
+          "type": "string",
+          "description": "The webhook URL for the MS Teams workflow."
+        }
+      },
+      "required": [
+        "name",
+        "webhookUrl"
+      ],
+      "inputProperties": {
+        "name": {
+          "type": "string",
+          "description": "Name of the MS Teams workflow integration."
+        },
+        "webhookUrl": {
+          "type": "string",
+          "description": "The webhook URL for the MS Teams workflow."
+        }
+      },
+      "requiredInputs": [
+        "name",
+        "webhookUrl"
+      ]
+    },
+    "adaptive:index:Resource": {
+      "properties": {
+        "accessKeyId": {
+          "type": "string"
+        },
+        "annotations": {
+          "type": "string"
+        },
+        "apiClientId": {
+          "type": "string"
+        },
+        "apiClientSecret": {
+          "type": "string"
+        },
+        "apiKey": {
+          "type": "string"
+        },
+        "apiServer": {
+          "type": "string"
+        },
+        "apiToken": {
+          "type": "string"
+        },
+        "appId": {
+          "type": "string"
+        },
+        "appKey": {
+          "type": "string"
+        },
+        "applicationId": {
+          "type": "string"
+        },
+        "applicationName": {
+          "type": "string"
+        },
+        "arn": {
+          "type": "string"
+        },
+        "awsArn": {
+          "type": "string"
+        },
+        "awsRegionName": {
+          "type": "string"
+        },
+        "clientId": {
+          "type": "string"
+        },
+        "clientSecret": {
+          "type": "string"
+        },
+        "clientcert": {
+          "type": "string"
+        },
+        "clusterCert": {
+          "type": "string"
+        },
+        "clusterToken": {
+          "type": "string"
+        },
+        "createIfNotExists": {
+          "type": "boolean"
+        },
+        "databaseAccount": {
+          "type": "string"
+        },
+        "databaseName": {
+          "type": "string"
+        },
+        "databasePassword": {
+          "type": "string"
+        },
+        "databaseUsername": {
+          "type": "string"
+        },
+        "ddApiKey": {
+          "type": "string"
+        },
+        "ddSite": {
+          "type": "string"
+        },
+        "defaultCluster": {
+          "type": "string",
+          "description": "The default cluster the resource is deployed to."
+        },
+        "defaultUser": {
+          "type": "string"
+        },
+        "domain": {
+          "type": "string"
+        },
+        "host": {
+          "type": "string"
+        },
+        "hostname": {
+          "type": "string"
+        },
+        "hosts": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        },
+        "image": {
+          "type": "string"
+        },
+        "index": {
+          "type": "string"
+        },
+        "key": {
+          "type": "string"
+        },
+        "keyFile": {
+          "type": "string"
+        },
+        "loginUrl": {
+          "type": "string"
+        },
+        "name": {
+          "type": "string",
+          "description": "Name of the Adaptive resource."
+        },
+        "namespace": {
+          "type": "string"
+        },
+        "networkId": {
+          "type": "string"
+        },
+        "nodeAffinity": {
+          "type": "string"
+        },
+        "nodeSelector": {
+          "type": "string"
+        },
+        "organizationId": {
+          "type": "string"
+        },
+        "password": {
+          "type": "string"
+        },
+        "port": {
+          "type": "string"
+        },
+        "privateKey": {
+          "type": "string"
+        },
+        "projectId": {
+          "type": "string"
+        },
+        "protocol": {
+          "type": "string"
+        },
+        "publicKey": {
+          "type": "string"
+        },
+        "region": {
+          "type": "string"
+        },
+        "regionName": {
+          "type": "string"
+        },
+        "role": {
+          "type": "string"
+        },
+        "rootCert": {
+          "type": "string"
+        },
+        "schema": {
+          "type": "string"
+        },
+        "secretAccessKey": {
+          "type": "string"
+        },
+        "secretId": {
+          "type": "string"
+        },
+        "serviceAccountName": {
+          "type": "string"
+        },
+        "sharedSecret": {
+          "type": "string"
+        },
+        "sslMode": {
+          "type": "string"
+        },
+        "subSystemName": {
+          "type": "string"
+        },
+        "tags": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          },
+          "description": "Optional tags."
+        },
+        "tenantId": {
+          "type": "string"
+        },
+        "tlsCertFile": {
+          "type": "string"
+        },
+        "tlsKeyFile": {
+          "type": "string"
+        },
+        "tlsRootCert": {
+          "type": "string"
+        },
+        "tokenId": {
+          "type": "string"
+        },
+        "tolerations": {
+          "type": "string"
+        },
+        "type": {
+          "type": "string",
+          "description": "Type of the Adaptive resource (integration), e.g. postgres, mysql, mongodb, ssh, kubernetes, aws, gcp, azure, snowflake."
+        },
+        "uri": {
+          "type": "string"
+        },
+        "url": {
+          "type": "string"
+        },
+        "urls": {
+          "type": "string"
+        },
+        "useProxy": {
+          "type": "boolean"
+        },
+        "useServiceAccount": {
+          "type": "boolean"
+        },
+        "useTenant": {
+          "type": "boolean"
+        },
+        "username": {
+          "type": "string"
+        },
+        "version": {
+          "type": "string"
+        },
+        "warehouse": {
+          "type": "string"
+        },
+        "webhookUrl": {
+          "type": "string"
+        },
+        "webuiPort": {
+          "type": "string"
+        }
+      },
+      "required": [
+        "type",
+        "name"
+      ],
+      "inputProperties": {
+        "accessKeyId": {
+          "type": "string"
+        },
+        "annotations": {
+          "type": "string"
+        },
+        "apiClientId": {
+          "type": "string"
+        },
+        "apiClientSecret": {
+          "type": "string"
+        },
+        "apiKey": {
+          "type": "string"
+        },
+        "apiServer": {
+          "type": "string"
+        },
+        "apiToken": {
+          "type": "string"
+        },
+        "appId": {
+          "type": "string"
+        },
+        "appKey": {
+          "type": "string"
+        },
+        "applicationId": {
+          "type": "string"
+        },
+        "applicationName": {
+          "type": "string"
+        },
+        "arn": {
+          "type": "string"
+        },
+        "awsArn": {
+          "type": "string"
+        },
+        "awsRegionName": {
+          "type": "string"
+        },
+        "clientId": {
+          "type": "string"
+        },
+        "clientSecret": {
+          "type": "string"
+        },
+        "clientcert": {
+          "type": "string"
+        },
+        "clusterCert": {
+          "type": "string"
+        },
+        "clusterToken": {
+          "type": "string"
+        },
+        "createIfNotExists": {
+          "type": "boolean"
+        },
+        "databaseAccount": {
+          "type": "string"
+        },
+        "databaseName": {
+          "type": "string"
+        },
+        "databasePassword": {
+          "type": "string"
+        },
+        "databaseUsername": {
+          "type": "string"
+        },
+        "ddApiKey": {
+          "type": "string"
+        },
+        "ddSite": {
+          "type": "string"
+        },
+        "defaultCluster": {
+          "type": "string",
+          "description": "The default cluster the resource is deployed to."
+        },
+        "defaultUser": {
+          "type": "string"
+        },
+        "domain": {
+          "type": "string"
+        },
+        "host": {
+          "type": "string"
+        },
+        "hostname": {
+          "type": "string"
+        },
+        "hosts": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        },
+        "image": {
+          "type": "string"
+        },
+        "index": {
+          "type": "string"
+        },
+        "key": {
+          "type": "string"
+        },
+        "keyFile": {
+          "type": "string"
+        },
+        "loginUrl": {
+          "type": "string"
+        },
+        "name": {
+          "type": "string",
+          "description": "Name of the Adaptive resource."
+        },
+        "namespace": {
+          "type": "string"
+        },
+        "networkId": {
+          "type": "string"
+        },
+        "nodeAffinity": {
+          "type": "string"
+        },
+        "nodeSelector": {
+          "type": "string"
+        },
+        "organizationId": {
+          "type": "string"
+        },
+        "password": {
+          "type": "string"
+        },
+        "port": {
+          "type": "string"
+        },
+        "privateKey": {
+          "type": "string"
+        },
+        "projectId": {
+          "type": "string"
+        },
+        "protocol": {
+          "type": "string"
+        },
+        "publicKey": {
+          "type": "string"
+        },
+        "region": {
+          "type": "string"
+        },
+        "regionName": {
+          "type": "string"
+        },
+        "role": {
+          "type": "string"
+        },
+        "rootCert": {
+          "type": "string"
+        },
+        "schema": {
+          "type": "string"
+        },
+        "secretAccessKey": {
+          "type": "string"
+        },
+        "secretId": {
+          "type": "string"
+        },
+        "serviceAccountName": {
+          "type": "string"
+        },
+        "sharedSecret": {
+          "type": "string"
+        },
+        "sslMode": {
+          "type": "string"
+        },
+        "subSystemName": {
+          "type": "string"
+        },
+        "tags": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          },
+          "description": "Optional tags."
+        },
+        "tenantId": {
+          "type": "string"
+        },
+        "tlsCertFile": {
+          "type": "string"
+        },
+        "tlsKeyFile": {
+          "type": "string"
+        },
+        "tlsRootCert": {
+          "type": "string"
+        },
+        "tokenId": {
+          "type": "string"
+        },
+        "tolerations": {
+          "type": "string"
+        },
+        "type": {
+          "type": "string",
+          "description": "Type of the Adaptive resource (integration), e.g. postgres, mysql, mongodb, ssh, kubernetes, aws, gcp, azure, snowflake."
+        },
+        "uri": {
+          "type": "string"
+        },
+        "url": {
+          "type": "string"
+        },
+        "urls": {
+          "type": "string"
+        },
+        "useProxy": {
+          "type": "boolean"
+        },
+        "useServiceAccount": {
+          "type": "boolean"
+        },
+        "useTenant": {
+          "type": "boolean"
+        },
+        "username": {
+          "type": "string"
+        },
+        "version": {
+          "type": "string"
+        },
+        "warehouse": {
+          "type": "string"
+        },
+        "webhookUrl": {
+          "type": "string"
+        },
+        "webuiPort": {
+          "type": "string"
+        }
+      },
+      "requiredInputs": [
+        "type",
+        "name"
+      ]
+    },
+    "adaptive:index:Script": {
+      "properties": {
+        "command": {
+          "type": "string",
+          "description": "The command the script runs."
+        },
+        "endpoint": {
+          "type": "string",
+          "description": "The endpoint the script is attached to. Cannot be changed after creation."
+        },
+        "name": {
+          "type": "string",
+          "description": "The name of the script."
+        }
+      },
+      "required": [
+        "name",
+        "command",
+        "endpoint"
+      ],
+      "inputProperties": {
+        "command": {
+          "type": "string",
+          "description": "The command the script runs."
+        },
+        "endpoint": {
+          "type": "string",
+          "description": "The endpoint the script is attached to. Cannot be changed after creation."
+        },
+        "name": {
+          "type": "string",
+          "description": "The name of the script."
+        }
+      },
+      "requiredInputs": [
+        "name",
+        "command",
+        "endpoint"
+      ]
+    }
+  }
+}

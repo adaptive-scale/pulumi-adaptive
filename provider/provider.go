@@ -9,6 +9,7 @@ import (
 
 	p "github.com/pulumi/pulumi-go-provider"
 	"github.com/pulumi/pulumi-go-provider/infer"
+	"github.com/pulumi/pulumi/sdk/v3/go/common/tokens"
 )
 
 // Version is the provider version, overridable at build time via -ldflags.
@@ -50,6 +51,11 @@ func Provider() (p.Provider, error) {
 		WithHomepage("https://adaptive.live").
 		WithRepository("https://github.com/adaptive-scale/pulumi-adaptive").
 		WithLicense("Apache-2.0").
+		WithGoImportPath("github.com/adaptive-scale/pulumi-adaptive/sdk/go/adaptive").
+		// Resource structs live in the Go package "adaptive" (dir name "provider"),
+		// which infer would otherwise expose as the "provider" module. Remap it to
+		// the conventional "index" module so users write adaptive.NewResource(...).
+		WithModuleMap(map[tokens.ModuleName]tokens.ModuleName{"provider": "index"}).
 		WithConfig(infer.Config(Config{})).
 		WithResources(
 			infer.Resource(&Resource{}),
