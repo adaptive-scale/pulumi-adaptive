@@ -307,7 +307,44 @@ func (c *Client) CreateAuthorization(ctx context.Context, name, description, per
 	if err := json.NewDecoder(resp.Body).Decode(&out); err != nil {
 		return nil, err
 	}
+	// Wait for the authorization to become functional before reporting success
+	// (parity with the Terraform provider).
+	if _, err := c.waitForAuthorization(ctx, out.ID); err != nil {
+		return nil, fmt.Errorf("failed to create authorization %s: %w", name, err)
+	}
 	return &out, nil
+}
+
+func (c *Client) readAuthorization(ctx context.Context, authID string) (map[string]any, error) {
+	resp, err := c.do(ctx, mustReq("GET", fmt.Sprintf("%s/read/%s", c.authorizationAPI(), authID), nil))
+	if err != nil {
+		return nil, err
+	}
+	defer resp.Body.Close()
+	if resp.StatusCode != http.StatusOK && resp.StatusCode != http.StatusAccepted {
+		return nil, fmt.Errorf("error reading authorization %s", authID)
+	}
+	var out map[string]any
+	if err := json.NewDecoder(resp.Body).Decode(&out); err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *Client) waitForAuthorization(ctx context.Context, authID string) (map[string]any, error) {
+	return Do(func() (map[string]any, error) {
+		return c.readAuthorization(ctx, authID)
+	}, RetryLimit(20), Sleep(10*time.Second), RetryResultChecker(func(r any) bool {
+		res, ok := r.(map[string]any)
+		if !ok || res == nil {
+			return true
+		}
+		status, ok := res["Status"].(string)
+		if !ok {
+			return true
+		}
+		return strings.ToLower(status) == "creating"
+	}))
 }
 
 func (c *Client) UpdateAuthorization(ctx context.Context, authID, name, description, permissions, resourceType string) (*IDResponse, error) {

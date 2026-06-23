@@ -19,7 +19,7 @@ type Authorization struct {
 	Description pulumi.StringPtrOutput `pulumi:"description"`
 	// The name of the authorization object.
 	Name pulumi.StringOutput `pulumi:"name"`
-	// The permission policy. Format depends on resource type (YAML for postgres/mysql/ssh/k8s, JSON for mongodb).
+	// The permission policy. The required format depends on resource_type: structured YAML for postgres/mysql/sqlserver/cockroachdb/yugabytedb (an `allow:` list of database/privileges/objects) and for kubernetes (an RBAC Role manifest); a free-form string for mongodb, ssh, and elasticsearch. Note: the SQL and kubernetes types are validated as YAML server-side, so a bare value like "SELECT" is rejected.
 	Permissions pulumi.StringOutput `pulumi:"permissions"`
 	// Resource type to grant permission on, e.g. postgres, mysql, mongodb, kubernetes, ssh.
 	ResourceType pulumi.StringOutput `pulumi:"resourceType"`
@@ -78,7 +78,7 @@ type authorizationArgs struct {
 	Description *string `pulumi:"description"`
 	// The name of the authorization object.
 	Name string `pulumi:"name"`
-	// The permission policy. Format depends on resource type (YAML for postgres/mysql/ssh/k8s, JSON for mongodb).
+	// The permission policy. The required format depends on resource_type: structured YAML for postgres/mysql/sqlserver/cockroachdb/yugabytedb (an `allow:` list of database/privileges/objects) and for kubernetes (an RBAC Role manifest); a free-form string for mongodb, ssh, and elasticsearch. Note: the SQL and kubernetes types are validated as YAML server-side, so a bare value like "SELECT" is rejected.
 	Permissions string `pulumi:"permissions"`
 	// Resource type to grant permission on, e.g. postgres, mysql, mongodb, kubernetes, ssh.
 	ResourceType string `pulumi:"resourceType"`
@@ -90,7 +90,7 @@ type AuthorizationArgs struct {
 	Description pulumi.StringPtrInput
 	// The name of the authorization object.
 	Name pulumi.StringInput
-	// The permission policy. Format depends on resource type (YAML for postgres/mysql/ssh/k8s, JSON for mongodb).
+	// The permission policy. The required format depends on resource_type: structured YAML for postgres/mysql/sqlserver/cockroachdb/yugabytedb (an `allow:` list of database/privileges/objects) and for kubernetes (an RBAC Role manifest); a free-form string for mongodb, ssh, and elasticsearch. Note: the SQL and kubernetes types are validated as YAML server-side, so a bare value like "SELECT" is rejected.
 	Permissions pulumi.StringInput
 	// Resource type to grant permission on, e.g. postgres, mysql, mongodb, kubernetes, ssh.
 	ResourceType pulumi.StringInput
@@ -193,7 +193,7 @@ func (o AuthorizationOutput) Name() pulumi.StringOutput {
 	return o.ApplyT(func(v *Authorization) pulumi.StringOutput { return v.Name }).(pulumi.StringOutput)
 }
 
-// The permission policy. Format depends on resource type (YAML for postgres/mysql/ssh/k8s, JSON for mongodb).
+// The permission policy. The required format depends on resource_type: structured YAML for postgres/mysql/sqlserver/cockroachdb/yugabytedb (an `allow:` list of database/privileges/objects) and for kubernetes (an RBAC Role manifest); a free-form string for mongodb, ssh, and elasticsearch. Note: the SQL and kubernetes types are validated as YAML server-side, so a bare value like "SELECT" is rejected.
 func (o AuthorizationOutput) Permissions() pulumi.StringOutput {
 	return o.ApplyT(func(v *Authorization) pulumi.StringOutput { return v.Permissions }).(pulumi.StringOutput)
 }

@@ -155,7 +155,10 @@ type AuthorizationState struct {
 func (a *AuthorizationArgs) Annotate(an infer.Annotator) {
 	an.Describe(&a.Name, "The name of the authorization object.")
 	an.Describe(&a.ResourceType, "Resource type to grant permission on, e.g. postgres, mysql, mongodb, kubernetes, ssh.")
-	an.Describe(&a.Permissions, "The permission policy. Format depends on resource type (YAML for postgres/mysql/ssh/k8s, JSON for mongodb).")
+	an.Describe(&a.Permissions, "The permission policy. The required format depends on resource_type: "+
+		"structured YAML for postgres/mysql/sqlserver/cockroachdb/yugabytedb (an `allow:` list of database/privileges/objects) "+
+		"and for kubernetes (an RBAC Role manifest); a free-form string for mongodb, ssh, and elasticsearch. "+
+		"Note: the SQL and kubernetes types are validated as YAML server-side, so a bare value like \"SELECT\" is rejected.")
 	an.Describe(&a.Description, "An optional description of the authorization object.")
 }
 
