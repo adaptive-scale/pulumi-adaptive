@@ -1,0 +1,10 @@
+# Compiled provider binary
+provider/bin/
+bin/
+
+# OS / editor cruft
+.DS_Store
+*.swp
+
+# Pulumi local state (if anyone runs examples here)
+.pulumi/
