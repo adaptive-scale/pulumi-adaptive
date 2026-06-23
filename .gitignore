@@ -2,6 +2,9 @@
 provider/bin/
 bin/
 
+# Compiled example program
+examples/go/adaptive-example
+
 # OS / editor cruft
 .DS_Store
 *.swp

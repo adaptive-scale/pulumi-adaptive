@@ -1,0 +1,3 @@
+name: adaptive-example
+runtime: go
+description: Example Pulumi (Go) program using the Adaptive provider
