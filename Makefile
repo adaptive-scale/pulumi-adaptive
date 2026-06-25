@@ -10,7 +10,7 @@ help:
 	@echo "  gen        Regenerate schema.json and the Go SDK (sdk/go)"
 	@echo "  build_sdk  Build the generated Go SDK"
 	@echo "  install    Build the plugin onto your PATH ($(GOBIN)) for use by Pulumi"
-	@echo "  test       Compile the provider and SDK (sanity check)"
+	@echo "  test       Run provider unit tests and compile the SDK"
 	@echo "  clean      Remove build artifacts"
 
 # Compile the provider plugin binary.
@@ -31,9 +31,9 @@ install:
 	cd provider && go build -o $(GOBIN)/$(PROVIDER) ./cmd/pulumi-resource-adaptive
 	@echo "Installed $(PROVIDER) ($(VERSION)) to $(GOBIN)"
 
-# Sanity check: everything compiles.
+# Run unit tests, and make sure the SDK still compiles.
 test:
-	cd provider && go build ./...
+	cd provider && go test ./...
 	cd sdk && go build ./...
 
 clean:
