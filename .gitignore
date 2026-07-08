@@ -5,9 +5,15 @@ bin/
 # Compiled example program
 examples/go/adaptive-example
 
+# Secrets / local credentials — NEVER commit
+.env.local
+**/.env.local
+.env
+
 # OS / editor cruft
 .DS_Store
 *.swp
 
-# Pulumi local state (if anyone runs examples here)
+# Pulumi local state and per-stack config from example runs
 .pulumi/
+examples/go/Pulumi.*.yaml
