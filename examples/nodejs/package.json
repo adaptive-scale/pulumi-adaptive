@@ -1,0 +1,12 @@
+{
+    "name": "adaptive-example-nodejs",
+    "main": "index.ts",
+    "devDependencies": {
+        "@types/node": "^20",
+        "typescript": "^5"
+    },
+    "dependencies": {
+        "@pulumi/pulumi": "^3.0.0",
+        "@adaptive-scale/pulumi-adaptive": "file:../../sdk/nodejs/bin"
+    }
+}

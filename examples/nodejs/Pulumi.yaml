@@ -1,0 +1,3 @@
+name: adaptive-example-nodejs
+runtime: nodejs
+description: Example Pulumi (TypeScript) program using the Adaptive provider

@@ -53,7 +53,7 @@ provider/            The provider plugin (its own Go module)
 sdk/                 The generated SDKs (go/ is its own Go module; nodejs/, python/, dotnet/)
 schema.json          The generated Pulumi schema
 docs/                Pulumi Registry docs (_index.md, installation-configuration.md)
-examples/go/         An example Pulumi (Go) program
+examples/            Example Pulumi programs (go/, nodejs/, python/)
 Makefile             build / gen / install helpers
 .goreleaser.yml      Plugin binary release configuration
 ```

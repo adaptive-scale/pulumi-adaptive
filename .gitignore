@@ -25,4 +25,7 @@ examples/go/adaptive-example
 
 # Pulumi local state and per-stack config from example runs
 .pulumi/
-examples/go/Pulumi.*.yaml
+examples/*/Pulumi.*.yaml
+examples/nodejs/node_modules/
+examples/nodejs/package-lock.json
+examples/python/venv/

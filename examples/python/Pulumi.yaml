@@ -1,0 +1,6 @@
+name: adaptive-example-python
+description: Example Pulumi (Python) program using the Adaptive provider
+runtime:
+  name: python
+  options:
+    virtualenv: venv
