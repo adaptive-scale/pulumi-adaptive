@@ -29,3 +29,5 @@ examples/*/Pulumi.*.yaml
 examples/nodejs/node_modules/
 examples/nodejs/package-lock.json
 examples/python/venv/
+__pycache__/
+*.pyc
