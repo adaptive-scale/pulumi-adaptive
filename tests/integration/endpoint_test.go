@@ -59,9 +59,9 @@ func TestEndpoint(t *testing.T) {
 	// We intentionally do NOT assert Status == "created". In Adaptive an endpoint
 	// is a live proxy backed by a container: "created" means that container
 	// started up and is ready to accept connections, while "failed" means it
-	// could not start (e.g. bad credentials / unreachable target) — see
-	// SessionStatus* in inventorize model/session.go. The record itself is listed
-	// regardless of container state, so a dummy target yields a real endpoint
+	// could not start (e.g. bad credentials / unreachable target). The record
+	// itself is listed via the Client API regardless of container state, so a
+	// dummy target yields a real endpoint
 	// record in "failed" state. The provider's job is to create that record with
 	// the right metadata (asserted above); reaching "created" would require a
 	// real reachable database. Status is logged for visibility only.
