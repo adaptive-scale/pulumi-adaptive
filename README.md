@@ -29,6 +29,19 @@ Terraform or the Terraform bridge.
 | `serviceToken` | `ADAPTIVE_SVC_TOKEN` | falls back to `~/.adaptive/token` |
 | `workspaceUrl` | `ADAPTIVE_URL` | `https://app.adaptive.live` |
 
+## Installing the SDKs
+
+| Language | Package |
+|---|---|
+| TypeScript/JavaScript | `npm install @adaptive-scale/pulumi-adaptive` |
+| Python | `pip install pulumi-adaptive` |
+| Go | `go get github.com/adaptive-scale/pulumi-adaptive/sdk` |
+| .NET | `dotnet add package AdaptiveScale.Adaptive` |
+
+The plugin binary is downloaded automatically from this repo's GitHub releases
+(the schema's `pluginDownloadURL` points at
+`github://api.github.com/adaptive-scale/pulumi-adaptive`).
+
 ## Repository layout
 
 ```
@@ -37,23 +50,40 @@ provider/            The provider plugin (its own Go module)
   cmd/
     pulumi-resource-adaptive/   the plugin binary
     gen/                        in-process schema + SDK generator (no Pulumi CLI needed)
-sdk/go/adaptive/     The generated Go SDK (its own Go module)
+sdk/                 The generated SDKs (go/ is its own Go module; nodejs/, python/, dotnet/)
 schema.json          The generated Pulumi schema
+docs/                Pulumi Registry docs (_index.md, installation-configuration.md)
 examples/go/         An example Pulumi (Go) program
 Makefile             build / gen / install helpers
+.goreleaser.yml      Plugin binary release configuration
 ```
 
 ## Building
 
 ```bash
-make build      # compile the provider plugin into provider/bin/
-make gen        # regenerate schema.json and the Go SDK
-make build_sdk  # compile the generated Go SDK
-make test       # sanity-check that everything compiles
+make build       # compile the provider plugin into provider/bin/
+make gen         # regenerate schema.json and the Go/Node.js/Python SDKs
+make gen_dotnet  # regenerate the .NET SDK (requires the Pulumi CLI)
+make build_sdks  # build every language SDK
+make test        # sanity-check that everything compiles
 ```
 
-The schema and SDK are generated **in-process** by `provider/cmd/gen` using
-`pulumi/pkg` codegen, so generation does not require the Pulumi CLI.
+The schema and the Go/Node.js/Python SDKs are generated **in-process** by
+`provider/cmd/gen` using `pulumi/pkg` codegen, so generation does not require
+the Pulumi CLI. The .NET SDK goes through `pulumi package gen-sdk` because its
+codegen lives outside `pulumi/pkg`.
+
+## Releasing
+
+Push a `vX.Y.Z` tag. The release workflow then:
+
+1. builds the plugin binaries for every OS/arch with GoReleaser and attaches
+   them to a GitHub release (`pulumi-resource-adaptive-vX.Y.Z-<os>-<arch>.tar.gz`),
+2. regenerates the SDKs at the release version and publishes them to npm,
+   PyPI, and NuGet via `pulumi/pulumi-package-publisher`,
+3. tags `sdk/vX.Y.Z` so the Go SDK resolves.
+
+It needs the `NPM_TOKEN`, `PYPI_API_TOKEN`, and `NUGET_PUBLISH_KEY` repo secrets.
 
 ## Using it
 
@@ -91,5 +121,5 @@ db, _ := adaptive.NewResource(ctx, "my-db", &adaptive.ResourceArgs{
 ## Status
 
 Early/experimental. The provider compiles, emits a valid schema, and the
-generated Go SDK builds and is consumable (see `examples/go`). SDKs for other
-languages (TypeScript, Python, .NET, Java) can be generated from `schema.json`.
+generated SDKs (Go, TypeScript, Python, .NET) build; the Go SDK is exercised
+end-to-end by the integration tests (see `examples/go` and `tests/integration`).

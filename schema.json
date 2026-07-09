@@ -3,13 +3,28 @@
   "displayName": "Adaptive",
   "version": "0.1.0",
   "description": "A Pulumi provider for managing Adaptive (adaptive.live) infrastructure: resources, endpoints, authorizations, groups, and scripts.",
+  "keywords": [
+    "pulumi",
+    "adaptive",
+    "access-management",
+    "security",
+    "category/infrastructure",
+    "kind/native"
+  ],
   "homepage": "https://adaptive.live",
   "license": "Apache-2.0",
   "repository": "https://github.com/adaptive-scale/pulumi-adaptive",
+  "logoUrl": "https://raw.githubusercontent.com/adaptive-scale/pulumi-adaptive/main/assets/logo.png",
+  "pluginDownloadURL": "github://api.github.com/adaptive-scale/pulumi-adaptive",
+  "publisher": "Adaptive Scale",
   "namespace": "adaptive-scale",
   "language": {
     "csharp": {
-      "respectSchemaVersion": true
+      "packageReferences": {
+        "Pulumi": "3.*"
+      },
+      "respectSchemaVersion": true,
+      "rootNamespace": "AdaptiveScale"
     },
     "go": {
       "generateResourceContainerTypes": true,
@@ -17,9 +32,11 @@
       "respectSchemaVersion": true
     },
     "nodejs": {
+      "packageName": "@adaptive-scale/pulumi-adaptive",
       "respectSchemaVersion": true
     },
     "python": {
+      "packageName": "pulumi_adaptive",
       "pyproject": {
         "enabled": true
       },

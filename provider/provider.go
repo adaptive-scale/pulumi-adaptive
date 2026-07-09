@@ -51,6 +51,39 @@ func Provider() (p.Provider, error) {
 		WithHomepage("https://adaptive.live").
 		WithRepository("https://github.com/adaptive-scale/pulumi-adaptive").
 		WithLicense("Apache-2.0").
+		WithPublisher("Adaptive Scale").
+		WithLogoURL("https://raw.githubusercontent.com/adaptive-scale/pulumi-adaptive/main/assets/logo.png").
+		WithPluginDownloadURL("github://api.github.com/adaptive-scale/pulumi-adaptive").
+		WithKeywords(
+			"pulumi", "adaptive", "access-management", "security",
+			"category/infrastructure", "kind/native",
+		).
+		// Replaces the builder's default language map, so each language must
+		// restate the defaults it needs alongside our package-name overrides.
+		WithLanguageMap(map[string]any{
+			"nodejs": map[string]any{
+				"packageName":          "@adaptive-scale/pulumi-adaptive",
+				"respectSchemaVersion": true,
+			},
+			"go": map[string]any{
+				"generateResourceContainerTypes": true,
+				"respectSchemaVersion":           true,
+			},
+			"python": map[string]any{
+				"packageName":          "pulumi_adaptive",
+				"respectSchemaVersion": true,
+				"pyproject": map[string]any{
+					"enabled": true,
+				},
+			},
+			"csharp": map[string]any{
+				"rootNamespace":        "AdaptiveScale",
+				"respectSchemaVersion": true,
+				"packageReferences": map[string]string{
+					"Pulumi": "3.*",
+				},
+			},
+		}).
 		WithGoImportPath("github.com/adaptive-scale/pulumi-adaptive/sdk/go/adaptive").
 		// Resource structs live in the Go package "adaptive" (dir name "provider"),
 		// which infer would otherwise expose as the "provider" module. Remap it to

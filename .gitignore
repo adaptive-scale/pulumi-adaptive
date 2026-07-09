@@ -1,6 +1,15 @@
 # Compiled provider binary
 provider/bin/
 bin/
+dist/
+
+# SDK build outputs (bin/ above covers sdk/*/bin)
+sdk/nodejs/node_modules/
+sdk/nodejs/package-lock.json
+sdk/python/venv/
+sdk/python/*.egg-info/
+sdk/dotnet/obj/
+sdk/*.tar.gz
 
 # Compiled example program
 examples/go/adaptive-example

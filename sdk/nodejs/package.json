@@ -1,0 +1,31 @@
+{
+    "name": "@adaptive-scale/pulumi-adaptive",
+    "version": "0.1.0",
+    "keywords": [
+        "pulumi",
+        "adaptive",
+        "access-management",
+        "security",
+        "category/infrastructure",
+        "kind/native"
+    ],
+    "homepage": "https://adaptive.live",
+    "repository": "https://github.com/adaptive-scale/pulumi-adaptive",
+    "license": "Apache-2.0",
+    "scripts": {
+        "build": "tsc"
+    },
+    "dependencies": {
+        "@pulumi/pulumi": "^3.142.0"
+    },
+    "devDependencies": {
+        "@types/node": "^20",
+        "typescript": "^4.7.0"
+    },
+    "pulumi": {
+        "resource": true,
+        "name": "adaptive",
+        "version": "0.1.0",
+        "server": "github://api.github.com/adaptive-scale/pulumi-adaptive"
+    }
+}

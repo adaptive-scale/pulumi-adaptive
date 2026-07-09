@@ -1,0 +1,34 @@
+version: 2
+project_name: pulumi-adaptive
+
+builds:
+  - id: pulumi-resource-adaptive
+    dir: provider
+    main: ./cmd/pulumi-resource-adaptive
+    binary: pulumi-resource-adaptive
+    env:
+      - CGO_ENABLED=0
+    goos:
+      - linux
+      - darwin
+      - windows
+    goarch:
+      - amd64
+      - arm64
+    ldflags:
+      - -s
+      - -w
+      - -X github.com/adaptive-scale/pulumi-adaptive/provider.Version={{ .Version }}
+
+archives:
+  # Pulumi plugin archives must be named
+  # pulumi-resource-<name>-v<version>-<os>-<arch>.tar.gz (tar.gz on every OS).
+  - id: pulumi-resource-adaptive
+    name_template: "pulumi-resource-adaptive-v{{ .Version }}-{{ .Os }}-{{ .Arch }}"
+    formats: [tar.gz]
+
+changelog:
+  use: github
+
+snapshot:
+  version_template: "{{ incpatch .Version }}-SNAPSHOT"

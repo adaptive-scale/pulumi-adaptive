@@ -1,0 +1,22 @@
+[project]
+  name = "pulumi_adaptive"
+  description = "A Pulumi provider for managing Adaptive (adaptive.live) infrastructure: resources, endpoints, authorizations, groups, and scripts."
+  dependencies = ["parver>=0.2.1", "pulumi>=3.165.0,<4.0.0", "semver>=2.8.1", "typing-extensions>=4.11,<5; python_version < \"3.11\""]
+  keywords = ["pulumi", "adaptive", "access-management", "security", "category/infrastructure", "kind/native"]
+  readme = "README.md"
+  requires-python = ">=3.9"
+  version = "0.1.0"
+  [project.license]
+    text = "Apache-2.0"
+  [project.urls]
+    Homepage = "https://adaptive.live"
+    Repository = "https://github.com/adaptive-scale/pulumi-adaptive"
+
+[build-system]
+  requires = ["setuptools>=61.0"]
+  build-backend = "setuptools.build_meta"
+
+[tool]
+  [tool.setuptools]
+    [tool.setuptools.package-data]
+      pulumi_adaptive = ["py.typed", "pulumi-plugin.json"]
