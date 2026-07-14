@@ -72,3 +72,10 @@ func (c *Client) ListTeams() ([]Team, error) {
 	var r []Team
 	return r, c.get("/api/v3/client/teams/list", &r)
 }
+
+// ListTeamEndpoints returns the endpoints associated with a team. The route has
+// a trailing slash, matching the backend route constant.
+func (c *Client) ListTeamEndpoints(teamID string) ([]TeamEndpoint, error) {
+	var r []TeamEndpoint
+	return r, c.get("/api/v3/client/team/"+teamID+"/endpoint/list/", &r)
+}
