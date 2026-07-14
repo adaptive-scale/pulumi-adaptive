@@ -31,3 +31,5 @@ examples/nodejs/package-lock.json
 examples/python/venv/
 __pycache__/
 *.pyc
+
+.idea
