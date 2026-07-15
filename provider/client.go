@@ -234,14 +234,42 @@ func (c *Client) UpdateSession(ctx context.Context, sessionID string, req Create
 	return &out, nil
 }
 
+// DeleteSession fully reaps an endpoint's session so the resource it points at
+// can be deleted afterwards. This is a synchronous two-step sequence:
+//
+//  1. POST /session/delete/:id terminates the session (status -> terminated). On
+//     its own this does NOT remove the sessions row — a terminated row has no
+//     delete_at and is never picked up by the deferred reaper, so it (and its
+//     integration_id association) would linger indefinitely and keep the parent
+//     resource undeletable.
+//  2. POST /session/forcedelete/:id hard-deletes the row and its child rows in a
+//     single committed transaction. Its precondition is the terminal status that
+//     step 1 establishes.
+//
+// Once step 2 returns, the row is gone (single primary DB, read-after-write
+// consistent), so a following DeleteResource passes the "no associated endpoint"
+// guard without waiting on the 7-day deferred-deletion cool-off.
 func (c *Client) DeleteSession(ctx context.Context, sessionID string) error {
+	// Step 1: terminate (precondition for force delete).
 	resp, err := c.do(ctx, mustReq("POST", fmt.Sprintf("%s/delete/%s", c.sessionAPI(), sessionID), nil))
+	if err != nil {
+		return err
+	}
+	if resp.StatusCode != http.StatusOK {
+		msg := readBody(resp)
+		resp.Body.Close()
+		return fmt.Errorf("error terminating session %s: %s", sessionID, msg)
+	}
+	resp.Body.Close()
+
+	// Step 2: force delete (synchronously removes the row + resource association).
+	resp, err = c.do(ctx, mustReq("POST", fmt.Sprintf("%s/forcedelete/%s", c.sessionAPI(), sessionID), nil))
 	if err != nil {
 		return err
 	}
 	defer resp.Body.Close()
 	if resp.StatusCode != http.StatusOK {
-		return fmt.Errorf("error deleting session %s", sessionID)
+		return fmt.Errorf("error force-deleting session %s: %s", sessionID, readBody(resp))
 	}
 	return nil
 }

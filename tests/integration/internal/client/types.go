@@ -47,3 +47,11 @@ type Team struct {
 	ID   string `json:"id"`
 	Name string `json:"name"`
 }
+
+// TeamEndpoint mirrors GET /api/v3/client/team/:teamID/endpoint/list/ items.
+// The backend model (model.TeamEndpoint) carries no JSON tags, so the keys are
+// the capitalized Go field names. EndpointID is the endpoint's session id.
+type TeamEndpoint struct {
+	TeamID     string `json:"TeamID"`
+	EndpointID string `json:"EndpointID"`
+}
