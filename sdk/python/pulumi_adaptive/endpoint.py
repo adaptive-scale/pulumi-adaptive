@@ -24,6 +24,7 @@ class EndpointArgs:
                  authorization: Optional[pulumi.Input[_builtins.str]] = None,
                  cluster: Optional[pulumi.Input[_builtins.str]] = None,
                  cpu: Optional[pulumi.Input[_builtins.str]] = None,
+                 disable_output_capture: Optional[pulumi.Input[_builtins.bool]] = None,
                  groups: Optional[pulumi.Input[Sequence[pulumi.Input[_builtins.str]]]] = None,
                  idle_timeout: Optional[pulumi.Input[_builtins.str]] = None,
                  is_jit_enabled: Optional[pulumi.Input[_builtins.bool]] = None,
@@ -41,6 +42,7 @@ class EndpointArgs:
         :param pulumi.Input[_builtins.str] name: The name of the endpoint to create.
         :param pulumi.Input[_builtins.str] resource: The resource (by name) this endpoint grants access to.
         :param pulumi.Input[_builtins.str] authorization: The authorization (by name) to apply to this endpoint.
+        :param pulumi.Input[_builtins.bool] disable_output_capture: Whether to stop retaining terminal output for sessions on this endpoint. Commands are still audited; the recorded output is purged and session replay shows a notice instead. The workspace-level setting is OR'd with this, so leaving it false does not re-enable capture for a workspace that has turned it off.
         :param pulumi.Input[_builtins.bool] is_jit_enabled: Whether Just-In-Time access approval is enabled.
         :param pulumi.Input[Sequence[pulumi.Input[_builtins.str]]] jit_approvers: Emails of users who can approve Just-In-Time access requests.
         :param pulumi.Input[_builtins.bool] script_only_access: Whether the endpoint is only accessible via script.
@@ -55,6 +57,8 @@ class EndpointArgs:
             pulumi.set(__self__, "cluster", cluster)
         if cpu is not None:
             pulumi.set(__self__, "cpu", cpu)
+        if disable_output_capture is not None:
+            pulumi.set(__self__, "disable_output_capture", disable_output_capture)
         if groups is not None:
             pulumi.set(__self__, "groups", groups)
         if idle_timeout is not None:
@@ -133,6 +137,18 @@ class EndpointArgs:
     @cpu.setter
     def cpu(self, value: Optional[pulumi.Input[_builtins.str]]):
         pulumi.set(self, "cpu", value)
+
+    @_builtins.property
+    @pulumi.getter(name="disableOutputCapture")
+    def disable_output_capture(self) -> Optional[pulumi.Input[_builtins.bool]]:
+        """
+        Whether to stop retaining terminal output for sessions on this endpoint. Commands are still audited; the recorded output is purged and session replay shows a notice instead. The workspace-level setting is OR'd with this, so leaving it false does not re-enable capture for a workspace that has turned it off.
+        """
+        return pulumi.get(self, "disable_output_capture")
+
+    @disable_output_capture.setter
+    def disable_output_capture(self, value: Optional[pulumi.Input[_builtins.bool]]):
+        pulumi.set(self, "disable_output_capture", value)
 
     @_builtins.property
     @pulumi.getter
@@ -258,6 +274,7 @@ class Endpoint(pulumi.CustomResource):
                  authorization: Optional[pulumi.Input[_builtins.str]] = None,
                  cluster: Optional[pulumi.Input[_builtins.str]] = None,
                  cpu: Optional[pulumi.Input[_builtins.str]] = None,
+                 disable_output_capture: Optional[pulumi.Input[_builtins.bool]] = None,
                  groups: Optional[pulumi.Input[Sequence[pulumi.Input[_builtins.str]]]] = None,
                  idle_timeout: Optional[pulumi.Input[_builtins.str]] = None,
                  is_jit_enabled: Optional[pulumi.Input[_builtins.bool]] = None,
@@ -278,6 +295,7 @@ class Endpoint(pulumi.CustomResource):
         :param str resource_name: The name of the resource.
         :param pulumi.ResourceOptions opts: Options for the resource.
         :param pulumi.Input[_builtins.str] authorization: The authorization (by name) to apply to this endpoint.
+        :param pulumi.Input[_builtins.bool] disable_output_capture: Whether to stop retaining terminal output for sessions on this endpoint. Commands are still audited; the recorded output is purged and session replay shows a notice instead. The workspace-level setting is OR'd with this, so leaving it false does not re-enable capture for a workspace that has turned it off.
         :param pulumi.Input[_builtins.bool] is_jit_enabled: Whether Just-In-Time access approval is enabled.
         :param pulumi.Input[Sequence[pulumi.Input[_builtins.str]]] jit_approvers: Emails of users who can approve Just-In-Time access requests.
         :param pulumi.Input[_builtins.str] name: The name of the endpoint to create.
@@ -313,6 +331,7 @@ class Endpoint(pulumi.CustomResource):
                  authorization: Optional[pulumi.Input[_builtins.str]] = None,
                  cluster: Optional[pulumi.Input[_builtins.str]] = None,
                  cpu: Optional[pulumi.Input[_builtins.str]] = None,
+                 disable_output_capture: Optional[pulumi.Input[_builtins.bool]] = None,
                  groups: Optional[pulumi.Input[Sequence[pulumi.Input[_builtins.str]]]] = None,
                  idle_timeout: Optional[pulumi.Input[_builtins.str]] = None,
                  is_jit_enabled: Optional[pulumi.Input[_builtins.bool]] = None,
@@ -338,6 +357,7 @@ class Endpoint(pulumi.CustomResource):
             __props__.__dict__["authorization"] = authorization
             __props__.__dict__["cluster"] = cluster
             __props__.__dict__["cpu"] = cpu
+            __props__.__dict__["disable_output_capture"] = disable_output_capture
             __props__.__dict__["groups"] = groups
             __props__.__dict__["idle_timeout"] = idle_timeout
             __props__.__dict__["is_jit_enabled"] = is_jit_enabled
@@ -382,6 +402,7 @@ class Endpoint(pulumi.CustomResource):
         __props__.__dict__["authorization"] = None
         __props__.__dict__["cluster"] = None
         __props__.__dict__["cpu"] = None
+        __props__.__dict__["disable_output_capture"] = None
         __props__.__dict__["groups"] = None
         __props__.__dict__["idle_timeout"] = None
         __props__.__dict__["is_jit_enabled"] = None
@@ -414,6 +435,14 @@ class Endpoint(pulumi.CustomResource):
     @pulumi.getter
     def cpu(self) -> pulumi.Output[Optional[_builtins.str]]:
         return pulumi.get(self, "cpu")
+
+    @_builtins.property
+    @pulumi.getter(name="disableOutputCapture")
+    def disable_output_capture(self) -> pulumi.Output[Optional[_builtins.bool]]:
+        """
+        Whether to stop retaining terminal output for sessions on this endpoint. Commands are still audited; the recorded output is purged and session replay shows a notice instead. The workspace-level setting is OR'd with this, so leaving it false does not re-enable capture for a workspace that has turned it off.
+        """
+        return pulumi.get(self, "disable_output_capture")
 
     @_builtins.property
     @pulumi.getter

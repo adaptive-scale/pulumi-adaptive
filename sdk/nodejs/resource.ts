@@ -43,8 +43,28 @@ export class Resource extends pulumi.CustomResource {
     declare public readonly applicationId: pulumi.Output<string | undefined>;
     declare public readonly applicationName: pulumi.Output<string | undefined>;
     declare public readonly arn: pulumi.Output<string | undefined>;
+    /**
+     * Postgres only. Static AWS access key id used to mint RDS IAM tokens. Requires useIrsa = false.
+     */
+    declare public readonly awsAccessKeyId: pulumi.Output<string | undefined>;
     declare public readonly awsArn: pulumi.Output<string | undefined>;
+    /**
+     * Postgres only. The AWS region used to mint RDS IAM tokens. Leave empty to auto-detect from an *.rds.amazonaws.com hostname.
+     */
+    declare public readonly awsRegion: pulumi.Output<string | undefined>;
     declare public readonly awsRegionName: pulumi.Output<string | undefined>;
+    /**
+     * Postgres only. An IAM role to assume when minting RDS IAM tokens. With IRSA it overrides the service account's eks.amazonaws.com/role-arn annotation.
+     */
+    declare public readonly awsRoleArn: pulumi.Output<string | undefined>;
+    /**
+     * Postgres only. Static AWS secret access key used to mint RDS IAM tokens. Requires useIrsa = false.
+     */
+    declare public readonly awsSecretAccessKey: pulumi.Output<string | undefined>;
+    /**
+     * Postgres only. Name of a Kubernetes ServiceAccount in the session cluster annotated with eks.amazonaws.com/role-arn; the platform mints RDS IAM tokens on its behalf. Requires useIrsa = true.
+     */
+    declare public readonly awsServiceAccount: pulumi.Output<string | undefined>;
     declare public readonly clientId: pulumi.Output<string | undefined>;
     declare public readonly clientSecret: pulumi.Output<string | undefined>;
     declare public readonly clientcert: pulumi.Output<string | undefined>;
@@ -114,7 +134,15 @@ export class Resource extends pulumi.CustomResource {
     declare public readonly uri: pulumi.Output<string | undefined>;
     declare public readonly url: pulumi.Output<string | undefined>;
     declare public readonly urls: pulumi.Output<string | undefined>;
+    /**
+     * Postgres only. Mint RDS IAM tokens with awsServiceAccount, or with the platform's own IRSA / instance-profile identity when it is empty. Set to false to use awsAccessKeyId / awsSecretAccessKey instead. Leave unset to infer it from whether static keys were given.
+     */
+    declare public readonly useIrsa: pulumi.Output<boolean | undefined>;
     declare public readonly useProxy: pulumi.Output<boolean | undefined>;
+    /**
+     * Postgres only. Authenticate with short-lived AWS RDS IAM auth tokens instead of a stored password. The database user must be granted rds_iam, the RDS instance must have IAM authentication enabled, and sslMode cannot be "disable".
+     */
+    declare public readonly useRdsIam: pulumi.Output<boolean | undefined>;
     declare public readonly useServiceAccount: pulumi.Output<boolean | undefined>;
     declare public readonly useTenant: pulumi.Output<boolean | undefined>;
     declare public readonly username: pulumi.Output<string | undefined>;
@@ -152,8 +180,13 @@ export class Resource extends pulumi.CustomResource {
             resourceInputs["applicationId"] = args?.applicationId;
             resourceInputs["applicationName"] = args?.applicationName;
             resourceInputs["arn"] = args?.arn;
+            resourceInputs["awsAccessKeyId"] = args?.awsAccessKeyId;
             resourceInputs["awsArn"] = args?.awsArn;
+            resourceInputs["awsRegion"] = args?.awsRegion;
             resourceInputs["awsRegionName"] = args?.awsRegionName;
+            resourceInputs["awsRoleArn"] = args?.awsRoleArn;
+            resourceInputs["awsSecretAccessKey"] = args?.awsSecretAccessKey;
+            resourceInputs["awsServiceAccount"] = args?.awsServiceAccount;
             resourceInputs["clientId"] = args?.clientId;
             resourceInputs["clientSecret"] = args?.clientSecret;
             resourceInputs["clientcert"] = args?.clientcert;
@@ -211,7 +244,9 @@ export class Resource extends pulumi.CustomResource {
             resourceInputs["uri"] = args?.uri;
             resourceInputs["url"] = args?.url;
             resourceInputs["urls"] = args?.urls;
+            resourceInputs["useIrsa"] = args?.useIrsa;
             resourceInputs["useProxy"] = args?.useProxy;
+            resourceInputs["useRdsIam"] = args?.useRdsIam;
             resourceInputs["useServiceAccount"] = args?.useServiceAccount;
             resourceInputs["useTenant"] = args?.useTenant;
             resourceInputs["username"] = args?.username;
@@ -232,8 +267,13 @@ export class Resource extends pulumi.CustomResource {
             resourceInputs["applicationId"] = undefined /*out*/;
             resourceInputs["applicationName"] = undefined /*out*/;
             resourceInputs["arn"] = undefined /*out*/;
+            resourceInputs["awsAccessKeyId"] = undefined /*out*/;
             resourceInputs["awsArn"] = undefined /*out*/;
+            resourceInputs["awsRegion"] = undefined /*out*/;
             resourceInputs["awsRegionName"] = undefined /*out*/;
+            resourceInputs["awsRoleArn"] = undefined /*out*/;
+            resourceInputs["awsSecretAccessKey"] = undefined /*out*/;
+            resourceInputs["awsServiceAccount"] = undefined /*out*/;
             resourceInputs["clientId"] = undefined /*out*/;
             resourceInputs["clientSecret"] = undefined /*out*/;
             resourceInputs["clientcert"] = undefined /*out*/;
@@ -291,7 +331,9 @@ export class Resource extends pulumi.CustomResource {
             resourceInputs["uri"] = undefined /*out*/;
             resourceInputs["url"] = undefined /*out*/;
             resourceInputs["urls"] = undefined /*out*/;
+            resourceInputs["useIrsa"] = undefined /*out*/;
             resourceInputs["useProxy"] = undefined /*out*/;
+            resourceInputs["useRdsIam"] = undefined /*out*/;
             resourceInputs["useServiceAccount"] = undefined /*out*/;
             resourceInputs["useTenant"] = undefined /*out*/;
             resourceInputs["username"] = undefined /*out*/;
@@ -321,8 +363,28 @@ export interface ResourceArgs {
     applicationId?: pulumi.Input<string>;
     applicationName?: pulumi.Input<string>;
     arn?: pulumi.Input<string>;
+    /**
+     * Postgres only. Static AWS access key id used to mint RDS IAM tokens. Requires useIrsa = false.
+     */
+    awsAccessKeyId?: pulumi.Input<string>;
     awsArn?: pulumi.Input<string>;
+    /**
+     * Postgres only. The AWS region used to mint RDS IAM tokens. Leave empty to auto-detect from an *.rds.amazonaws.com hostname.
+     */
+    awsRegion?: pulumi.Input<string>;
     awsRegionName?: pulumi.Input<string>;
+    /**
+     * Postgres only. An IAM role to assume when minting RDS IAM tokens. With IRSA it overrides the service account's eks.amazonaws.com/role-arn annotation.
+     */
+    awsRoleArn?: pulumi.Input<string>;
+    /**
+     * Postgres only. Static AWS secret access key used to mint RDS IAM tokens. Requires useIrsa = false.
+     */
+    awsSecretAccessKey?: pulumi.Input<string>;
+    /**
+     * Postgres only. Name of a Kubernetes ServiceAccount in the session cluster annotated with eks.amazonaws.com/role-arn; the platform mints RDS IAM tokens on its behalf. Requires useIrsa = true.
+     */
+    awsServiceAccount?: pulumi.Input<string>;
     clientId?: pulumi.Input<string>;
     clientSecret?: pulumi.Input<string>;
     clientcert?: pulumi.Input<string>;
@@ -392,7 +454,15 @@ export interface ResourceArgs {
     uri?: pulumi.Input<string>;
     url?: pulumi.Input<string>;
     urls?: pulumi.Input<string>;
+    /**
+     * Postgres only. Mint RDS IAM tokens with awsServiceAccount, or with the platform's own IRSA / instance-profile identity when it is empty. Set to false to use awsAccessKeyId / awsSecretAccessKey instead. Leave unset to infer it from whether static keys were given.
+     */
+    useIrsa?: pulumi.Input<boolean>;
     useProxy?: pulumi.Input<boolean>;
+    /**
+     * Postgres only. Authenticate with short-lived AWS RDS IAM auth tokens instead of a stored password. The database user must be granted rds_iam, the RDS instance must have IAM authentication enabled, and sslMode cannot be "disable".
+     */
+    useRdsIam?: pulumi.Input<boolean>;
     useServiceAccount?: pulumi.Input<boolean>;
     useTenant?: pulumi.Input<boolean>;
     username?: pulumi.Input<string>;

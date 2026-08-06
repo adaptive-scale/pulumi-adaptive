@@ -144,3 +144,34 @@ return Deployment.RunAsync(() =>
 {{% /choosable %}}
 
 {{< /chooser >}}
+
+## Postgres with AWS RDS IAM authentication
+
+Set `useRdsIam` to authenticate with short-lived AWS RDS IAM auth tokens instead
+of a stored password, so no `password` is needed. The database user must have
+been granted `rds_iam`, the RDS instance must have IAM authentication enabled,
+and `sslMode` cannot be `disable`.
+
+`useIrsa` selects the identity that mints the tokens. With it on, tokens are
+minted through `awsServiceAccount` — a Kubernetes ServiceAccount in the session
+cluster annotated with `eks.amazonaws.com/role-arn` — or, when that is empty,
+through the platform's own IRSA role or instance profile. With it off,
+`awsAccessKeyId` / `awsSecretAccessKey` are used instead. Leaving `useIrsa`
+unset infers it from whether static keys were given.
+
+`awsRegion` is only needed when the region cannot be derived from an
+`*.rds.amazonaws.com` hostname, and `awsRoleArn` is an optional role to assume.
+
+```typescript
+const rdsDb = new adaptive.Resource("rds-db", {
+    name: "production-rds",
+    type: "postgres",
+    host: "mydb.abc123.us-east-1.rds.amazonaws.com",
+    port: "5432",
+    username: "iam_user",
+    sslMode: "require",
+    useRdsIam: true,
+    useIrsa: true,
+    awsServiceAccount: "adaptive-rds-access",
+});
+```

@@ -22,6 +22,20 @@ db = adaptive.Resource("my-db",
     password="not-a-real-password",
     ssl_mode="require")
 
+# The same thing on RDS, authenticating with short-lived IAM auth tokens minted
+# through a ServiceAccount annotated with eks.amazonaws.com/role-arn, so there
+# is no password to store or rotate.
+rds_db = adaptive.Resource("my-rds-db",
+    name="playground-rds-postgres",
+    type="postgres",
+    host="mydb.abc123.us-east-1.rds.amazonaws.com",
+    port="5432",
+    username="iam_user",
+    ssl_mode="require",
+    use_rds_iam=True,
+    use_irsa=True,
+    aws_service_account="adaptive-rds-access")
+
 # A time-limited access endpoint. Referencing db.name makes Pulumi create the
 # resource before the endpoint (the dependency graph).
 endpoint = adaptive.Endpoint("my-db-access",

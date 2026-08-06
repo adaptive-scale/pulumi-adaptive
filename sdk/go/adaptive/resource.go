@@ -15,20 +15,30 @@ import (
 type Resource struct {
 	pulumi.CustomResourceState
 
-	AccessKeyId       pulumi.StringPtrOutput `pulumi:"accessKeyId"`
-	Annotations       pulumi.StringPtrOutput `pulumi:"annotations"`
-	ApiClientId       pulumi.StringPtrOutput `pulumi:"apiClientId"`
-	ApiClientSecret   pulumi.StringPtrOutput `pulumi:"apiClientSecret"`
-	ApiKey            pulumi.StringPtrOutput `pulumi:"apiKey"`
-	ApiServer         pulumi.StringPtrOutput `pulumi:"apiServer"`
-	ApiToken          pulumi.StringPtrOutput `pulumi:"apiToken"`
-	AppId             pulumi.StringPtrOutput `pulumi:"appId"`
-	AppKey            pulumi.StringPtrOutput `pulumi:"appKey"`
-	ApplicationId     pulumi.StringPtrOutput `pulumi:"applicationId"`
-	ApplicationName   pulumi.StringPtrOutput `pulumi:"applicationName"`
-	Arn               pulumi.StringPtrOutput `pulumi:"arn"`
-	AwsArn            pulumi.StringPtrOutput `pulumi:"awsArn"`
-	AwsRegionName     pulumi.StringPtrOutput `pulumi:"awsRegionName"`
+	AccessKeyId     pulumi.StringPtrOutput `pulumi:"accessKeyId"`
+	Annotations     pulumi.StringPtrOutput `pulumi:"annotations"`
+	ApiClientId     pulumi.StringPtrOutput `pulumi:"apiClientId"`
+	ApiClientSecret pulumi.StringPtrOutput `pulumi:"apiClientSecret"`
+	ApiKey          pulumi.StringPtrOutput `pulumi:"apiKey"`
+	ApiServer       pulumi.StringPtrOutput `pulumi:"apiServer"`
+	ApiToken        pulumi.StringPtrOutput `pulumi:"apiToken"`
+	AppId           pulumi.StringPtrOutput `pulumi:"appId"`
+	AppKey          pulumi.StringPtrOutput `pulumi:"appKey"`
+	ApplicationId   pulumi.StringPtrOutput `pulumi:"applicationId"`
+	ApplicationName pulumi.StringPtrOutput `pulumi:"applicationName"`
+	Arn             pulumi.StringPtrOutput `pulumi:"arn"`
+	// Postgres only. Static AWS access key id used to mint RDS IAM tokens. Requires useIrsa = false.
+	AwsAccessKeyId pulumi.StringPtrOutput `pulumi:"awsAccessKeyId"`
+	AwsArn         pulumi.StringPtrOutput `pulumi:"awsArn"`
+	// Postgres only. The AWS region used to mint RDS IAM tokens. Leave empty to auto-detect from an *.rds.amazonaws.com hostname.
+	AwsRegion     pulumi.StringPtrOutput `pulumi:"awsRegion"`
+	AwsRegionName pulumi.StringPtrOutput `pulumi:"awsRegionName"`
+	// Postgres only. An IAM role to assume when minting RDS IAM tokens. With IRSA it overrides the service account's eks.amazonaws.com/role-arn annotation.
+	AwsRoleArn pulumi.StringPtrOutput `pulumi:"awsRoleArn"`
+	// Postgres only. Static AWS secret access key used to mint RDS IAM tokens. Requires useIrsa = false.
+	AwsSecretAccessKey pulumi.StringPtrOutput `pulumi:"awsSecretAccessKey"`
+	// Postgres only. Name of a Kubernetes ServiceAccount in the session cluster annotated with eks.amazonaws.com/role-arn; the platform mints RDS IAM tokens on its behalf. Requires useIrsa = true.
+	AwsServiceAccount pulumi.StringPtrOutput `pulumi:"awsServiceAccount"`
 	ClientId          pulumi.StringPtrOutput `pulumi:"clientId"`
 	ClientSecret      pulumi.StringPtrOutput `pulumi:"clientSecret"`
 	Clientcert        pulumi.StringPtrOutput `pulumi:"clientcert"`
@@ -86,11 +96,15 @@ type Resource struct {
 	TokenId     pulumi.StringPtrOutput   `pulumi:"tokenId"`
 	Tolerations pulumi.StringPtrOutput   `pulumi:"tolerations"`
 	// Type of the Adaptive resource (integration), e.g. postgres, mysql, mongodb, ssh, kubernetes, aws, gcp, azure, snowflake.
-	Type              pulumi.StringOutput    `pulumi:"type"`
-	Uri               pulumi.StringPtrOutput `pulumi:"uri"`
-	Url               pulumi.StringPtrOutput `pulumi:"url"`
-	Urls              pulumi.StringPtrOutput `pulumi:"urls"`
-	UseProxy          pulumi.BoolPtrOutput   `pulumi:"useProxy"`
+	Type pulumi.StringOutput    `pulumi:"type"`
+	Uri  pulumi.StringPtrOutput `pulumi:"uri"`
+	Url  pulumi.StringPtrOutput `pulumi:"url"`
+	Urls pulumi.StringPtrOutput `pulumi:"urls"`
+	// Postgres only. Mint RDS IAM tokens with awsServiceAccount, or with the platform's own IRSA / instance-profile identity when it is empty. Set to false to use awsAccessKeyId / awsSecretAccessKey instead. Leave unset to infer it from whether static keys were given.
+	UseIrsa  pulumi.BoolPtrOutput `pulumi:"useIrsa"`
+	UseProxy pulumi.BoolPtrOutput `pulumi:"useProxy"`
+	// Postgres only. Authenticate with short-lived AWS RDS IAM auth tokens instead of a stored password. The database user must be granted rds_iam, the RDS instance must have IAM authentication enabled, and sslMode cannot be "disable".
+	UseRdsIam         pulumi.BoolPtrOutput   `pulumi:"useRdsIam"`
 	UseServiceAccount pulumi.BoolPtrOutput   `pulumi:"useServiceAccount"`
 	UseTenant         pulumi.BoolPtrOutput   `pulumi:"useTenant"`
 	Username          pulumi.StringPtrOutput `pulumi:"username"`
@@ -146,20 +160,30 @@ func (ResourceState) ElementType() reflect.Type {
 }
 
 type resourceArgs struct {
-	AccessKeyId       *string `pulumi:"accessKeyId"`
-	Annotations       *string `pulumi:"annotations"`
-	ApiClientId       *string `pulumi:"apiClientId"`
-	ApiClientSecret   *string `pulumi:"apiClientSecret"`
-	ApiKey            *string `pulumi:"apiKey"`
-	ApiServer         *string `pulumi:"apiServer"`
-	ApiToken          *string `pulumi:"apiToken"`
-	AppId             *string `pulumi:"appId"`
-	AppKey            *string `pulumi:"appKey"`
-	ApplicationId     *string `pulumi:"applicationId"`
-	ApplicationName   *string `pulumi:"applicationName"`
-	Arn               *string `pulumi:"arn"`
-	AwsArn            *string `pulumi:"awsArn"`
-	AwsRegionName     *string `pulumi:"awsRegionName"`
+	AccessKeyId     *string `pulumi:"accessKeyId"`
+	Annotations     *string `pulumi:"annotations"`
+	ApiClientId     *string `pulumi:"apiClientId"`
+	ApiClientSecret *string `pulumi:"apiClientSecret"`
+	ApiKey          *string `pulumi:"apiKey"`
+	ApiServer       *string `pulumi:"apiServer"`
+	ApiToken        *string `pulumi:"apiToken"`
+	AppId           *string `pulumi:"appId"`
+	AppKey          *string `pulumi:"appKey"`
+	ApplicationId   *string `pulumi:"applicationId"`
+	ApplicationName *string `pulumi:"applicationName"`
+	Arn             *string `pulumi:"arn"`
+	// Postgres only. Static AWS access key id used to mint RDS IAM tokens. Requires useIrsa = false.
+	AwsAccessKeyId *string `pulumi:"awsAccessKeyId"`
+	AwsArn         *string `pulumi:"awsArn"`
+	// Postgres only. The AWS region used to mint RDS IAM tokens. Leave empty to auto-detect from an *.rds.amazonaws.com hostname.
+	AwsRegion     *string `pulumi:"awsRegion"`
+	AwsRegionName *string `pulumi:"awsRegionName"`
+	// Postgres only. An IAM role to assume when minting RDS IAM tokens. With IRSA it overrides the service account's eks.amazonaws.com/role-arn annotation.
+	AwsRoleArn *string `pulumi:"awsRoleArn"`
+	// Postgres only. Static AWS secret access key used to mint RDS IAM tokens. Requires useIrsa = false.
+	AwsSecretAccessKey *string `pulumi:"awsSecretAccessKey"`
+	// Postgres only. Name of a Kubernetes ServiceAccount in the session cluster annotated with eks.amazonaws.com/role-arn; the platform mints RDS IAM tokens on its behalf. Requires useIrsa = true.
+	AwsServiceAccount *string `pulumi:"awsServiceAccount"`
 	ClientId          *string `pulumi:"clientId"`
 	ClientSecret      *string `pulumi:"clientSecret"`
 	Clientcert        *string `pulumi:"clientcert"`
@@ -217,11 +241,15 @@ type resourceArgs struct {
 	TokenId     *string  `pulumi:"tokenId"`
 	Tolerations *string  `pulumi:"tolerations"`
 	// Type of the Adaptive resource (integration), e.g. postgres, mysql, mongodb, ssh, kubernetes, aws, gcp, azure, snowflake.
-	Type              string  `pulumi:"type"`
-	Uri               *string `pulumi:"uri"`
-	Url               *string `pulumi:"url"`
-	Urls              *string `pulumi:"urls"`
-	UseProxy          *bool   `pulumi:"useProxy"`
+	Type string  `pulumi:"type"`
+	Uri  *string `pulumi:"uri"`
+	Url  *string `pulumi:"url"`
+	Urls *string `pulumi:"urls"`
+	// Postgres only. Mint RDS IAM tokens with awsServiceAccount, or with the platform's own IRSA / instance-profile identity when it is empty. Set to false to use awsAccessKeyId / awsSecretAccessKey instead. Leave unset to infer it from whether static keys were given.
+	UseIrsa  *bool `pulumi:"useIrsa"`
+	UseProxy *bool `pulumi:"useProxy"`
+	// Postgres only. Authenticate with short-lived AWS RDS IAM auth tokens instead of a stored password. The database user must be granted rds_iam, the RDS instance must have IAM authentication enabled, and sslMode cannot be "disable".
+	UseRdsIam         *bool   `pulumi:"useRdsIam"`
 	UseServiceAccount *bool   `pulumi:"useServiceAccount"`
 	UseTenant         *bool   `pulumi:"useTenant"`
 	Username          *string `pulumi:"username"`
@@ -233,20 +261,30 @@ type resourceArgs struct {
 
 // The set of arguments for constructing a Resource resource.
 type ResourceArgs struct {
-	AccessKeyId       pulumi.StringPtrInput
-	Annotations       pulumi.StringPtrInput
-	ApiClientId       pulumi.StringPtrInput
-	ApiClientSecret   pulumi.StringPtrInput
-	ApiKey            pulumi.StringPtrInput
-	ApiServer         pulumi.StringPtrInput
-	ApiToken          pulumi.StringPtrInput
-	AppId             pulumi.StringPtrInput
-	AppKey            pulumi.StringPtrInput
-	ApplicationId     pulumi.StringPtrInput
-	ApplicationName   pulumi.StringPtrInput
-	Arn               pulumi.StringPtrInput
-	AwsArn            pulumi.StringPtrInput
-	AwsRegionName     pulumi.StringPtrInput
+	AccessKeyId     pulumi.StringPtrInput
+	Annotations     pulumi.StringPtrInput
+	ApiClientId     pulumi.StringPtrInput
+	ApiClientSecret pulumi.StringPtrInput
+	ApiKey          pulumi.StringPtrInput
+	ApiServer       pulumi.StringPtrInput
+	ApiToken        pulumi.StringPtrInput
+	AppId           pulumi.StringPtrInput
+	AppKey          pulumi.StringPtrInput
+	ApplicationId   pulumi.StringPtrInput
+	ApplicationName pulumi.StringPtrInput
+	Arn             pulumi.StringPtrInput
+	// Postgres only. Static AWS access key id used to mint RDS IAM tokens. Requires useIrsa = false.
+	AwsAccessKeyId pulumi.StringPtrInput
+	AwsArn         pulumi.StringPtrInput
+	// Postgres only. The AWS region used to mint RDS IAM tokens. Leave empty to auto-detect from an *.rds.amazonaws.com hostname.
+	AwsRegion     pulumi.StringPtrInput
+	AwsRegionName pulumi.StringPtrInput
+	// Postgres only. An IAM role to assume when minting RDS IAM tokens. With IRSA it overrides the service account's eks.amazonaws.com/role-arn annotation.
+	AwsRoleArn pulumi.StringPtrInput
+	// Postgres only. Static AWS secret access key used to mint RDS IAM tokens. Requires useIrsa = false.
+	AwsSecretAccessKey pulumi.StringPtrInput
+	// Postgres only. Name of a Kubernetes ServiceAccount in the session cluster annotated with eks.amazonaws.com/role-arn; the platform mints RDS IAM tokens on its behalf. Requires useIrsa = true.
+	AwsServiceAccount pulumi.StringPtrInput
 	ClientId          pulumi.StringPtrInput
 	ClientSecret      pulumi.StringPtrInput
 	Clientcert        pulumi.StringPtrInput
@@ -304,11 +342,15 @@ type ResourceArgs struct {
 	TokenId     pulumi.StringPtrInput
 	Tolerations pulumi.StringPtrInput
 	// Type of the Adaptive resource (integration), e.g. postgres, mysql, mongodb, ssh, kubernetes, aws, gcp, azure, snowflake.
-	Type              pulumi.StringInput
-	Uri               pulumi.StringPtrInput
-	Url               pulumi.StringPtrInput
-	Urls              pulumi.StringPtrInput
-	UseProxy          pulumi.BoolPtrInput
+	Type pulumi.StringInput
+	Uri  pulumi.StringPtrInput
+	Url  pulumi.StringPtrInput
+	Urls pulumi.StringPtrInput
+	// Postgres only. Mint RDS IAM tokens with awsServiceAccount, or with the platform's own IRSA / instance-profile identity when it is empty. Set to false to use awsAccessKeyId / awsSecretAccessKey instead. Leave unset to infer it from whether static keys were given.
+	UseIrsa  pulumi.BoolPtrInput
+	UseProxy pulumi.BoolPtrInput
+	// Postgres only. Authenticate with short-lived AWS RDS IAM auth tokens instead of a stored password. The database user must be granted rds_iam, the RDS instance must have IAM authentication enabled, and sslMode cannot be "disable".
+	UseRdsIam         pulumi.BoolPtrInput
 	UseServiceAccount pulumi.BoolPtrInput
 	UseTenant         pulumi.BoolPtrInput
 	Username          pulumi.StringPtrInput
@@ -453,12 +495,37 @@ func (o ResourceOutput) Arn() pulumi.StringPtrOutput {
 	return o.ApplyT(func(v *Resource) pulumi.StringPtrOutput { return v.Arn }).(pulumi.StringPtrOutput)
 }
 
+// Postgres only. Static AWS access key id used to mint RDS IAM tokens. Requires useIrsa = false.
+func (o ResourceOutput) AwsAccessKeyId() pulumi.StringPtrOutput {
+	return o.ApplyT(func(v *Resource) pulumi.StringPtrOutput { return v.AwsAccessKeyId }).(pulumi.StringPtrOutput)
+}
+
 func (o ResourceOutput) AwsArn() pulumi.StringPtrOutput {
 	return o.ApplyT(func(v *Resource) pulumi.StringPtrOutput { return v.AwsArn }).(pulumi.StringPtrOutput)
 }
 
+// Postgres only. The AWS region used to mint RDS IAM tokens. Leave empty to auto-detect from an *.rds.amazonaws.com hostname.
+func (o ResourceOutput) AwsRegion() pulumi.StringPtrOutput {
+	return o.ApplyT(func(v *Resource) pulumi.StringPtrOutput { return v.AwsRegion }).(pulumi.StringPtrOutput)
+}
+
 func (o ResourceOutput) AwsRegionName() pulumi.StringPtrOutput {
 	return o.ApplyT(func(v *Resource) pulumi.StringPtrOutput { return v.AwsRegionName }).(pulumi.StringPtrOutput)
+}
+
+// Postgres only. An IAM role to assume when minting RDS IAM tokens. With IRSA it overrides the service account's eks.amazonaws.com/role-arn annotation.
+func (o ResourceOutput) AwsRoleArn() pulumi.StringPtrOutput {
+	return o.ApplyT(func(v *Resource) pulumi.StringPtrOutput { return v.AwsRoleArn }).(pulumi.StringPtrOutput)
+}
+
+// Postgres only. Static AWS secret access key used to mint RDS IAM tokens. Requires useIrsa = false.
+func (o ResourceOutput) AwsSecretAccessKey() pulumi.StringPtrOutput {
+	return o.ApplyT(func(v *Resource) pulumi.StringPtrOutput { return v.AwsSecretAccessKey }).(pulumi.StringPtrOutput)
+}
+
+// Postgres only. Name of a Kubernetes ServiceAccount in the session cluster annotated with eks.amazonaws.com/role-arn; the platform mints RDS IAM tokens on its behalf. Requires useIrsa = true.
+func (o ResourceOutput) AwsServiceAccount() pulumi.StringPtrOutput {
+	return o.ApplyT(func(v *Resource) pulumi.StringPtrOutput { return v.AwsServiceAccount }).(pulumi.StringPtrOutput)
 }
 
 func (o ResourceOutput) ClientId() pulumi.StringPtrOutput {
@@ -693,8 +760,18 @@ func (o ResourceOutput) Urls() pulumi.StringPtrOutput {
 	return o.ApplyT(func(v *Resource) pulumi.StringPtrOutput { return v.Urls }).(pulumi.StringPtrOutput)
 }
 
+// Postgres only. Mint RDS IAM tokens with awsServiceAccount, or with the platform's own IRSA / instance-profile identity when it is empty. Set to false to use awsAccessKeyId / awsSecretAccessKey instead. Leave unset to infer it from whether static keys were given.
+func (o ResourceOutput) UseIrsa() pulumi.BoolPtrOutput {
+	return o.ApplyT(func(v *Resource) pulumi.BoolPtrOutput { return v.UseIrsa }).(pulumi.BoolPtrOutput)
+}
+
 func (o ResourceOutput) UseProxy() pulumi.BoolPtrOutput {
 	return o.ApplyT(func(v *Resource) pulumi.BoolPtrOutput { return v.UseProxy }).(pulumi.BoolPtrOutput)
+}
+
+// Postgres only. Authenticate with short-lived AWS RDS IAM auth tokens instead of a stored password. The database user must be granted rds_iam, the RDS instance must have IAM authentication enabled, and sslMode cannot be "disable".
+func (o ResourceOutput) UseRdsIam() pulumi.BoolPtrOutput {
+	return o.ApplyT(func(v *Resource) pulumi.BoolPtrOutput { return v.UseRdsIam }).(pulumi.BoolPtrOutput)
 }
 
 func (o ResourceOutput) UseServiceAccount() pulumi.BoolPtrOutput {

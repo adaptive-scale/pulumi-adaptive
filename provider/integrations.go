@@ -16,6 +16,13 @@ func buildIntegrationConfig(a ResourceArgs) (any, string, error) {
 	if !validIntegrationTypes[t] {
 		return nil, "", fmt.Errorf("invalid integration type %q; valid types are: %s", t, validTypeList())
 	}
+	// Only postgres reads the AWS RDS IAM block, so setting it on any other
+	// type would be silently dropped.
+	if t != "postgres" && (a.UseRDSIAM != nil || a.UseIRSA != nil || a.AWSRegion != nil ||
+		a.AWSRoleARN != nil || a.AWSAccessKeyID != nil || a.AWSSecretAccessKey != nil ||
+		a.AWSServiceAccount != nil) {
+		return nil, "", fmt.Errorf("the AWS RDS IAM fields (useRdsIam, useIrsa, awsRegion, awsRoleArn, awsAccessKeyId, awsSecretAccessKey, awsServiceAccount) are only supported by resources of type \"postgres\", not %q", t)
+	}
 
 	var cfg any
 	switch t {
@@ -40,7 +47,7 @@ func buildIntegrationConfig(a ResourceArgs) (any, string, error) {
 	case "okta":
 		cfg = oktaConfig{Version: "1.0", Name: a.Name, Domain: sv(a.Domain), ClientID: sv(a.ClientID), ClientSecret: sv(a.ClientSecret)}
 	case "postgres":
-		cfg = postgresConfig{Name: a.Name, Username: sv(a.Username), Password: sv(a.Password), DatabaseName: sv(a.DatabaseName), HostName: sv(a.Host), Port: sv(a.Port), SSLMode: sv(a.SSLMode), TLSRootCert: sv(a.TLSRootCert), TLSCertFile: sv(a.TLSCertFile), TLSKeyFile: sv(a.TLSKeyFile)}
+		cfg = withRDSIAM(postgresConfig{Name: a.Name, Username: sv(a.Username), Password: sv(a.Password), DatabaseName: sv(a.DatabaseName), HostName: sv(a.Host), Port: sv(a.Port), SSLMode: sv(a.SSLMode), TLSRootCert: sv(a.TLSRootCert), TLSCertFile: sv(a.TLSCertFile), TLSKeyFile: sv(a.TLSKeyFile)}, a)
 	case "ssh":
 		cfg = sshConfig{Version: "1.0", Name: a.Name, Username: sv(a.Username), UsePassword: sv(a.Key) == "", Password: sv(a.Key), HostName: sv(a.Host), Port: sv(a.Port), SSHKey: sv(a.Key)}
 	case "kubernetes":
@@ -231,6 +238,40 @@ type postgresConfig struct {
 	TLSRootCert  string `yaml:"rootCert"`
 	TLSCertFile  string `yaml:"crtText"`
 	TLSKeyFile   string `yaml:"keyText"`
+
+	// AWS RDS IAM authentication. Only emitted when useRdsIam is set, so a
+	// password resource marshals exactly as it did before.
+	UseRDSIAM          *bool  `yaml:"useRdsIam,omitempty"`
+	UseIRSA            *bool  `yaml:"useIrsa,omitempty"`
+	AWSRegion          string `yaml:"awsRegion,omitempty"`
+	AWSRoleARN         string `yaml:"awsRoleArn,omitempty"`
+	AWSAccessKeyID     string `yaml:"awsAccessKeyId,omitempty"`
+	AWSSecretAccessKey string `yaml:"awsSecretAccessKey,omitempty"`
+	AWSServiceAccount  string `yaml:"awsServiceAccount,omitempty"`
+}
+
+// withRDSIAM fills in the AWS RDS IAM block. It is a no-op unless useRdsIam is
+// set, and defaults useIrsa to "no static keys were given" — which is how the
+// platform infers the credential source — unless the caller says otherwise.
+func withRDSIAM(cfg postgresConfig, a ResourceArgs) postgresConfig {
+	if !bv(a.UseRDSIAM) {
+		return cfg
+	}
+
+	useRDSIAM := true
+	useIRSA := sv(a.AWSAccessKeyID) == ""
+	if a.UseIRSA != nil {
+		useIRSA = *a.UseIRSA
+	}
+
+	cfg.UseRDSIAM = &useRDSIAM
+	cfg.UseIRSA = &useIRSA
+	cfg.AWSRegion = sv(a.AWSRegion)
+	cfg.AWSRoleARN = sv(a.AWSRoleARN)
+	cfg.AWSAccessKeyID = sv(a.AWSAccessKeyID)
+	cfg.AWSSecretAccessKey = sv(a.AWSSecretAccessKey)
+	cfg.AWSServiceAccount = sv(a.AWSServiceAccount)
+	return cfg
 }
 
 type sshConfig struct {

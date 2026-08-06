@@ -1,6 +1,9 @@
 package adaptive
 
-import "testing"
+import (
+	"encoding/json"
+	"testing"
+)
 
 func TestNewClientURL(t *testing.T) {
 	cases := map[string]string{
@@ -81,5 +84,47 @@ func TestEndpointToSessionRequest(t *testing.T) {
 	}
 	if len(req.SessionUsers) != 1 || req.SessionUsers[0] != "a@x.com" {
 		t.Errorf("users = %v", req.SessionUsers)
+	}
+}
+
+func TestEndpointToSessionRequestDisableOutputCapture(t *testing.T) {
+	// The wire key must stay disable_output_capture: the platform reads that
+	// exact name, and an unset flag has to serialize as false rather than
+	// being omitted, so clearing it in a program clears it on the endpoint.
+	for _, c := range []struct {
+		name string
+		in   *bool
+		want bool
+	}{
+		{"unset defaults to false", nil, false},
+		{"explicit false", boolp(false), false},
+		{"explicit true", boolp(true), true},
+	} {
+		t.Run(c.name, func(t *testing.T) {
+			args := EndpointArgs{Name: "ep", Resource: "res", DisableOutputCapture: c.in}
+			req, err := args.toSessionRequest()
+			if err != nil {
+				t.Fatal(err)
+			}
+			if req.DisableOutputCapture != c.want {
+				t.Errorf("DisableOutputCapture = %v, want %v", req.DisableOutputCapture, c.want)
+			}
+
+			body, err := json.Marshal(req)
+			if err != nil {
+				t.Fatal(err)
+			}
+			var wire map[string]any
+			if err := json.Unmarshal(body, &wire); err != nil {
+				t.Fatal(err)
+			}
+			got, present := wire["disable_output_capture"]
+			if !present {
+				t.Fatalf("disable_output_capture missing from payload: %s", body)
+			}
+			if got != c.want {
+				t.Errorf("wire disable_output_capture = %v, want %v", got, c.want)
+			}
+		})
 	}
 }

@@ -30,7 +30,10 @@ type EndpointArgs struct {
 	Memory           *string  `pulumi:"memory,optional"`
 	CPU              *string  `pulumi:"cpu,optional"`
 	ScriptOnlyAccess *bool    `pulumi:"scriptOnlyAccess,optional"`
-	Tags             []string `pulumi:"tags,optional"`
+
+	DisableOutputCapture *bool `pulumi:"disableOutputCapture,optional"`
+
+	Tags []string `pulumi:"tags,optional"`
 }
 
 type EndpointState struct {
@@ -47,6 +50,7 @@ func (e *EndpointArgs) Annotate(a infer.Annotator) {
 	a.Describe(&e.IsJitEnabled, "Whether Just-In-Time access approval is enabled.")
 	a.Describe(&e.JitApprovers, "Emails of users who can approve Just-In-Time access requests.")
 	a.Describe(&e.ScriptOnlyAccess, "Whether the endpoint is only accessible via script.")
+	a.Describe(&e.DisableOutputCapture, "Whether to stop retaining terminal output for sessions on this endpoint. Commands are still audited; the recorded output is purged and session replay shows a notice instead. The workspace-level setting is OR'd with this, so leaving it false does not re-enable capture for a workspace that has turned it off.")
 }
 
 func getSessionType(t string) (string, bool) {
@@ -84,6 +88,8 @@ func (a EndpointArgs) toSessionRequest() (CreateSessionRequest, error) {
 		Groups:            a.Groups,
 		IdleTimeout:       sv(a.IdleTimeout),
 		ScriptOnlyAccess:  bv(a.ScriptOnlyAccess),
+
+		DisableOutputCapture: bv(a.DisableOutputCapture),
 	}, nil
 }
 

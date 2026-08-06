@@ -37,6 +37,10 @@ export class Endpoint extends pulumi.CustomResource {
     declare public readonly authorization: pulumi.Output<string | undefined>;
     declare public readonly cluster: pulumi.Output<string | undefined>;
     declare public readonly cpu: pulumi.Output<string | undefined>;
+    /**
+     * Whether to stop retaining terminal output for sessions on this endpoint. Commands are still audited; the recorded output is purged and session replay shows a notice instead. The workspace-level setting is OR'd with this, so leaving it false does not re-enable capture for a workspace that has turned it off.
+     */
+    declare public readonly disableOutputCapture: pulumi.Output<boolean | undefined>;
     declare public readonly groups: pulumi.Output<string[] | undefined>;
     declare public readonly idleTimeout: pulumi.Output<string | undefined>;
     /**
@@ -92,6 +96,7 @@ export class Endpoint extends pulumi.CustomResource {
             resourceInputs["authorization"] = args?.authorization;
             resourceInputs["cluster"] = args?.cluster;
             resourceInputs["cpu"] = args?.cpu;
+            resourceInputs["disableOutputCapture"] = args?.disableOutputCapture;
             resourceInputs["groups"] = args?.groups;
             resourceInputs["idleTimeout"] = args?.idleTimeout;
             resourceInputs["isJitEnabled"] = args?.isJitEnabled;
@@ -109,6 +114,7 @@ export class Endpoint extends pulumi.CustomResource {
             resourceInputs["authorization"] = undefined /*out*/;
             resourceInputs["cluster"] = undefined /*out*/;
             resourceInputs["cpu"] = undefined /*out*/;
+            resourceInputs["disableOutputCapture"] = undefined /*out*/;
             resourceInputs["groups"] = undefined /*out*/;
             resourceInputs["idleTimeout"] = undefined /*out*/;
             resourceInputs["isJitEnabled"] = undefined /*out*/;
@@ -138,6 +144,10 @@ export interface EndpointArgs {
     authorization?: pulumi.Input<string>;
     cluster?: pulumi.Input<string>;
     cpu?: pulumi.Input<string>;
+    /**
+     * Whether to stop retaining terminal output for sessions on this endpoint. Commands are still audited; the recorded output is purged and session replay shows a notice instead. The workspace-level setting is OR'd with this, so leaving it false does not re-enable capture for a workspace that has turned it off.
+     */
+    disableOutputCapture?: pulumi.Input<boolean>;
     groups?: pulumi.Input<pulumi.Input<string>[]>;
     idleTimeout?: pulumi.Input<string>;
     /**
