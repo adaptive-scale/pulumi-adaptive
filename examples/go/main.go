@@ -30,6 +30,24 @@ func main() {
 			return err
 		}
 
+		// The same thing on RDS, authenticating with short-lived IAM auth
+		// tokens minted through a ServiceAccount annotated with
+		// eks.amazonaws.com/role-arn, so there is no password to store.
+		_, err = adaptive.NewResource(ctx, "my-rds-db", &adaptive.ResourceArgs{
+			Name:              pulumi.String("playground-rds-postgres"),
+			Type:              pulumi.String("postgres"),
+			Host:              pulumi.String("mydb.abc123.us-east-1.rds.amazonaws.com"),
+			Port:              pulumi.String("5432"),
+			Username:          pulumi.String("iam_user"),
+			SslMode:           pulumi.String("require"),
+			UseRdsIam:         pulumi.Bool(true),
+			UseIrsa:           pulumi.Bool(true),
+			AwsServiceAccount: pulumi.String("adaptive-rds-access"),
+		})
+		if err != nil {
+			return err
+		}
+
 		// A time-limited access endpoint. Referencing db.Name makes Pulumi
 		// create the resource before the endpoint (the dependency graph).
 		endpoint, err := adaptive.NewEndpoint(ctx, "my-db-access", &adaptive.EndpointArgs{

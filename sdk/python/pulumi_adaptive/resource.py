@@ -33,8 +33,13 @@ class ResourceArgs:
                  application_id: Optional[pulumi.Input[_builtins.str]] = None,
                  application_name: Optional[pulumi.Input[_builtins.str]] = None,
                  arn: Optional[pulumi.Input[_builtins.str]] = None,
+                 aws_access_key_id: Optional[pulumi.Input[_builtins.str]] = None,
                  aws_arn: Optional[pulumi.Input[_builtins.str]] = None,
+                 aws_region: Optional[pulumi.Input[_builtins.str]] = None,
                  aws_region_name: Optional[pulumi.Input[_builtins.str]] = None,
+                 aws_role_arn: Optional[pulumi.Input[_builtins.str]] = None,
+                 aws_secret_access_key: Optional[pulumi.Input[_builtins.str]] = None,
+                 aws_service_account: Optional[pulumi.Input[_builtins.str]] = None,
                  client_id: Optional[pulumi.Input[_builtins.str]] = None,
                  client_secret: Optional[pulumi.Input[_builtins.str]] = None,
                  clientcert: Optional[pulumi.Input[_builtins.str]] = None,
@@ -90,7 +95,9 @@ class ResourceArgs:
                  uri: Optional[pulumi.Input[_builtins.str]] = None,
                  url: Optional[pulumi.Input[_builtins.str]] = None,
                  urls: Optional[pulumi.Input[_builtins.str]] = None,
+                 use_irsa: Optional[pulumi.Input[_builtins.bool]] = None,
                  use_proxy: Optional[pulumi.Input[_builtins.bool]] = None,
+                 use_rds_iam: Optional[pulumi.Input[_builtins.bool]] = None,
                  use_service_account: Optional[pulumi.Input[_builtins.bool]] = None,
                  use_tenant: Optional[pulumi.Input[_builtins.bool]] = None,
                  username: Optional[pulumi.Input[_builtins.str]] = None,
@@ -103,8 +110,15 @@ class ResourceArgs:
 
         :param pulumi.Input[_builtins.str] name: Name of the Adaptive resource.
         :param pulumi.Input[_builtins.str] type: Type of the Adaptive resource (integration), e.g. postgres, mysql, mongodb, ssh, kubernetes, aws, gcp, azure, snowflake.
+        :param pulumi.Input[_builtins.str] aws_access_key_id: Postgres only. Static AWS access key id used to mint RDS IAM tokens. Requires useIrsa = false.
+        :param pulumi.Input[_builtins.str] aws_region: Postgres only. The AWS region used to mint RDS IAM tokens. Leave empty to auto-detect from an *.rds.amazonaws.com hostname.
+        :param pulumi.Input[_builtins.str] aws_role_arn: Postgres only. An IAM role to assume when minting RDS IAM tokens. With IRSA it overrides the service account's eks.amazonaws.com/role-arn annotation.
+        :param pulumi.Input[_builtins.str] aws_secret_access_key: Postgres only. Static AWS secret access key used to mint RDS IAM tokens. Requires useIrsa = false.
+        :param pulumi.Input[_builtins.str] aws_service_account: Postgres only. Name of a Kubernetes ServiceAccount in the session cluster annotated with eks.amazonaws.com/role-arn; the platform mints RDS IAM tokens on its behalf. Requires useIrsa = true.
         :param pulumi.Input[_builtins.str] default_cluster: The default cluster the resource is deployed to.
         :param pulumi.Input[Sequence[pulumi.Input[_builtins.str]]] tags: Optional tags.
+        :param pulumi.Input[_builtins.bool] use_irsa: Postgres only. Mint RDS IAM tokens with awsServiceAccount, or with the platform's own IRSA / instance-profile identity when it is empty. Set to false to use awsAccessKeyId / awsSecretAccessKey instead. Leave unset to infer it from whether static keys were given.
+        :param pulumi.Input[_builtins.bool] use_rds_iam: Postgres only. Authenticate with short-lived AWS RDS IAM auth tokens instead of a stored password. The database user must be granted rds_iam, the RDS instance must have IAM authentication enabled, and sslMode cannot be "disable".
         """
         pulumi.set(__self__, "name", name)
         pulumi.set(__self__, "type", type)
@@ -132,10 +146,20 @@ class ResourceArgs:
             pulumi.set(__self__, "application_name", application_name)
         if arn is not None:
             pulumi.set(__self__, "arn", arn)
+        if aws_access_key_id is not None:
+            pulumi.set(__self__, "aws_access_key_id", aws_access_key_id)
         if aws_arn is not None:
             pulumi.set(__self__, "aws_arn", aws_arn)
+        if aws_region is not None:
+            pulumi.set(__self__, "aws_region", aws_region)
         if aws_region_name is not None:
             pulumi.set(__self__, "aws_region_name", aws_region_name)
+        if aws_role_arn is not None:
+            pulumi.set(__self__, "aws_role_arn", aws_role_arn)
+        if aws_secret_access_key is not None:
+            pulumi.set(__self__, "aws_secret_access_key", aws_secret_access_key)
+        if aws_service_account is not None:
+            pulumi.set(__self__, "aws_service_account", aws_service_account)
         if client_id is not None:
             pulumi.set(__self__, "client_id", client_id)
         if client_secret is not None:
@@ -246,8 +270,12 @@ class ResourceArgs:
             pulumi.set(__self__, "url", url)
         if urls is not None:
             pulumi.set(__self__, "urls", urls)
+        if use_irsa is not None:
+            pulumi.set(__self__, "use_irsa", use_irsa)
         if use_proxy is not None:
             pulumi.set(__self__, "use_proxy", use_proxy)
+        if use_rds_iam is not None:
+            pulumi.set(__self__, "use_rds_iam", use_rds_iam)
         if use_service_account is not None:
             pulumi.set(__self__, "use_service_account", use_service_account)
         if use_tenant is not None:
@@ -396,6 +424,18 @@ class ResourceArgs:
         pulumi.set(self, "arn", value)
 
     @_builtins.property
+    @pulumi.getter(name="awsAccessKeyId")
+    def aws_access_key_id(self) -> Optional[pulumi.Input[_builtins.str]]:
+        """
+        Postgres only. Static AWS access key id used to mint RDS IAM tokens. Requires useIrsa = false.
+        """
+        return pulumi.get(self, "aws_access_key_id")
+
+    @aws_access_key_id.setter
+    def aws_access_key_id(self, value: Optional[pulumi.Input[_builtins.str]]):
+        pulumi.set(self, "aws_access_key_id", value)
+
+    @_builtins.property
     @pulumi.getter(name="awsArn")
     def aws_arn(self) -> Optional[pulumi.Input[_builtins.str]]:
         return pulumi.get(self, "aws_arn")
@@ -405,6 +445,18 @@ class ResourceArgs:
         pulumi.set(self, "aws_arn", value)
 
     @_builtins.property
+    @pulumi.getter(name="awsRegion")
+    def aws_region(self) -> Optional[pulumi.Input[_builtins.str]]:
+        """
+        Postgres only. The AWS region used to mint RDS IAM tokens. Leave empty to auto-detect from an *.rds.amazonaws.com hostname.
+        """
+        return pulumi.get(self, "aws_region")
+
+    @aws_region.setter
+    def aws_region(self, value: Optional[pulumi.Input[_builtins.str]]):
+        pulumi.set(self, "aws_region", value)
+
+    @_builtins.property
     @pulumi.getter(name="awsRegionName")
     def aws_region_name(self) -> Optional[pulumi.Input[_builtins.str]]:
         return pulumi.get(self, "aws_region_name")
@@ -412,6 +464,42 @@ class ResourceArgs:
     @aws_region_name.setter
     def aws_region_name(self, value: Optional[pulumi.Input[_builtins.str]]):
         pulumi.set(self, "aws_region_name", value)
+
+    @_builtins.property
+    @pulumi.getter(name="awsRoleArn")
+    def aws_role_arn(self) -> Optional[pulumi.Input[_builtins.str]]:
+        """
+        Postgres only. An IAM role to assume when minting RDS IAM tokens. With IRSA it overrides the service account's eks.amazonaws.com/role-arn annotation.
+        """
+        return pulumi.get(self, "aws_role_arn")
+
+    @aws_role_arn.setter
+    def aws_role_arn(self, value: Optional[pulumi.Input[_builtins.str]]):
+        pulumi.set(self, "aws_role_arn", value)
+
+    @_builtins.property
+    @pulumi.getter(name="awsSecretAccessKey")
+    def aws_secret_access_key(self) -> Optional[pulumi.Input[_builtins.str]]:
+        """
+        Postgres only. Static AWS secret access key used to mint RDS IAM tokens. Requires useIrsa = false.
+        """
+        return pulumi.get(self, "aws_secret_access_key")
+
+    @aws_secret_access_key.setter
+    def aws_secret_access_key(self, value: Optional[pulumi.Input[_builtins.str]]):
+        pulumi.set(self, "aws_secret_access_key", value)
+
+    @_builtins.property
+    @pulumi.getter(name="awsServiceAccount")
+    def aws_service_account(self) -> Optional[pulumi.Input[_builtins.str]]:
+        """
+        Postgres only. Name of a Kubernetes ServiceAccount in the session cluster annotated with eks.amazonaws.com/role-arn; the platform mints RDS IAM tokens on its behalf. Requires useIrsa = true.
+        """
+        return pulumi.get(self, "aws_service_account")
+
+    @aws_service_account.setter
+    def aws_service_account(self, value: Optional[pulumi.Input[_builtins.str]]):
+        pulumi.set(self, "aws_service_account", value)
 
     @_builtins.property
     @pulumi.getter(name="clientId")
@@ -915,6 +1003,18 @@ class ResourceArgs:
         pulumi.set(self, "urls", value)
 
     @_builtins.property
+    @pulumi.getter(name="useIrsa")
+    def use_irsa(self) -> Optional[pulumi.Input[_builtins.bool]]:
+        """
+        Postgres only. Mint RDS IAM tokens with awsServiceAccount, or with the platform's own IRSA / instance-profile identity when it is empty. Set to false to use awsAccessKeyId / awsSecretAccessKey instead. Leave unset to infer it from whether static keys were given.
+        """
+        return pulumi.get(self, "use_irsa")
+
+    @use_irsa.setter
+    def use_irsa(self, value: Optional[pulumi.Input[_builtins.bool]]):
+        pulumi.set(self, "use_irsa", value)
+
+    @_builtins.property
     @pulumi.getter(name="useProxy")
     def use_proxy(self) -> Optional[pulumi.Input[_builtins.bool]]:
         return pulumi.get(self, "use_proxy")
@@ -922,6 +1022,18 @@ class ResourceArgs:
     @use_proxy.setter
     def use_proxy(self, value: Optional[pulumi.Input[_builtins.bool]]):
         pulumi.set(self, "use_proxy", value)
+
+    @_builtins.property
+    @pulumi.getter(name="useRdsIam")
+    def use_rds_iam(self) -> Optional[pulumi.Input[_builtins.bool]]:
+        """
+        Postgres only. Authenticate with short-lived AWS RDS IAM auth tokens instead of a stored password. The database user must be granted rds_iam, the RDS instance must have IAM authentication enabled, and sslMode cannot be "disable".
+        """
+        return pulumi.get(self, "use_rds_iam")
+
+    @use_rds_iam.setter
+    def use_rds_iam(self, value: Optional[pulumi.Input[_builtins.bool]]):
+        pulumi.set(self, "use_rds_iam", value)
 
     @_builtins.property
     @pulumi.getter(name="useServiceAccount")
@@ -1005,8 +1117,13 @@ class Resource(pulumi.CustomResource):
                  application_id: Optional[pulumi.Input[_builtins.str]] = None,
                  application_name: Optional[pulumi.Input[_builtins.str]] = None,
                  arn: Optional[pulumi.Input[_builtins.str]] = None,
+                 aws_access_key_id: Optional[pulumi.Input[_builtins.str]] = None,
                  aws_arn: Optional[pulumi.Input[_builtins.str]] = None,
+                 aws_region: Optional[pulumi.Input[_builtins.str]] = None,
                  aws_region_name: Optional[pulumi.Input[_builtins.str]] = None,
+                 aws_role_arn: Optional[pulumi.Input[_builtins.str]] = None,
+                 aws_secret_access_key: Optional[pulumi.Input[_builtins.str]] = None,
+                 aws_service_account: Optional[pulumi.Input[_builtins.str]] = None,
                  client_id: Optional[pulumi.Input[_builtins.str]] = None,
                  client_secret: Optional[pulumi.Input[_builtins.str]] = None,
                  clientcert: Optional[pulumi.Input[_builtins.str]] = None,
@@ -1064,7 +1181,9 @@ class Resource(pulumi.CustomResource):
                  uri: Optional[pulumi.Input[_builtins.str]] = None,
                  url: Optional[pulumi.Input[_builtins.str]] = None,
                  urls: Optional[pulumi.Input[_builtins.str]] = None,
+                 use_irsa: Optional[pulumi.Input[_builtins.bool]] = None,
                  use_proxy: Optional[pulumi.Input[_builtins.bool]] = None,
+                 use_rds_iam: Optional[pulumi.Input[_builtins.bool]] = None,
                  use_service_account: Optional[pulumi.Input[_builtins.bool]] = None,
                  use_tenant: Optional[pulumi.Input[_builtins.bool]] = None,
                  username: Optional[pulumi.Input[_builtins.str]] = None,
@@ -1078,10 +1197,17 @@ class Resource(pulumi.CustomResource):
 
         :param str resource_name: The name of the resource.
         :param pulumi.ResourceOptions opts: Options for the resource.
+        :param pulumi.Input[_builtins.str] aws_access_key_id: Postgres only. Static AWS access key id used to mint RDS IAM tokens. Requires useIrsa = false.
+        :param pulumi.Input[_builtins.str] aws_region: Postgres only. The AWS region used to mint RDS IAM tokens. Leave empty to auto-detect from an *.rds.amazonaws.com hostname.
+        :param pulumi.Input[_builtins.str] aws_role_arn: Postgres only. An IAM role to assume when minting RDS IAM tokens. With IRSA it overrides the service account's eks.amazonaws.com/role-arn annotation.
+        :param pulumi.Input[_builtins.str] aws_secret_access_key: Postgres only. Static AWS secret access key used to mint RDS IAM tokens. Requires useIrsa = false.
+        :param pulumi.Input[_builtins.str] aws_service_account: Postgres only. Name of a Kubernetes ServiceAccount in the session cluster annotated with eks.amazonaws.com/role-arn; the platform mints RDS IAM tokens on its behalf. Requires useIrsa = true.
         :param pulumi.Input[_builtins.str] default_cluster: The default cluster the resource is deployed to.
         :param pulumi.Input[_builtins.str] name: Name of the Adaptive resource.
         :param pulumi.Input[Sequence[pulumi.Input[_builtins.str]]] tags: Optional tags.
         :param pulumi.Input[_builtins.str] type: Type of the Adaptive resource (integration), e.g. postgres, mysql, mongodb, ssh, kubernetes, aws, gcp, azure, snowflake.
+        :param pulumi.Input[_builtins.bool] use_irsa: Postgres only. Mint RDS IAM tokens with awsServiceAccount, or with the platform's own IRSA / instance-profile identity when it is empty. Set to false to use awsAccessKeyId / awsSecretAccessKey instead. Leave unset to infer it from whether static keys were given.
+        :param pulumi.Input[_builtins.bool] use_rds_iam: Postgres only. Authenticate with short-lived AWS RDS IAM auth tokens instead of a stored password. The database user must be granted rds_iam, the RDS instance must have IAM authentication enabled, and sslMode cannot be "disable".
         """
         ...
     @overload
@@ -1119,8 +1245,13 @@ class Resource(pulumi.CustomResource):
                  application_id: Optional[pulumi.Input[_builtins.str]] = None,
                  application_name: Optional[pulumi.Input[_builtins.str]] = None,
                  arn: Optional[pulumi.Input[_builtins.str]] = None,
+                 aws_access_key_id: Optional[pulumi.Input[_builtins.str]] = None,
                  aws_arn: Optional[pulumi.Input[_builtins.str]] = None,
+                 aws_region: Optional[pulumi.Input[_builtins.str]] = None,
                  aws_region_name: Optional[pulumi.Input[_builtins.str]] = None,
+                 aws_role_arn: Optional[pulumi.Input[_builtins.str]] = None,
+                 aws_secret_access_key: Optional[pulumi.Input[_builtins.str]] = None,
+                 aws_service_account: Optional[pulumi.Input[_builtins.str]] = None,
                  client_id: Optional[pulumi.Input[_builtins.str]] = None,
                  client_secret: Optional[pulumi.Input[_builtins.str]] = None,
                  clientcert: Optional[pulumi.Input[_builtins.str]] = None,
@@ -1178,7 +1309,9 @@ class Resource(pulumi.CustomResource):
                  uri: Optional[pulumi.Input[_builtins.str]] = None,
                  url: Optional[pulumi.Input[_builtins.str]] = None,
                  urls: Optional[pulumi.Input[_builtins.str]] = None,
+                 use_irsa: Optional[pulumi.Input[_builtins.bool]] = None,
                  use_proxy: Optional[pulumi.Input[_builtins.bool]] = None,
+                 use_rds_iam: Optional[pulumi.Input[_builtins.bool]] = None,
                  use_service_account: Optional[pulumi.Input[_builtins.bool]] = None,
                  use_tenant: Optional[pulumi.Input[_builtins.bool]] = None,
                  username: Optional[pulumi.Input[_builtins.str]] = None,
@@ -1207,8 +1340,13 @@ class Resource(pulumi.CustomResource):
             __props__.__dict__["application_id"] = application_id
             __props__.__dict__["application_name"] = application_name
             __props__.__dict__["arn"] = arn
+            __props__.__dict__["aws_access_key_id"] = aws_access_key_id
             __props__.__dict__["aws_arn"] = aws_arn
+            __props__.__dict__["aws_region"] = aws_region
             __props__.__dict__["aws_region_name"] = aws_region_name
+            __props__.__dict__["aws_role_arn"] = aws_role_arn
+            __props__.__dict__["aws_secret_access_key"] = aws_secret_access_key
+            __props__.__dict__["aws_service_account"] = aws_service_account
             __props__.__dict__["client_id"] = client_id
             __props__.__dict__["client_secret"] = client_secret
             __props__.__dict__["clientcert"] = clientcert
@@ -1270,7 +1408,9 @@ class Resource(pulumi.CustomResource):
             __props__.__dict__["uri"] = uri
             __props__.__dict__["url"] = url
             __props__.__dict__["urls"] = urls
+            __props__.__dict__["use_irsa"] = use_irsa
             __props__.__dict__["use_proxy"] = use_proxy
+            __props__.__dict__["use_rds_iam"] = use_rds_iam
             __props__.__dict__["use_service_account"] = use_service_account
             __props__.__dict__["use_tenant"] = use_tenant
             __props__.__dict__["username"] = username
@@ -1312,8 +1452,13 @@ class Resource(pulumi.CustomResource):
         __props__.__dict__["application_id"] = None
         __props__.__dict__["application_name"] = None
         __props__.__dict__["arn"] = None
+        __props__.__dict__["aws_access_key_id"] = None
         __props__.__dict__["aws_arn"] = None
+        __props__.__dict__["aws_region"] = None
         __props__.__dict__["aws_region_name"] = None
+        __props__.__dict__["aws_role_arn"] = None
+        __props__.__dict__["aws_secret_access_key"] = None
+        __props__.__dict__["aws_service_account"] = None
         __props__.__dict__["client_id"] = None
         __props__.__dict__["client_secret"] = None
         __props__.__dict__["clientcert"] = None
@@ -1371,7 +1516,9 @@ class Resource(pulumi.CustomResource):
         __props__.__dict__["uri"] = None
         __props__.__dict__["url"] = None
         __props__.__dict__["urls"] = None
+        __props__.__dict__["use_irsa"] = None
         __props__.__dict__["use_proxy"] = None
+        __props__.__dict__["use_rds_iam"] = None
         __props__.__dict__["use_service_account"] = None
         __props__.__dict__["use_tenant"] = None
         __props__.__dict__["username"] = None
@@ -1442,14 +1589,54 @@ class Resource(pulumi.CustomResource):
         return pulumi.get(self, "arn")
 
     @_builtins.property
+    @pulumi.getter(name="awsAccessKeyId")
+    def aws_access_key_id(self) -> pulumi.Output[Optional[_builtins.str]]:
+        """
+        Postgres only. Static AWS access key id used to mint RDS IAM tokens. Requires useIrsa = false.
+        """
+        return pulumi.get(self, "aws_access_key_id")
+
+    @_builtins.property
     @pulumi.getter(name="awsArn")
     def aws_arn(self) -> pulumi.Output[Optional[_builtins.str]]:
         return pulumi.get(self, "aws_arn")
 
     @_builtins.property
+    @pulumi.getter(name="awsRegion")
+    def aws_region(self) -> pulumi.Output[Optional[_builtins.str]]:
+        """
+        Postgres only. The AWS region used to mint RDS IAM tokens. Leave empty to auto-detect from an *.rds.amazonaws.com hostname.
+        """
+        return pulumi.get(self, "aws_region")
+
+    @_builtins.property
     @pulumi.getter(name="awsRegionName")
     def aws_region_name(self) -> pulumi.Output[Optional[_builtins.str]]:
         return pulumi.get(self, "aws_region_name")
+
+    @_builtins.property
+    @pulumi.getter(name="awsRoleArn")
+    def aws_role_arn(self) -> pulumi.Output[Optional[_builtins.str]]:
+        """
+        Postgres only. An IAM role to assume when minting RDS IAM tokens. With IRSA it overrides the service account's eks.amazonaws.com/role-arn annotation.
+        """
+        return pulumi.get(self, "aws_role_arn")
+
+    @_builtins.property
+    @pulumi.getter(name="awsSecretAccessKey")
+    def aws_secret_access_key(self) -> pulumi.Output[Optional[_builtins.str]]:
+        """
+        Postgres only. Static AWS secret access key used to mint RDS IAM tokens. Requires useIrsa = false.
+        """
+        return pulumi.get(self, "aws_secret_access_key")
+
+    @_builtins.property
+    @pulumi.getter(name="awsServiceAccount")
+    def aws_service_account(self) -> pulumi.Output[Optional[_builtins.str]]:
+        """
+        Postgres only. Name of a Kubernetes ServiceAccount in the session cluster annotated with eks.amazonaws.com/role-arn; the platform mints RDS IAM tokens on its behalf. Requires useIrsa = true.
+        """
+        return pulumi.get(self, "aws_service_account")
 
     @_builtins.property
     @pulumi.getter(name="clientId")
@@ -1749,9 +1936,25 @@ class Resource(pulumi.CustomResource):
         return pulumi.get(self, "urls")
 
     @_builtins.property
+    @pulumi.getter(name="useIrsa")
+    def use_irsa(self) -> pulumi.Output[Optional[_builtins.bool]]:
+        """
+        Postgres only. Mint RDS IAM tokens with awsServiceAccount, or with the platform's own IRSA / instance-profile identity when it is empty. Set to false to use awsAccessKeyId / awsSecretAccessKey instead. Leave unset to infer it from whether static keys were given.
+        """
+        return pulumi.get(self, "use_irsa")
+
+    @_builtins.property
     @pulumi.getter(name="useProxy")
     def use_proxy(self) -> pulumi.Output[Optional[_builtins.bool]]:
         return pulumi.get(self, "use_proxy")
+
+    @_builtins.property
+    @pulumi.getter(name="useRdsIam")
+    def use_rds_iam(self) -> pulumi.Output[Optional[_builtins.bool]]:
+        """
+        Postgres only. Authenticate with short-lived AWS RDS IAM auth tokens instead of a stored password. The database user must be granted rds_iam, the RDS instance must have IAM authentication enabled, and sslMode cannot be "disable".
+        """
+        return pulumi.get(self, "use_rds_iam")
 
     @_builtins.property
     @pulumi.getter(name="useServiceAccount")

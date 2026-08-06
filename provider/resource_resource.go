@@ -59,6 +59,15 @@ type ResourceArgs struct {
 	AWSArn          *string `pulumi:"awsArn,optional"`
 	AWSRegionName   *string `pulumi:"awsRegionName,optional"`
 
+	// AWS RDS IAM authentication (postgres)
+	UseRDSIAM          *bool   `pulumi:"useRdsIam,optional"`
+	UseIRSA            *bool   `pulumi:"useIrsa,optional"`
+	AWSRegion          *string `pulumi:"awsRegion,optional"`
+	AWSRoleARN         *string `pulumi:"awsRoleArn,optional"`
+	AWSAccessKeyID     *string `pulumi:"awsAccessKeyId,optional"`
+	AWSSecretAccessKey *string `pulumi:"awsSecretAccessKey,optional"`
+	AWSServiceAccount  *string `pulumi:"awsServiceAccount,optional"`
+
 	// Azure
 	TenantID        *string `pulumi:"tenantId,optional"`
 	ApplicationID   *string `pulumi:"applicationId,optional"`
@@ -126,6 +135,13 @@ func (r *ResourceArgs) Annotate(a infer.Annotator) {
 	a.Describe(&r.Name, "Name of the Adaptive resource.")
 	a.Describe(&r.Tags, "Optional tags.")
 	a.Describe(&r.DefaultCluster, "The default cluster the resource is deployed to.")
+	a.Describe(&r.UseRDSIAM, "Postgres only. Authenticate with short-lived AWS RDS IAM auth tokens instead of a stored password. The database user must be granted rds_iam, the RDS instance must have IAM authentication enabled, and sslMode cannot be \"disable\".")
+	a.Describe(&r.UseIRSA, "Postgres only. Mint RDS IAM tokens with awsServiceAccount, or with the platform's own IRSA / instance-profile identity when it is empty. Set to false to use awsAccessKeyId / awsSecretAccessKey instead. Leave unset to infer it from whether static keys were given.")
+	a.Describe(&r.AWSRegion, "Postgres only. The AWS region used to mint RDS IAM tokens. Leave empty to auto-detect from an *.rds.amazonaws.com hostname.")
+	a.Describe(&r.AWSRoleARN, "Postgres only. An IAM role to assume when minting RDS IAM tokens. With IRSA it overrides the service account's eks.amazonaws.com/role-arn annotation.")
+	a.Describe(&r.AWSAccessKeyID, "Postgres only. Static AWS access key id used to mint RDS IAM tokens. Requires useIrsa = false.")
+	a.Describe(&r.AWSSecretAccessKey, "Postgres only. Static AWS secret access key used to mint RDS IAM tokens. Requires useIrsa = false.")
+	a.Describe(&r.AWSServiceAccount, "Postgres only. Name of a Kubernetes ServiceAccount in the session cluster annotated with eks.amazonaws.com/role-arn; the platform mints RDS IAM tokens on its behalf. Requires useIrsa = true.")
 }
 
 func (*Resource) Create(ctx context.Context, req infer.CreateRequest[ResourceArgs]) (infer.CreateResponse[ResourceState], error) {

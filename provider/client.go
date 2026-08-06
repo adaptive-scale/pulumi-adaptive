@@ -99,6 +99,8 @@ type CreateSessionRequest struct {
 	Groups            []string `json:"groups,omitempty"`
 	IdleTimeout       string   `json:"idle_timeout,omitempty"`
 	ScriptOnlyAccess  bool     `json:"script_only_access"`
+
+	DisableOutputCapture bool `json:"disable_output_capture"`
 }
 
 type CreateAuthorizationRequest struct {

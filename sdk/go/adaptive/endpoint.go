@@ -16,11 +16,13 @@ type Endpoint struct {
 	pulumi.CustomResourceState
 
 	// The authorization (by name) to apply to this endpoint.
-	Authorization pulumi.StringPtrOutput   `pulumi:"authorization"`
-	Cluster       pulumi.StringPtrOutput   `pulumi:"cluster"`
-	Cpu           pulumi.StringPtrOutput   `pulumi:"cpu"`
-	Groups        pulumi.StringArrayOutput `pulumi:"groups"`
-	IdleTimeout   pulumi.StringPtrOutput   `pulumi:"idleTimeout"`
+	Authorization pulumi.StringPtrOutput `pulumi:"authorization"`
+	Cluster       pulumi.StringPtrOutput `pulumi:"cluster"`
+	Cpu           pulumi.StringPtrOutput `pulumi:"cpu"`
+	// Whether to stop retaining terminal output for sessions on this endpoint. Commands are still audited; the recorded output is purged and session replay shows a notice instead. The workspace-level setting is OR'd with this, so leaving it false does not re-enable capture for a workspace that has turned it off.
+	DisableOutputCapture pulumi.BoolPtrOutput     `pulumi:"disableOutputCapture"`
+	Groups               pulumi.StringArrayOutput `pulumi:"groups"`
+	IdleTimeout          pulumi.StringPtrOutput   `pulumi:"idleTimeout"`
 	// Whether Just-In-Time access approval is enabled.
 	IsJitEnabled pulumi.BoolPtrOutput `pulumi:"isJitEnabled"`
 	// Emails of users who can approve Just-In-Time access requests.
@@ -91,11 +93,13 @@ func (EndpointState) ElementType() reflect.Type {
 
 type endpointArgs struct {
 	// The authorization (by name) to apply to this endpoint.
-	Authorization *string  `pulumi:"authorization"`
-	Cluster       *string  `pulumi:"cluster"`
-	Cpu           *string  `pulumi:"cpu"`
-	Groups        []string `pulumi:"groups"`
-	IdleTimeout   *string  `pulumi:"idleTimeout"`
+	Authorization *string `pulumi:"authorization"`
+	Cluster       *string `pulumi:"cluster"`
+	Cpu           *string `pulumi:"cpu"`
+	// Whether to stop retaining terminal output for sessions on this endpoint. Commands are still audited; the recorded output is purged and session replay shows a notice instead. The workspace-level setting is OR'd with this, so leaving it false does not re-enable capture for a workspace that has turned it off.
+	DisableOutputCapture *bool    `pulumi:"disableOutputCapture"`
+	Groups               []string `pulumi:"groups"`
+	IdleTimeout          *string  `pulumi:"idleTimeout"`
 	// Whether Just-In-Time access approval is enabled.
 	IsJitEnabled *bool `pulumi:"isJitEnabled"`
 	// Emails of users who can approve Just-In-Time access requests.
@@ -122,8 +126,10 @@ type EndpointArgs struct {
 	Authorization pulumi.StringPtrInput
 	Cluster       pulumi.StringPtrInput
 	Cpu           pulumi.StringPtrInput
-	Groups        pulumi.StringArrayInput
-	IdleTimeout   pulumi.StringPtrInput
+	// Whether to stop retaining terminal output for sessions on this endpoint. Commands are still audited; the recorded output is purged and session replay shows a notice instead. The workspace-level setting is OR'd with this, so leaving it false does not re-enable capture for a workspace that has turned it off.
+	DisableOutputCapture pulumi.BoolPtrInput
+	Groups               pulumi.StringArrayInput
+	IdleTimeout          pulumi.StringPtrInput
 	// Whether Just-In-Time access approval is enabled.
 	IsJitEnabled pulumi.BoolPtrInput
 	// Emails of users who can approve Just-In-Time access requests.
@@ -242,6 +248,11 @@ func (o EndpointOutput) Cluster() pulumi.StringPtrOutput {
 
 func (o EndpointOutput) Cpu() pulumi.StringPtrOutput {
 	return o.ApplyT(func(v *Endpoint) pulumi.StringPtrOutput { return v.Cpu }).(pulumi.StringPtrOutput)
+}
+
+// Whether to stop retaining terminal output for sessions on this endpoint. Commands are still audited; the recorded output is purged and session replay shows a notice instead. The workspace-level setting is OR'd with this, so leaving it false does not re-enable capture for a workspace that has turned it off.
+func (o EndpointOutput) DisableOutputCapture() pulumi.BoolPtrOutput {
+	return o.ApplyT(func(v *Endpoint) pulumi.BoolPtrOutput { return v.DisableOutputCapture }).(pulumi.BoolPtrOutput)
 }
 
 func (o EndpointOutput) Groups() pulumi.StringArrayOutput {

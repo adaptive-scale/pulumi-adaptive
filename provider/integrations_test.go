@@ -46,6 +46,90 @@ func TestBuildIntegrationConfig_Postgres(t *testing.T) {
 			t.Errorf("postgres yaml[%q] = %v, want %v", k, m[k], want)
 		}
 	}
+	// A password resource must marshal exactly as it did before the RDS IAM
+	// fields existed.
+	for _, k := range []string{"useRdsIam", "useIrsa", "awsRegion", "awsRoleArn", "awsServiceAccount"} {
+		if _, ok := m[k]; ok {
+			t.Errorf("password-mode postgres should not emit %q", k)
+		}
+	}
+}
+
+func TestBuildIntegrationConfig_PostgresRDSIAM(t *testing.T) {
+	base := func() ResourceArgs {
+		return ResourceArgs{
+			Type: "postgres", Name: "db",
+			Host: strp("mydb.abc123.us-east-1.rds.amazonaws.com"), Port: strp("5432"),
+			Username: strp("iam_user"), SSLMode: strp("require"),
+			UseRDSIAM: boolp(true),
+		}
+	}
+
+	tests := []struct {
+		name   string
+		mutate func(*ResourceArgs)
+		want   map[string]any
+	}{
+		{
+			name:   "service account implies irsa",
+			mutate: func(a *ResourceArgs) { a.AWSServiceAccount = strp("adaptive-rds-access") },
+			want: map[string]any{
+				"useRdsIam": true, "useIrsa": true,
+				"awsServiceAccount": "adaptive-rds-access",
+			},
+		},
+		{
+			name: "static keys imply no irsa",
+			mutate: func(a *ResourceArgs) {
+				a.AWSAccessKeyID = strp("AKID")
+				a.AWSSecretAccessKey = strp("secret")
+			},
+			want: map[string]any{
+				"useRdsIam": true, "useIrsa": false,
+				"awsAccessKeyId": "AKID", "awsSecretAccessKey": "secret",
+			},
+		},
+		{
+			name: "explicit irsa with a role arn",
+			mutate: func(a *ResourceArgs) {
+				a.UseIRSA = boolp(true)
+				a.AWSRoleARN = strp("arn:aws:iam::123456789012:role/AdaptiveRDSAccess")
+				a.AWSRegion = strp("us-east-1")
+			},
+			want: map[string]any{
+				"useRdsIam": true, "useIrsa": true,
+				"awsRoleArn": "arn:aws:iam::123456789012:role/AdaptiveRDSAccess",
+				"awsRegion":  "us-east-1",
+			},
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			args := base()
+			tt.mutate(&args)
+			cfg, _, err := buildIntegrationConfig(args)
+			if err != nil {
+				t.Fatal(err)
+			}
+			m := toMap(t, cfg)
+			for k, want := range tt.want {
+				if m[k] != want {
+					t.Errorf("yaml[%q] = %v, want %v", k, m[k], want)
+				}
+			}
+		})
+	}
+}
+
+func TestBuildIntegrationConfig_RDSIAMRejectedOnOtherTypes(t *testing.T) {
+	_, _, err := buildIntegrationConfig(ResourceArgs{
+		Type: "mysql", Name: "db", Host: strp("h"), Username: strp("root"),
+		UseRDSIAM: boolp(true),
+	})
+	if err == nil {
+		t.Fatal("expected an error when the RDS IAM fields are set on a non-postgres resource")
+	}
 }
 
 func TestBuildIntegrationConfig_SSH(t *testing.T) {
