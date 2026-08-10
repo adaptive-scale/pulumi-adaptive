@@ -31,6 +31,8 @@ func (m *module) Construct(ctx *pulumi.Context, name, typ, urn string) (r pulumi
 		r = &MSTeamsWorkflow{}
 	case "adaptive:index:Resource":
 		r = &Resource{}
+	case "adaptive:index:Schedule":
+		r = &Schedule{}
 	case "adaptive:index:Script":
 		r = &Script{}
 	default:

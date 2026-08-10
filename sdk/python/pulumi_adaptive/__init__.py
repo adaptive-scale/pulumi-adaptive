@@ -12,6 +12,7 @@ from .group import *
 from .ms_teams_workflow import *
 from .provider import *
 from .resource import *
+from .schedule import *
 from .script import *
 
 # Make subpackages available:
@@ -34,6 +35,7 @@ _utilities.register(
    "adaptive:index:Group": "Group",
    "adaptive:index:MSTeamsWorkflow": "MSTeamsWorkflow",
    "adaptive:index:Resource": "Resource",
+   "adaptive:index:Schedule": "Schedule",
    "adaptive:index:Script": "Script"
   }
  }

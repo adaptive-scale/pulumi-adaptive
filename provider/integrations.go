@@ -40,7 +40,9 @@ func buildIntegrationConfig(a ResourceArgs) (any, string, error) {
 	case "okta":
 		cfg = oktaConfig{Version: "1.0", Name: a.Name, Domain: sv(a.Domain), ClientID: sv(a.ClientID), ClientSecret: sv(a.ClientSecret)}
 	case "postgres":
-		cfg = postgresConfig{Name: a.Name, Username: sv(a.Username), Password: sv(a.Password), DatabaseName: sv(a.DatabaseName), HostName: sv(a.Host), Port: sv(a.Port), SSLMode: sv(a.SSLMode), TLSRootCert: sv(a.TLSRootCert), TLSCertFile: sv(a.TLSCertFile), TLSKeyFile: sv(a.TLSKeyFile)}
+		cfg = postgresConfig{Name: a.Name, Username: sv(a.Username), Password: sv(a.Password), DatabaseName: sv(a.DatabaseName), HostName: sv(a.Host), Port: sv(a.Port), SSLMode: sv(a.SSLMode), TLSRootCert: sv(a.TLSRootCert), TLSCertFile: sv(a.TLSCertFile), TLSKeyFile: sv(a.TLSKeyFile),
+			UseRdsIam: bv(a.UseRdsIam), UseIrsa: bv(a.UseIrsa), AWSRegion: sv(a.AWSRegion), AWSRoleArn: sv(a.AWSRoleArn),
+			AWSAccessKeyID: sv(a.AWSAccessKeyID), AWSSecretAccessKey: sv(a.AWSSecretAccessKey), AWSServiceAccount: sv(a.AWSServiceAccount)}
 	case "ssh":
 		cfg = sshConfig{Version: "1.0", Name: a.Name, Username: sv(a.Username), UsePassword: sv(a.Key) == "", Password: sv(a.Key), HostName: sv(a.Host), Port: sv(a.Port), SSHKey: sv(a.Key)}
 	case "kubernetes":
@@ -231,6 +233,16 @@ type postgresConfig struct {
 	TLSRootCert  string `yaml:"rootCert"`
 	TLSCertFile  string `yaml:"crtText"`
 	TLSKeyFile   string `yaml:"keyText"`
+
+	// RDS IAM authentication. All omitempty so a postgres resource that does not
+	// use it serialises exactly as before.
+	UseRdsIam          bool   `yaml:"useRdsIam,omitempty"`
+	UseIrsa            bool   `yaml:"useIrsa,omitempty"`
+	AWSRegion          string `yaml:"awsRegion,omitempty"`
+	AWSRoleArn         string `yaml:"awsRoleArn,omitempty"`
+	AWSAccessKeyID     string `yaml:"awsAccessKeyId,omitempty"`
+	AWSSecretAccessKey string `yaml:"awsSecretAccessKey,omitempty"`
+	AWSServiceAccount  string `yaml:"awsServiceAccount,omitempty"`
 }
 
 type sshConfig struct {

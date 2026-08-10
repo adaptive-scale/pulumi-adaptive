@@ -28,6 +28,7 @@
         "msteamsWorkflow.ts",
         "provider.ts",
         "resource.ts",
+        "schedule.ts",
         "script.ts",
         "utilities.ts"
     ]
