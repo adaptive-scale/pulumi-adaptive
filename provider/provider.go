@@ -97,6 +97,7 @@ func Provider() (p.Provider, error) {
 			infer.Resource(&Group{}),
 			infer.Resource(&Script{}),
 			infer.Resource(&MSTeamsWorkflow{}),
+			infer.Resource(&Schedule{}),
 		).
 		Build()
 }
@@ -117,6 +118,14 @@ func sv(p *string) string {
 func bv(p *bool) bool {
 	if p == nil {
 		return false
+	}
+	return *p
+}
+
+// iv dereferences an optional int pointer, returning 0 for nil.
+func iv(p *int) int {
+	if p == nil {
+		return 0
 	}
 	return *p
 }

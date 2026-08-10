@@ -35,6 +35,11 @@ export type Resource = import("./resource").Resource;
 export const Resource: typeof import("./resource").Resource = null as any;
 utilities.lazyLoad(exports, ["Resource"], () => require("./resource"));
 
+export { ScheduleArgs } from "./schedule";
+export type Schedule = import("./schedule").Schedule;
+export const Schedule: typeof import("./schedule").Schedule = null as any;
+utilities.lazyLoad(exports, ["Schedule"], () => require("./schedule"));
+
 export { ScriptArgs } from "./script";
 export type Script = import("./script").Script;
 export const Script: typeof import("./script").Script = null as any;
@@ -62,6 +67,8 @@ const _module = {
                 return new MSTeamsWorkflow(name, <any>undefined, { urn })
             case "adaptive:index:Resource":
                 return new Resource(name, <any>undefined, { urn })
+            case "adaptive:index:Schedule":
+                return new Schedule(name, <any>undefined, { urn })
             case "adaptive:index:Script":
                 return new Script(name, <any>undefined, { urn })
             default:

@@ -27,22 +27,33 @@ type ResourceArgs struct {
 	Hostname     *string `pulumi:"hostname,optional"`
 	Port         *string `pulumi:"port,optional"`
 	Username     *string `pulumi:"username,optional"`
-	Password     *string `pulumi:"password,optional"`
+	Password     *string `pulumi:"password,optional" provider:"secret"`
 	DatabaseName *string `pulumi:"databaseName,optional"`
 	SSLMode      *string `pulumi:"sslMode,optional"`
 	Protocol     *string `pulumi:"protocol,optional"`
 	URL          *string `pulumi:"url,optional"`
 
+	// RDS IAM authentication (postgres). Supported by the Terraform provider
+	// since the RDS IAM release; carried here so both providers describe the
+	// same resource.
+	UseRdsIam          *bool   `pulumi:"useRdsIam,optional"`
+	UseIrsa            *bool   `pulumi:"useIrsa,optional"`
+	AWSRegion          *string `pulumi:"awsRegion,optional"`
+	AWSRoleArn         *string `pulumi:"awsRoleArn,optional"`
+	AWSAccessKeyID     *string `pulumi:"awsAccessKeyId,optional"`
+	AWSSecretAccessKey *string `pulumi:"awsSecretAccessKey,optional" provider:"secret"`
+	AWSServiceAccount  *string `pulumi:"awsServiceAccount,optional"`
+
 	// TLS / certs
-	RootCert    *string `pulumi:"rootCert,optional"`
-	TLSRootCert *string `pulumi:"tlsRootCert,optional"`
-	TLSCertFile *string `pulumi:"tlsCertFile,optional"`
-	TLSKeyFile  *string `pulumi:"tlsKeyFile,optional"`
+	RootCert    *string `pulumi:"rootCert,optional" provider:"secret"`
+	TLSRootCert *string `pulumi:"tlsRootCert,optional" provider:"secret"`
+	TLSCertFile *string `pulumi:"tlsCertFile,optional" provider:"secret"`
+	TLSKeyFile  *string `pulumi:"tlsKeyFile,optional" provider:"secret"`
 
 	// Kubernetes
 	ApiServer    *string `pulumi:"apiServer,optional"`
-	ClusterToken *string `pulumi:"clusterToken,optional"`
-	ClusterCert  *string `pulumi:"clusterCert,optional"`
+	ClusterToken *string `pulumi:"clusterToken,optional" provider:"secret"`
+	ClusterCert  *string `pulumi:"clusterCert,optional" provider:"secret"`
 	Namespace    *string `pulumi:"namespace,optional"`
 	Tolerations  *string `pulumi:"tolerations,optional"`
 	Annotations  *string `pulumi:"annotations,optional"`
@@ -51,8 +62,8 @@ type ResourceArgs struct {
 
 	// AWS
 	RegionName      *string `pulumi:"regionName,optional"`
-	AccessKeyID     *string `pulumi:"accessKeyId,optional"`
-	SecretAccessKey *string `pulumi:"secretAccessKey,optional"`
+	AccessKeyID     *string `pulumi:"accessKeyId,optional" provider:"secret"`
+	SecretAccessKey *string `pulumi:"secretAccessKey,optional" provider:"secret"`
 	Arn             *string `pulumi:"arn,optional"`
 	Region          *string `pulumi:"region,optional"`
 	SecretID        *string `pulumi:"secretId,optional"`
@@ -62,22 +73,22 @@ type ResourceArgs struct {
 	// Azure
 	TenantID        *string `pulumi:"tenantId,optional"`
 	ApplicationID   *string `pulumi:"applicationId,optional"`
-	ClientSecret    *string `pulumi:"clientSecret,optional"`
+	ClientSecret    *string `pulumi:"clientSecret,optional" provider:"secret"`
 	ApiClientID     *string `pulumi:"apiClientId,optional"`
-	ApiClientSecret *string `pulumi:"apiClientSecret,optional"`
+	ApiClientSecret *string `pulumi:"apiClientSecret,optional" provider:"secret"`
 	UseTenant       *bool   `pulumi:"useTenant,optional"`
 
 	// GCP / Google / OAuth identity
-	ProjectID    *string `pulumi:"projectId,optional"`
-	KeyFile      *string `pulumi:"keyFile,optional"`
-	Domain       *string `pulumi:"domain,optional"`
-	ClientID     *string `pulumi:"clientId,optional"`
-	LoginURL     *string `pulumi:"loginUrl,optional"`
+	ProjectID *string `pulumi:"projectId,optional"`
+	KeyFile   *string `pulumi:"keyFile,optional" provider:"secret"`
+	Domain    *string `pulumi:"domain,optional"`
+	ClientID  *string `pulumi:"clientId,optional"`
+	LoginURL  *string `pulumi:"loginUrl,optional"`
 
 	// Snowflake
 	Warehouse  *string `pulumi:"warehouse,optional"`
 	Schema     *string `pulumi:"schema,optional"`
-	Clientcert *string `pulumi:"clientcert,optional"`
+	Clientcert *string `pulumi:"clientcert,optional" provider:"secret"`
 	Role       *string `pulumi:"role,optional"`
 
 	// Services / serverlist
@@ -86,20 +97,20 @@ type ResourceArgs struct {
 	DefaultUser *string  `pulumi:"defaultUser,optional"`
 
 	// SSH
-	Key            *string `pulumi:"key,optional"`
+	Key            *string `pulumi:"key,optional" provider:"secret"`
 	PublicKey      *string `pulumi:"publicKey,optional"`
 	OrganizationID *string `pulumi:"organizationId,optional"`
 
 	// Misc service fields
-	APIToken           *string `pulumi:"apiToken,optional"`
-	PrivateKey         *string `pulumi:"privateKey,optional"`
+	APIToken           *string `pulumi:"apiToken,optional" provider:"secret"`
+	PrivateKey         *string `pulumi:"privateKey,optional" provider:"secret"`
 	ApplicationName    *string `pulumi:"applicationName,optional"`
 	SubSystemName      *string `pulumi:"subSystemName,optional"`
-	SharedSecret       *string `pulumi:"sharedSecret,optional"`
+	SharedSecret       *string `pulumi:"sharedSecret,optional" provider:"secret"`
 	Image              *string `pulumi:"image,optional"`
 	ServiceAccountName *string `pulumi:"serviceAccountName,optional"`
 	DdSite             *string `pulumi:"ddSite,optional"`
-	DdApiKey           *string `pulumi:"ddApiKey,optional"`
+	DdApiKey           *string `pulumi:"ddApiKey,optional" provider:"secret"`
 	Index              *string `pulumi:"index,optional"`
 	UseProxy           *bool   `pulumi:"useProxy,optional"`
 	WebuiPort          *string `pulumi:"webuiPort,optional"`
@@ -107,14 +118,14 @@ type ResourceArgs struct {
 	CreateIfNotExists  *bool   `pulumi:"createIfNotExists,optional"`
 	NetworkID          *string `pulumi:"networkId,optional"`
 	TokenID            *string `pulumi:"tokenId,optional"`
-	APIKey             *string `pulumi:"apiKey,optional"`
+	APIKey             *string `pulumi:"apiKey,optional" provider:"secret"`
 	AppID              *string `pulumi:"appId,optional"`
-	AppKey             *string `pulumi:"appKey,optional"`
+	AppKey             *string `pulumi:"appKey,optional" provider:"secret"`
 	Version            *string `pulumi:"version,optional"`
 	DatabaseAccount    *string `pulumi:"databaseAccount,optional"`
 	DatabaseUsername   *string `pulumi:"databaseUsername,optional"`
-	DatabasePassword   *string `pulumi:"databasePassword,optional"`
-	WebhookURL         *string `pulumi:"webhookUrl,optional"`
+	DatabasePassword   *string `pulumi:"databasePassword,optional" provider:"secret"`
+	WebhookURL         *string `pulumi:"webhookUrl,optional" provider:"secret"`
 }
 
 type ResourceState struct {

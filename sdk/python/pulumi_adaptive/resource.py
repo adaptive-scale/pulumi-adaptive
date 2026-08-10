@@ -33,8 +33,13 @@ class ResourceArgs:
                  application_id: Optional[pulumi.Input[_builtins.str]] = None,
                  application_name: Optional[pulumi.Input[_builtins.str]] = None,
                  arn: Optional[pulumi.Input[_builtins.str]] = None,
+                 aws_access_key_id: Optional[pulumi.Input[_builtins.str]] = None,
                  aws_arn: Optional[pulumi.Input[_builtins.str]] = None,
+                 aws_region: Optional[pulumi.Input[_builtins.str]] = None,
                  aws_region_name: Optional[pulumi.Input[_builtins.str]] = None,
+                 aws_role_arn: Optional[pulumi.Input[_builtins.str]] = None,
+                 aws_secret_access_key: Optional[pulumi.Input[_builtins.str]] = None,
+                 aws_service_account: Optional[pulumi.Input[_builtins.str]] = None,
                  client_id: Optional[pulumi.Input[_builtins.str]] = None,
                  client_secret: Optional[pulumi.Input[_builtins.str]] = None,
                  clientcert: Optional[pulumi.Input[_builtins.str]] = None,
@@ -90,7 +95,9 @@ class ResourceArgs:
                  uri: Optional[pulumi.Input[_builtins.str]] = None,
                  url: Optional[pulumi.Input[_builtins.str]] = None,
                  urls: Optional[pulumi.Input[_builtins.str]] = None,
+                 use_irsa: Optional[pulumi.Input[_builtins.bool]] = None,
                  use_proxy: Optional[pulumi.Input[_builtins.bool]] = None,
+                 use_rds_iam: Optional[pulumi.Input[_builtins.bool]] = None,
                  use_service_account: Optional[pulumi.Input[_builtins.bool]] = None,
                  use_tenant: Optional[pulumi.Input[_builtins.bool]] = None,
                  username: Optional[pulumi.Input[_builtins.str]] = None,
@@ -132,10 +139,20 @@ class ResourceArgs:
             pulumi.set(__self__, "application_name", application_name)
         if arn is not None:
             pulumi.set(__self__, "arn", arn)
+        if aws_access_key_id is not None:
+            pulumi.set(__self__, "aws_access_key_id", aws_access_key_id)
         if aws_arn is not None:
             pulumi.set(__self__, "aws_arn", aws_arn)
+        if aws_region is not None:
+            pulumi.set(__self__, "aws_region", aws_region)
         if aws_region_name is not None:
             pulumi.set(__self__, "aws_region_name", aws_region_name)
+        if aws_role_arn is not None:
+            pulumi.set(__self__, "aws_role_arn", aws_role_arn)
+        if aws_secret_access_key is not None:
+            pulumi.set(__self__, "aws_secret_access_key", aws_secret_access_key)
+        if aws_service_account is not None:
+            pulumi.set(__self__, "aws_service_account", aws_service_account)
         if client_id is not None:
             pulumi.set(__self__, "client_id", client_id)
         if client_secret is not None:
@@ -246,8 +263,12 @@ class ResourceArgs:
             pulumi.set(__self__, "url", url)
         if urls is not None:
             pulumi.set(__self__, "urls", urls)
+        if use_irsa is not None:
+            pulumi.set(__self__, "use_irsa", use_irsa)
         if use_proxy is not None:
             pulumi.set(__self__, "use_proxy", use_proxy)
+        if use_rds_iam is not None:
+            pulumi.set(__self__, "use_rds_iam", use_rds_iam)
         if use_service_account is not None:
             pulumi.set(__self__, "use_service_account", use_service_account)
         if use_tenant is not None:
@@ -396,6 +417,15 @@ class ResourceArgs:
         pulumi.set(self, "arn", value)
 
     @_builtins.property
+    @pulumi.getter(name="awsAccessKeyId")
+    def aws_access_key_id(self) -> Optional[pulumi.Input[_builtins.str]]:
+        return pulumi.get(self, "aws_access_key_id")
+
+    @aws_access_key_id.setter
+    def aws_access_key_id(self, value: Optional[pulumi.Input[_builtins.str]]):
+        pulumi.set(self, "aws_access_key_id", value)
+
+    @_builtins.property
     @pulumi.getter(name="awsArn")
     def aws_arn(self) -> Optional[pulumi.Input[_builtins.str]]:
         return pulumi.get(self, "aws_arn")
@@ -405,6 +435,15 @@ class ResourceArgs:
         pulumi.set(self, "aws_arn", value)
 
     @_builtins.property
+    @pulumi.getter(name="awsRegion")
+    def aws_region(self) -> Optional[pulumi.Input[_builtins.str]]:
+        return pulumi.get(self, "aws_region")
+
+    @aws_region.setter
+    def aws_region(self, value: Optional[pulumi.Input[_builtins.str]]):
+        pulumi.set(self, "aws_region", value)
+
+    @_builtins.property
     @pulumi.getter(name="awsRegionName")
     def aws_region_name(self) -> Optional[pulumi.Input[_builtins.str]]:
         return pulumi.get(self, "aws_region_name")
@@ -412,6 +451,33 @@ class ResourceArgs:
     @aws_region_name.setter
     def aws_region_name(self, value: Optional[pulumi.Input[_builtins.str]]):
         pulumi.set(self, "aws_region_name", value)
+
+    @_builtins.property
+    @pulumi.getter(name="awsRoleArn")
+    def aws_role_arn(self) -> Optional[pulumi.Input[_builtins.str]]:
+        return pulumi.get(self, "aws_role_arn")
+
+    @aws_role_arn.setter
+    def aws_role_arn(self, value: Optional[pulumi.Input[_builtins.str]]):
+        pulumi.set(self, "aws_role_arn", value)
+
+    @_builtins.property
+    @pulumi.getter(name="awsSecretAccessKey")
+    def aws_secret_access_key(self) -> Optional[pulumi.Input[_builtins.str]]:
+        return pulumi.get(self, "aws_secret_access_key")
+
+    @aws_secret_access_key.setter
+    def aws_secret_access_key(self, value: Optional[pulumi.Input[_builtins.str]]):
+        pulumi.set(self, "aws_secret_access_key", value)
+
+    @_builtins.property
+    @pulumi.getter(name="awsServiceAccount")
+    def aws_service_account(self) -> Optional[pulumi.Input[_builtins.str]]:
+        return pulumi.get(self, "aws_service_account")
+
+    @aws_service_account.setter
+    def aws_service_account(self, value: Optional[pulumi.Input[_builtins.str]]):
+        pulumi.set(self, "aws_service_account", value)
 
     @_builtins.property
     @pulumi.getter(name="clientId")
@@ -915,6 +981,15 @@ class ResourceArgs:
         pulumi.set(self, "urls", value)
 
     @_builtins.property
+    @pulumi.getter(name="useIrsa")
+    def use_irsa(self) -> Optional[pulumi.Input[_builtins.bool]]:
+        return pulumi.get(self, "use_irsa")
+
+    @use_irsa.setter
+    def use_irsa(self, value: Optional[pulumi.Input[_builtins.bool]]):
+        pulumi.set(self, "use_irsa", value)
+
+    @_builtins.property
     @pulumi.getter(name="useProxy")
     def use_proxy(self) -> Optional[pulumi.Input[_builtins.bool]]:
         return pulumi.get(self, "use_proxy")
@@ -922,6 +997,15 @@ class ResourceArgs:
     @use_proxy.setter
     def use_proxy(self, value: Optional[pulumi.Input[_builtins.bool]]):
         pulumi.set(self, "use_proxy", value)
+
+    @_builtins.property
+    @pulumi.getter(name="useRdsIam")
+    def use_rds_iam(self) -> Optional[pulumi.Input[_builtins.bool]]:
+        return pulumi.get(self, "use_rds_iam")
+
+    @use_rds_iam.setter
+    def use_rds_iam(self, value: Optional[pulumi.Input[_builtins.bool]]):
+        pulumi.set(self, "use_rds_iam", value)
 
     @_builtins.property
     @pulumi.getter(name="useServiceAccount")
@@ -1005,8 +1089,13 @@ class Resource(pulumi.CustomResource):
                  application_id: Optional[pulumi.Input[_builtins.str]] = None,
                  application_name: Optional[pulumi.Input[_builtins.str]] = None,
                  arn: Optional[pulumi.Input[_builtins.str]] = None,
+                 aws_access_key_id: Optional[pulumi.Input[_builtins.str]] = None,
                  aws_arn: Optional[pulumi.Input[_builtins.str]] = None,
+                 aws_region: Optional[pulumi.Input[_builtins.str]] = None,
                  aws_region_name: Optional[pulumi.Input[_builtins.str]] = None,
+                 aws_role_arn: Optional[pulumi.Input[_builtins.str]] = None,
+                 aws_secret_access_key: Optional[pulumi.Input[_builtins.str]] = None,
+                 aws_service_account: Optional[pulumi.Input[_builtins.str]] = None,
                  client_id: Optional[pulumi.Input[_builtins.str]] = None,
                  client_secret: Optional[pulumi.Input[_builtins.str]] = None,
                  clientcert: Optional[pulumi.Input[_builtins.str]] = None,
@@ -1064,7 +1153,9 @@ class Resource(pulumi.CustomResource):
                  uri: Optional[pulumi.Input[_builtins.str]] = None,
                  url: Optional[pulumi.Input[_builtins.str]] = None,
                  urls: Optional[pulumi.Input[_builtins.str]] = None,
+                 use_irsa: Optional[pulumi.Input[_builtins.bool]] = None,
                  use_proxy: Optional[pulumi.Input[_builtins.bool]] = None,
+                 use_rds_iam: Optional[pulumi.Input[_builtins.bool]] = None,
                  use_service_account: Optional[pulumi.Input[_builtins.bool]] = None,
                  use_tenant: Optional[pulumi.Input[_builtins.bool]] = None,
                  username: Optional[pulumi.Input[_builtins.str]] = None,
@@ -1119,8 +1210,13 @@ class Resource(pulumi.CustomResource):
                  application_id: Optional[pulumi.Input[_builtins.str]] = None,
                  application_name: Optional[pulumi.Input[_builtins.str]] = None,
                  arn: Optional[pulumi.Input[_builtins.str]] = None,
+                 aws_access_key_id: Optional[pulumi.Input[_builtins.str]] = None,
                  aws_arn: Optional[pulumi.Input[_builtins.str]] = None,
+                 aws_region: Optional[pulumi.Input[_builtins.str]] = None,
                  aws_region_name: Optional[pulumi.Input[_builtins.str]] = None,
+                 aws_role_arn: Optional[pulumi.Input[_builtins.str]] = None,
+                 aws_secret_access_key: Optional[pulumi.Input[_builtins.str]] = None,
+                 aws_service_account: Optional[pulumi.Input[_builtins.str]] = None,
                  client_id: Optional[pulumi.Input[_builtins.str]] = None,
                  client_secret: Optional[pulumi.Input[_builtins.str]] = None,
                  clientcert: Optional[pulumi.Input[_builtins.str]] = None,
@@ -1178,7 +1274,9 @@ class Resource(pulumi.CustomResource):
                  uri: Optional[pulumi.Input[_builtins.str]] = None,
                  url: Optional[pulumi.Input[_builtins.str]] = None,
                  urls: Optional[pulumi.Input[_builtins.str]] = None,
+                 use_irsa: Optional[pulumi.Input[_builtins.bool]] = None,
                  use_proxy: Optional[pulumi.Input[_builtins.bool]] = None,
+                 use_rds_iam: Optional[pulumi.Input[_builtins.bool]] = None,
                  use_service_account: Optional[pulumi.Input[_builtins.bool]] = None,
                  use_tenant: Optional[pulumi.Input[_builtins.bool]] = None,
                  username: Optional[pulumi.Input[_builtins.str]] = None,
@@ -1195,31 +1293,36 @@ class Resource(pulumi.CustomResource):
                 raise TypeError('__props__ is only valid when passed in combination with a valid opts.id to get an existing resource')
             __props__ = ResourceArgs.__new__(ResourceArgs)
 
-            __props__.__dict__["access_key_id"] = access_key_id
+            __props__.__dict__["access_key_id"] = None if access_key_id is None else pulumi.Output.secret(access_key_id)
             __props__.__dict__["annotations"] = annotations
             __props__.__dict__["api_client_id"] = api_client_id
-            __props__.__dict__["api_client_secret"] = api_client_secret
-            __props__.__dict__["api_key"] = api_key
+            __props__.__dict__["api_client_secret"] = None if api_client_secret is None else pulumi.Output.secret(api_client_secret)
+            __props__.__dict__["api_key"] = None if api_key is None else pulumi.Output.secret(api_key)
             __props__.__dict__["api_server"] = api_server
-            __props__.__dict__["api_token"] = api_token
+            __props__.__dict__["api_token"] = None if api_token is None else pulumi.Output.secret(api_token)
             __props__.__dict__["app_id"] = app_id
-            __props__.__dict__["app_key"] = app_key
+            __props__.__dict__["app_key"] = None if app_key is None else pulumi.Output.secret(app_key)
             __props__.__dict__["application_id"] = application_id
             __props__.__dict__["application_name"] = application_name
             __props__.__dict__["arn"] = arn
+            __props__.__dict__["aws_access_key_id"] = aws_access_key_id
             __props__.__dict__["aws_arn"] = aws_arn
+            __props__.__dict__["aws_region"] = aws_region
             __props__.__dict__["aws_region_name"] = aws_region_name
+            __props__.__dict__["aws_role_arn"] = aws_role_arn
+            __props__.__dict__["aws_secret_access_key"] = None if aws_secret_access_key is None else pulumi.Output.secret(aws_secret_access_key)
+            __props__.__dict__["aws_service_account"] = aws_service_account
             __props__.__dict__["client_id"] = client_id
-            __props__.__dict__["client_secret"] = client_secret
-            __props__.__dict__["clientcert"] = clientcert
-            __props__.__dict__["cluster_cert"] = cluster_cert
-            __props__.__dict__["cluster_token"] = cluster_token
+            __props__.__dict__["client_secret"] = None if client_secret is None else pulumi.Output.secret(client_secret)
+            __props__.__dict__["clientcert"] = None if clientcert is None else pulumi.Output.secret(clientcert)
+            __props__.__dict__["cluster_cert"] = None if cluster_cert is None else pulumi.Output.secret(cluster_cert)
+            __props__.__dict__["cluster_token"] = None if cluster_token is None else pulumi.Output.secret(cluster_token)
             __props__.__dict__["create_if_not_exists"] = create_if_not_exists
             __props__.__dict__["database_account"] = database_account
             __props__.__dict__["database_name"] = database_name
-            __props__.__dict__["database_password"] = database_password
+            __props__.__dict__["database_password"] = None if database_password is None else pulumi.Output.secret(database_password)
             __props__.__dict__["database_username"] = database_username
-            __props__.__dict__["dd_api_key"] = dd_api_key
+            __props__.__dict__["dd_api_key"] = None if dd_api_key is None else pulumi.Output.secret(dd_api_key)
             __props__.__dict__["dd_site"] = dd_site
             __props__.__dict__["default_cluster"] = default_cluster
             __props__.__dict__["default_user"] = default_user
@@ -1229,8 +1332,8 @@ class Resource(pulumi.CustomResource):
             __props__.__dict__["hosts"] = hosts
             __props__.__dict__["image"] = image
             __props__.__dict__["index"] = index
-            __props__.__dict__["key"] = key
-            __props__.__dict__["key_file"] = key_file
+            __props__.__dict__["key"] = None if key is None else pulumi.Output.secret(key)
+            __props__.__dict__["key_file"] = None if key_file is None else pulumi.Output.secret(key_file)
             __props__.__dict__["login_url"] = login_url
             if name is None and not opts.urn:
                 raise TypeError("Missing required property 'name'")
@@ -1240,28 +1343,28 @@ class Resource(pulumi.CustomResource):
             __props__.__dict__["node_affinity"] = node_affinity
             __props__.__dict__["node_selector"] = node_selector
             __props__.__dict__["organization_id"] = organization_id
-            __props__.__dict__["password"] = password
+            __props__.__dict__["password"] = None if password is None else pulumi.Output.secret(password)
             __props__.__dict__["port"] = port
-            __props__.__dict__["private_key"] = private_key
+            __props__.__dict__["private_key"] = None if private_key is None else pulumi.Output.secret(private_key)
             __props__.__dict__["project_id"] = project_id
             __props__.__dict__["protocol"] = protocol
             __props__.__dict__["public_key"] = public_key
             __props__.__dict__["region"] = region
             __props__.__dict__["region_name"] = region_name
             __props__.__dict__["role"] = role
-            __props__.__dict__["root_cert"] = root_cert
+            __props__.__dict__["root_cert"] = None if root_cert is None else pulumi.Output.secret(root_cert)
             __props__.__dict__["schema"] = schema
-            __props__.__dict__["secret_access_key"] = secret_access_key
+            __props__.__dict__["secret_access_key"] = None if secret_access_key is None else pulumi.Output.secret(secret_access_key)
             __props__.__dict__["secret_id"] = secret_id
             __props__.__dict__["service_account_name"] = service_account_name
-            __props__.__dict__["shared_secret"] = shared_secret
+            __props__.__dict__["shared_secret"] = None if shared_secret is None else pulumi.Output.secret(shared_secret)
             __props__.__dict__["ssl_mode"] = ssl_mode
             __props__.__dict__["sub_system_name"] = sub_system_name
             __props__.__dict__["tags"] = tags
             __props__.__dict__["tenant_id"] = tenant_id
-            __props__.__dict__["tls_cert_file"] = tls_cert_file
-            __props__.__dict__["tls_key_file"] = tls_key_file
-            __props__.__dict__["tls_root_cert"] = tls_root_cert
+            __props__.__dict__["tls_cert_file"] = None if tls_cert_file is None else pulumi.Output.secret(tls_cert_file)
+            __props__.__dict__["tls_key_file"] = None if tls_key_file is None else pulumi.Output.secret(tls_key_file)
+            __props__.__dict__["tls_root_cert"] = None if tls_root_cert is None else pulumi.Output.secret(tls_root_cert)
             __props__.__dict__["token_id"] = token_id
             __props__.__dict__["tolerations"] = tolerations
             if type is None and not opts.urn:
@@ -1270,14 +1373,18 @@ class Resource(pulumi.CustomResource):
             __props__.__dict__["uri"] = uri
             __props__.__dict__["url"] = url
             __props__.__dict__["urls"] = urls
+            __props__.__dict__["use_irsa"] = use_irsa
             __props__.__dict__["use_proxy"] = use_proxy
+            __props__.__dict__["use_rds_iam"] = use_rds_iam
             __props__.__dict__["use_service_account"] = use_service_account
             __props__.__dict__["use_tenant"] = use_tenant
             __props__.__dict__["username"] = username
             __props__.__dict__["version"] = version
             __props__.__dict__["warehouse"] = warehouse
-            __props__.__dict__["webhook_url"] = webhook_url
+            __props__.__dict__["webhook_url"] = None if webhook_url is None else pulumi.Output.secret(webhook_url)
             __props__.__dict__["webui_port"] = webui_port
+        secret_opts = pulumi.ResourceOptions(additional_secret_outputs=["accessKeyId", "apiClientSecret", "apiKey", "apiToken", "appKey", "awsSecretAccessKey", "clientSecret", "clientcert", "clusterCert", "clusterToken", "databasePassword", "ddApiKey", "key", "keyFile", "password", "privateKey", "rootCert", "secretAccessKey", "sharedSecret", "tlsCertFile", "tlsKeyFile", "tlsRootCert", "webhookUrl"])
+        opts = pulumi.ResourceOptions.merge(opts, secret_opts)
         super(Resource, __self__).__init__(
             'adaptive:index:Resource',
             resource_name,
@@ -1312,8 +1419,13 @@ class Resource(pulumi.CustomResource):
         __props__.__dict__["application_id"] = None
         __props__.__dict__["application_name"] = None
         __props__.__dict__["arn"] = None
+        __props__.__dict__["aws_access_key_id"] = None
         __props__.__dict__["aws_arn"] = None
+        __props__.__dict__["aws_region"] = None
         __props__.__dict__["aws_region_name"] = None
+        __props__.__dict__["aws_role_arn"] = None
+        __props__.__dict__["aws_secret_access_key"] = None
+        __props__.__dict__["aws_service_account"] = None
         __props__.__dict__["client_id"] = None
         __props__.__dict__["client_secret"] = None
         __props__.__dict__["clientcert"] = None
@@ -1371,7 +1483,9 @@ class Resource(pulumi.CustomResource):
         __props__.__dict__["uri"] = None
         __props__.__dict__["url"] = None
         __props__.__dict__["urls"] = None
+        __props__.__dict__["use_irsa"] = None
         __props__.__dict__["use_proxy"] = None
+        __props__.__dict__["use_rds_iam"] = None
         __props__.__dict__["use_service_account"] = None
         __props__.__dict__["use_tenant"] = None
         __props__.__dict__["username"] = None
@@ -1442,14 +1556,39 @@ class Resource(pulumi.CustomResource):
         return pulumi.get(self, "arn")
 
     @_builtins.property
+    @pulumi.getter(name="awsAccessKeyId")
+    def aws_access_key_id(self) -> pulumi.Output[Optional[_builtins.str]]:
+        return pulumi.get(self, "aws_access_key_id")
+
+    @_builtins.property
     @pulumi.getter(name="awsArn")
     def aws_arn(self) -> pulumi.Output[Optional[_builtins.str]]:
         return pulumi.get(self, "aws_arn")
 
     @_builtins.property
+    @pulumi.getter(name="awsRegion")
+    def aws_region(self) -> pulumi.Output[Optional[_builtins.str]]:
+        return pulumi.get(self, "aws_region")
+
+    @_builtins.property
     @pulumi.getter(name="awsRegionName")
     def aws_region_name(self) -> pulumi.Output[Optional[_builtins.str]]:
         return pulumi.get(self, "aws_region_name")
+
+    @_builtins.property
+    @pulumi.getter(name="awsRoleArn")
+    def aws_role_arn(self) -> pulumi.Output[Optional[_builtins.str]]:
+        return pulumi.get(self, "aws_role_arn")
+
+    @_builtins.property
+    @pulumi.getter(name="awsSecretAccessKey")
+    def aws_secret_access_key(self) -> pulumi.Output[Optional[_builtins.str]]:
+        return pulumi.get(self, "aws_secret_access_key")
+
+    @_builtins.property
+    @pulumi.getter(name="awsServiceAccount")
+    def aws_service_account(self) -> pulumi.Output[Optional[_builtins.str]]:
+        return pulumi.get(self, "aws_service_account")
 
     @_builtins.property
     @pulumi.getter(name="clientId")
@@ -1749,9 +1888,19 @@ class Resource(pulumi.CustomResource):
         return pulumi.get(self, "urls")
 
     @_builtins.property
+    @pulumi.getter(name="useIrsa")
+    def use_irsa(self) -> pulumi.Output[Optional[_builtins.bool]]:
+        return pulumi.get(self, "use_irsa")
+
+    @_builtins.property
     @pulumi.getter(name="useProxy")
     def use_proxy(self) -> pulumi.Output[Optional[_builtins.bool]]:
         return pulumi.get(self, "use_proxy")
+
+    @_builtins.property
+    @pulumi.getter(name="useRdsIam")
+    def use_rds_iam(self) -> pulumi.Output[Optional[_builtins.bool]]:
+        return pulumi.get(self, "use_rds_iam")
 
     @_builtins.property
     @pulumi.getter(name="useServiceAccount")

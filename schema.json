@@ -398,7 +398,8 @@
     "adaptive:index:Resource": {
       "properties": {
         "accessKeyId": {
-          "type": "string"
+          "type": "string",
+          "secret": true
         },
         "annotations": {
           "type": "string"
@@ -407,22 +408,26 @@
           "type": "string"
         },
         "apiClientSecret": {
-          "type": "string"
+          "type": "string",
+          "secret": true
         },
         "apiKey": {
-          "type": "string"
+          "type": "string",
+          "secret": true
         },
         "apiServer": {
           "type": "string"
         },
         "apiToken": {
-          "type": "string"
+          "type": "string",
+          "secret": true
         },
         "appId": {
           "type": "string"
         },
         "appKey": {
-          "type": "string"
+          "type": "string",
+          "secret": true
         },
         "applicationId": {
           "type": "string"
@@ -433,26 +438,46 @@
         "arn": {
           "type": "string"
         },
+        "awsAccessKeyId": {
+          "type": "string"
+        },
         "awsArn": {
           "type": "string"
         },
+        "awsRegion": {
+          "type": "string"
+        },
         "awsRegionName": {
+          "type": "string"
+        },
+        "awsRoleArn": {
+          "type": "string"
+        },
+        "awsSecretAccessKey": {
+          "type": "string",
+          "secret": true
+        },
+        "awsServiceAccount": {
           "type": "string"
         },
         "clientId": {
           "type": "string"
         },
         "clientSecret": {
-          "type": "string"
+          "type": "string",
+          "secret": true
         },
         "clientcert": {
-          "type": "string"
+          "type": "string",
+          "secret": true
         },
         "clusterCert": {
-          "type": "string"
+          "type": "string",
+          "secret": true
         },
         "clusterToken": {
-          "type": "string"
+          "type": "string",
+          "secret": true
         },
         "createIfNotExists": {
           "type": "boolean"
@@ -464,13 +489,15 @@
           "type": "string"
         },
         "databasePassword": {
-          "type": "string"
+          "type": "string",
+          "secret": true
         },
         "databaseUsername": {
           "type": "string"
         },
         "ddApiKey": {
-          "type": "string"
+          "type": "string",
+          "secret": true
         },
         "ddSite": {
           "type": "string"
@@ -504,10 +531,12 @@
           "type": "string"
         },
         "key": {
-          "type": "string"
+          "type": "string",
+          "secret": true
         },
         "keyFile": {
-          "type": "string"
+          "type": "string",
+          "secret": true
         },
         "loginUrl": {
           "type": "string"
@@ -532,13 +561,15 @@
           "type": "string"
         },
         "password": {
-          "type": "string"
+          "type": "string",
+          "secret": true
         },
         "port": {
           "type": "string"
         },
         "privateKey": {
-          "type": "string"
+          "type": "string",
+          "secret": true
         },
         "projectId": {
           "type": "string"
@@ -559,13 +590,15 @@
           "type": "string"
         },
         "rootCert": {
-          "type": "string"
+          "type": "string",
+          "secret": true
         },
         "schema": {
           "type": "string"
         },
         "secretAccessKey": {
-          "type": "string"
+          "type": "string",
+          "secret": true
         },
         "secretId": {
           "type": "string"
@@ -574,7 +607,8 @@
           "type": "string"
         },
         "sharedSecret": {
-          "type": "string"
+          "type": "string",
+          "secret": true
         },
         "sslMode": {
           "type": "string"
@@ -593,13 +627,16 @@
           "type": "string"
         },
         "tlsCertFile": {
-          "type": "string"
+          "type": "string",
+          "secret": true
         },
         "tlsKeyFile": {
-          "type": "string"
+          "type": "string",
+          "secret": true
         },
         "tlsRootCert": {
-          "type": "string"
+          "type": "string",
+          "secret": true
         },
         "tokenId": {
           "type": "string"
@@ -620,7 +657,13 @@
         "urls": {
           "type": "string"
         },
+        "useIrsa": {
+          "type": "boolean"
+        },
         "useProxy": {
+          "type": "boolean"
+        },
+        "useRdsIam": {
           "type": "boolean"
         },
         "useServiceAccount": {
@@ -639,7 +682,8 @@
           "type": "string"
         },
         "webhookUrl": {
-          "type": "string"
+          "type": "string",
+          "secret": true
         },
         "webuiPort": {
           "type": "string"
@@ -651,7 +695,8 @@
       ],
       "inputProperties": {
         "accessKeyId": {
-          "type": "string"
+          "type": "string",
+          "secret": true
         },
         "annotations": {
           "type": "string"
@@ -660,22 +705,26 @@
           "type": "string"
         },
         "apiClientSecret": {
-          "type": "string"
+          "type": "string",
+          "secret": true
         },
         "apiKey": {
-          "type": "string"
+          "type": "string",
+          "secret": true
         },
         "apiServer": {
           "type": "string"
         },
         "apiToken": {
-          "type": "string"
+          "type": "string",
+          "secret": true
         },
         "appId": {
           "type": "string"
         },
         "appKey": {
-          "type": "string"
+          "type": "string",
+          "secret": true
         },
         "applicationId": {
           "type": "string"
@@ -686,26 +735,46 @@
         "arn": {
           "type": "string"
         },
+        "awsAccessKeyId": {
+          "type": "string"
+        },
         "awsArn": {
           "type": "string"
         },
+        "awsRegion": {
+          "type": "string"
+        },
         "awsRegionName": {
+          "type": "string"
+        },
+        "awsRoleArn": {
+          "type": "string"
+        },
+        "awsSecretAccessKey": {
+          "type": "string",
+          "secret": true
+        },
+        "awsServiceAccount": {
           "type": "string"
         },
         "clientId": {
           "type": "string"
         },
         "clientSecret": {
-          "type": "string"
+          "type": "string",
+          "secret": true
         },
         "clientcert": {
-          "type": "string"
+          "type": "string",
+          "secret": true
         },
         "clusterCert": {
-          "type": "string"
+          "type": "string",
+          "secret": true
         },
         "clusterToken": {
-          "type": "string"
+          "type": "string",
+          "secret": true
         },
         "createIfNotExists": {
           "type": "boolean"
@@ -717,13 +786,15 @@
           "type": "string"
         },
         "databasePassword": {
-          "type": "string"
+          "type": "string",
+          "secret": true
         },
         "databaseUsername": {
           "type": "string"
         },
         "ddApiKey": {
-          "type": "string"
+          "type": "string",
+          "secret": true
         },
         "ddSite": {
           "type": "string"
@@ -757,10 +828,12 @@
           "type": "string"
         },
         "key": {
-          "type": "string"
+          "type": "string",
+          "secret": true
         },
         "keyFile": {
-          "type": "string"
+          "type": "string",
+          "secret": true
         },
         "loginUrl": {
           "type": "string"
@@ -785,13 +858,15 @@
           "type": "string"
         },
         "password": {
-          "type": "string"
+          "type": "string",
+          "secret": true
         },
         "port": {
           "type": "string"
         },
         "privateKey": {
-          "type": "string"
+          "type": "string",
+          "secret": true
         },
         "projectId": {
           "type": "string"
@@ -812,13 +887,15 @@
           "type": "string"
         },
         "rootCert": {
-          "type": "string"
+          "type": "string",
+          "secret": true
         },
         "schema": {
           "type": "string"
         },
         "secretAccessKey": {
-          "type": "string"
+          "type": "string",
+          "secret": true
         },
         "secretId": {
           "type": "string"
@@ -827,7 +904,8 @@
           "type": "string"
         },
         "sharedSecret": {
-          "type": "string"
+          "type": "string",
+          "secret": true
         },
         "sslMode": {
           "type": "string"
@@ -846,13 +924,16 @@
           "type": "string"
         },
         "tlsCertFile": {
-          "type": "string"
+          "type": "string",
+          "secret": true
         },
         "tlsKeyFile": {
-          "type": "string"
+          "type": "string",
+          "secret": true
         },
         "tlsRootCert": {
-          "type": "string"
+          "type": "string",
+          "secret": true
         },
         "tokenId": {
           "type": "string"
@@ -873,7 +954,13 @@
         "urls": {
           "type": "string"
         },
+        "useIrsa": {
+          "type": "boolean"
+        },
         "useProxy": {
+          "type": "boolean"
+        },
+        "useRdsIam": {
           "type": "boolean"
         },
         "useServiceAccount": {
@@ -892,7 +979,8 @@
           "type": "string"
         },
         "webhookUrl": {
-          "type": "string"
+          "type": "string",
+          "secret": true
         },
         "webuiPort": {
           "type": "string"
@@ -901,6 +989,216 @@
       "requiredInputs": [
         "type",
         "name"
+      ]
+    },
+    "adaptive:index:Schedule": {
+      "properties": {
+        "allDay": {
+          "type": "boolean",
+          "description": "Whether the schedule covers the whole day, ignoring the hour and minute bounds.",
+          "default": false
+        },
+        "description": {
+          "type": "string",
+          "description": "An optional description of the schedule."
+        },
+        "endDay": {
+          "type": "integer",
+          "description": "Day of month the window closes. Used when scheduleType is monthly."
+        },
+        "endHour": {
+          "type": "integer",
+          "description": "Hour the window closes (0-23). Ignored when allDay is set."
+        },
+        "endMinute": {
+          "type": "integer",
+          "description": "Minute the window closes (0-59). Ignored when allDay is set."
+        },
+        "endpoints": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          },
+          "description": "Names of endpoints this schedule applies to."
+        },
+        "expiresAt": {
+          "type": "string",
+          "description": "RFC3339 timestamp after which the schedule stops applying."
+        },
+        "isActive": {
+          "type": "boolean",
+          "description": "Whether the schedule is active.",
+          "default": true
+        },
+        "maxAccessTime": {
+          "type": "integer",
+          "description": "Maximum granted access duration, in minutes."
+        },
+        "name": {
+          "type": "string",
+          "description": "Name of the schedule. Must be unique within the workspace."
+        },
+        "operationType": {
+          "type": "string",
+          "description": "Either autoapprove (default) or autoreject.",
+          "default": "autoapprove"
+        },
+        "scheduleType": {
+          "type": "string",
+          "description": "One of weekdays, weekends, everyday, monthly, specific, or custom."
+        },
+        "specificDates": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          },
+          "description": "RFC3339 dates the schedule applies to. Used when scheduleType is specific."
+        },
+        "startDay": {
+          "type": "integer",
+          "description": "Day of month the window opens. Used when scheduleType is monthly."
+        },
+        "startHour": {
+          "type": "integer",
+          "description": "Hour the window opens (0-23). Ignored when allDay is set."
+        },
+        "startMinute": {
+          "type": "integer",
+          "description": "Minute the window opens (0-59). Ignored when allDay is set."
+        },
+        "teams": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          },
+          "description": "Names of groups this schedule applies to."
+        },
+        "timezone": {
+          "type": "string",
+          "description": "IANA timezone the window is evaluated in. Empty inherits the workspace default."
+        },
+        "users": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          },
+          "description": "Emails of users this schedule applies to."
+        },
+        "weekdays": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          },
+          "description": "Weekday names the schedule applies to. Used when scheduleType is custom."
+        }
+      },
+      "required": [
+        "name",
+        "scheduleType"
+      ],
+      "inputProperties": {
+        "allDay": {
+          "type": "boolean",
+          "description": "Whether the schedule covers the whole day, ignoring the hour and minute bounds.",
+          "default": false
+        },
+        "description": {
+          "type": "string",
+          "description": "An optional description of the schedule."
+        },
+        "endDay": {
+          "type": "integer",
+          "description": "Day of month the window closes. Used when scheduleType is monthly."
+        },
+        "endHour": {
+          "type": "integer",
+          "description": "Hour the window closes (0-23). Ignored when allDay is set."
+        },
+        "endMinute": {
+          "type": "integer",
+          "description": "Minute the window closes (0-59). Ignored when allDay is set."
+        },
+        "endpoints": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          },
+          "description": "Names of endpoints this schedule applies to."
+        },
+        "expiresAt": {
+          "type": "string",
+          "description": "RFC3339 timestamp after which the schedule stops applying."
+        },
+        "isActive": {
+          "type": "boolean",
+          "description": "Whether the schedule is active.",
+          "default": true
+        },
+        "maxAccessTime": {
+          "type": "integer",
+          "description": "Maximum granted access duration, in minutes."
+        },
+        "name": {
+          "type": "string",
+          "description": "Name of the schedule. Must be unique within the workspace."
+        },
+        "operationType": {
+          "type": "string",
+          "description": "Either autoapprove (default) or autoreject.",
+          "default": "autoapprove"
+        },
+        "scheduleType": {
+          "type": "string",
+          "description": "One of weekdays, weekends, everyday, monthly, specific, or custom."
+        },
+        "specificDates": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          },
+          "description": "RFC3339 dates the schedule applies to. Used when scheduleType is specific."
+        },
+        "startDay": {
+          "type": "integer",
+          "description": "Day of month the window opens. Used when scheduleType is monthly."
+        },
+        "startHour": {
+          "type": "integer",
+          "description": "Hour the window opens (0-23). Ignored when allDay is set."
+        },
+        "startMinute": {
+          "type": "integer",
+          "description": "Minute the window opens (0-59). Ignored when allDay is set."
+        },
+        "teams": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          },
+          "description": "Names of groups this schedule applies to."
+        },
+        "timezone": {
+          "type": "string",
+          "description": "IANA timezone the window is evaluated in. Empty inherits the workspace default."
+        },
+        "users": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          },
+          "description": "Emails of users this schedule applies to."
+        },
+        "weekdays": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          },
+          "description": "Weekday names the schedule applies to. Used when scheduleType is custom."
+        }
+      },
+      "requiredInputs": [
+        "name",
+        "scheduleType"
       ]
     },
     "adaptive:index:Script": {
