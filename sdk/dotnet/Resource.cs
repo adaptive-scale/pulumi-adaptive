@@ -256,6 +256,12 @@ namespace AdaptiveScale.Adaptive
         [Output("publicKey")]
         public Output<string?> PublicKey { get; private set; } = null!;
 
+        /// <summary>
+        /// Opaque server fingerprints of the write-only secret fields, used to detect out-of-band secret changes on refresh. Not comparable across resources or workspaces.
+        /// </summary>
+        [Output("redactedDigests")]
+        public Output<ImmutableDictionary<string, string>?> RedactedDigests { get; private set; } = null!;
+
         [Output("region")]
         public Output<string?> Region { get; private set; } = null!;
 
@@ -415,6 +421,39 @@ namespace AdaptiveScale.Adaptive
             {
                 Version = Utilities.Version,
                 PluginDownloadURL = "github://api.github.com/adaptive-scale/pulumi-adaptive",
+                AdditionalSecretOutputs =
+                {
+                    "apiClientSecret",
+                    "apiKey",
+                    "apiSecret",
+                    "apiToken",
+                    "appKey",
+                    "clientCert",
+                    "clientCertificate",
+                    "clientConfiguration",
+                    "clientKey",
+                    "clientSecret",
+                    "clientcert",
+                    "clusterToken",
+                    "credentialJson",
+                    "databasePassword",
+                    "ddApiKey",
+                    "key",
+                    "keyFile",
+                    "ldapSearchBindPassword",
+                    "password",
+                    "privateKey",
+                    "proxysqlAdminPassword",
+                    "secretAccessKey",
+                    "secretId",
+                    "sharedSecret",
+                    "targets",
+                    "tlsKeyFile",
+                    "token",
+                    "tokenId",
+                    "uri",
+                    "webhookUrl",
+                },
             };
             var merged = CustomResourceOptions.Merge(defaultOptions, options);
             // Override the ID if one was specified for consistency with other language SDKs.
@@ -453,25 +492,70 @@ namespace AdaptiveScale.Adaptive
         public Input<string>? ApiClientId { get; set; }
 
         [Input("apiClientSecret")]
-        public Input<string>? ApiClientSecret { get; set; }
+        private Input<string>? _apiClientSecret;
+        public Input<string>? ApiClientSecret
+        {
+            get => _apiClientSecret;
+            set
+            {
+                var emptySecret = Output.CreateSecret(0);
+                _apiClientSecret = Output.Tuple<Input<string>?, int>(value, emptySecret).Apply(t => t.Item1);
+            }
+        }
 
         [Input("apiKey")]
-        public Input<string>? ApiKey { get; set; }
+        private Input<string>? _apiKey;
+        public Input<string>? ApiKey
+        {
+            get => _apiKey;
+            set
+            {
+                var emptySecret = Output.CreateSecret(0);
+                _apiKey = Output.Tuple<Input<string>?, int>(value, emptySecret).Apply(t => t.Item1);
+            }
+        }
 
         [Input("apiSecret")]
-        public Input<string>? ApiSecret { get; set; }
+        private Input<string>? _apiSecret;
+        public Input<string>? ApiSecret
+        {
+            get => _apiSecret;
+            set
+            {
+                var emptySecret = Output.CreateSecret(0);
+                _apiSecret = Output.Tuple<Input<string>?, int>(value, emptySecret).Apply(t => t.Item1);
+            }
+        }
 
         [Input("apiServer")]
         public Input<string>? ApiServer { get; set; }
 
         [Input("apiToken")]
-        public Input<string>? ApiToken { get; set; }
+        private Input<string>? _apiToken;
+        public Input<string>? ApiToken
+        {
+            get => _apiToken;
+            set
+            {
+                var emptySecret = Output.CreateSecret(0);
+                _apiToken = Output.Tuple<Input<string>?, int>(value, emptySecret).Apply(t => t.Item1);
+            }
+        }
 
         [Input("appId")]
         public Input<string>? AppId { get; set; }
 
         [Input("appKey")]
-        public Input<string>? AppKey { get; set; }
+        private Input<string>? _appKey;
+        public Input<string>? AppKey
+        {
+            get => _appKey;
+            set
+            {
+                var emptySecret = Output.CreateSecret(0);
+                _appKey = Output.Tuple<Input<string>?, int>(value, emptySecret).Apply(t => t.Item1);
+            }
+        }
 
         [Input("applicationId")]
         public Input<string>? ApplicationId { get; set; }
@@ -492,31 +576,94 @@ namespace AdaptiveScale.Adaptive
         public Input<string>? AwsRegionName { get; set; }
 
         [Input("clientCert")]
-        public Input<string>? ClientCert { get; set; }
+        private Input<string>? _clientCert;
+        public Input<string>? ClientCert
+        {
+            get => _clientCert;
+            set
+            {
+                var emptySecret = Output.CreateSecret(0);
+                _clientCert = Output.Tuple<Input<string>?, int>(value, emptySecret).Apply(t => t.Item1);
+            }
+        }
 
         [Input("clientCertificate")]
-        public Input<string>? ClientCertificate { get; set; }
+        private Input<string>? _clientCertificate;
+        public Input<string>? ClientCertificate
+        {
+            get => _clientCertificate;
+            set
+            {
+                var emptySecret = Output.CreateSecret(0);
+                _clientCertificate = Output.Tuple<Input<string>?, int>(value, emptySecret).Apply(t => t.Item1);
+            }
+        }
 
         [Input("clientConfiguration")]
-        public Input<string>? ClientConfiguration { get; set; }
+        private Input<string>? _clientConfiguration;
+        public Input<string>? ClientConfiguration
+        {
+            get => _clientConfiguration;
+            set
+            {
+                var emptySecret = Output.CreateSecret(0);
+                _clientConfiguration = Output.Tuple<Input<string>?, int>(value, emptySecret).Apply(t => t.Item1);
+            }
+        }
 
         [Input("clientId")]
         public Input<string>? ClientId { get; set; }
 
         [Input("clientKey")]
-        public Input<string>? ClientKey { get; set; }
+        private Input<string>? _clientKey;
+        public Input<string>? ClientKey
+        {
+            get => _clientKey;
+            set
+            {
+                var emptySecret = Output.CreateSecret(0);
+                _clientKey = Output.Tuple<Input<string>?, int>(value, emptySecret).Apply(t => t.Item1);
+            }
+        }
 
         [Input("clientSecret")]
-        public Input<string>? ClientSecret { get; set; }
+        private Input<string>? _clientSecret;
+        public Input<string>? ClientSecret
+        {
+            get => _clientSecret;
+            set
+            {
+                var emptySecret = Output.CreateSecret(0);
+                _clientSecret = Output.Tuple<Input<string>?, int>(value, emptySecret).Apply(t => t.Item1);
+            }
+        }
 
         [Input("clientcert")]
-        public Input<string>? Clientcert { get; set; }
+        private Input<string>? _clientcert;
+        public Input<string>? Clientcert
+        {
+            get => _clientcert;
+            set
+            {
+                var emptySecret = Output.CreateSecret(0);
+                _clientcert = Output.Tuple<Input<string>?, int>(value, emptySecret).Apply(t => t.Item1);
+            }
+        }
 
         [Input("clusterCert")]
         public Input<string>? ClusterCert { get; set; }
 
         [Input("clusterToken")]
-        public Input<string>? ClusterToken { get; set; }
+        private Input<string>? _clusterToken;
+        public Input<string>? ClusterToken
+        {
+            get => _clusterToken;
+            set
+            {
+                var emptySecret = Output.CreateSecret(0);
+                _clusterToken = Output.Tuple<Input<string>?, int>(value, emptySecret).Apply(t => t.Item1);
+            }
+        }
 
         [Input("connectServerUrl")]
         public Input<string>? ConnectServerUrl { get; set; }
@@ -528,7 +675,16 @@ namespace AdaptiveScale.Adaptive
         public Input<bool>? CreateIfNotExists { get; set; }
 
         [Input("credentialJson")]
-        public Input<string>? CredentialJson { get; set; }
+        private Input<string>? _credentialJson;
+        public Input<string>? CredentialJson
+        {
+            get => _credentialJson;
+            set
+            {
+                var emptySecret = Output.CreateSecret(0);
+                _credentialJson = Output.Tuple<Input<string>?, int>(value, emptySecret).Apply(t => t.Item1);
+            }
+        }
 
         [Input("databaseAccount")]
         public Input<string>? DatabaseAccount { get; set; }
@@ -537,13 +693,31 @@ namespace AdaptiveScale.Adaptive
         public Input<string>? DatabaseName { get; set; }
 
         [Input("databasePassword")]
-        public Input<string>? DatabasePassword { get; set; }
+        private Input<string>? _databasePassword;
+        public Input<string>? DatabasePassword
+        {
+            get => _databasePassword;
+            set
+            {
+                var emptySecret = Output.CreateSecret(0);
+                _databasePassword = Output.Tuple<Input<string>?, int>(value, emptySecret).Apply(t => t.Item1);
+            }
+        }
 
         [Input("databaseUsername")]
         public Input<string>? DatabaseUsername { get; set; }
 
         [Input("ddApiKey")]
-        public Input<string>? DdApiKey { get; set; }
+        private Input<string>? _ddApiKey;
+        public Input<string>? DdApiKey
+        {
+            get => _ddApiKey;
+            set
+            {
+                var emptySecret = Output.CreateSecret(0);
+                _ddApiKey = Output.Tuple<Input<string>?, int>(value, emptySecret).Apply(t => t.Item1);
+            }
+        }
 
         [Input("ddSite")]
         public Input<string>? DdSite { get; set; }
@@ -587,10 +761,28 @@ namespace AdaptiveScale.Adaptive
         public Input<bool>? IsRedisLabs { get; set; }
 
         [Input("key")]
-        public Input<string>? Key { get; set; }
+        private Input<string>? _key;
+        public Input<string>? Key
+        {
+            get => _key;
+            set
+            {
+                var emptySecret = Output.CreateSecret(0);
+                _key = Output.Tuple<Input<string>?, int>(value, emptySecret).Apply(t => t.Item1);
+            }
+        }
 
         [Input("keyFile")]
-        public Input<string>? KeyFile { get; set; }
+        private Input<string>? _keyFile;
+        public Input<string>? KeyFile
+        {
+            get => _keyFile;
+            set
+            {
+                var emptySecret = Output.CreateSecret(0);
+                _keyFile = Output.Tuple<Input<string>?, int>(value, emptySecret).Apply(t => t.Item1);
+            }
+        }
 
         [Input("ldapEncryptionMethod")]
         public Input<string>? LdapEncryptionMethod { get; set; }
@@ -605,7 +797,16 @@ namespace AdaptiveScale.Adaptive
         public Input<string>? LdapSearchBindDn { get; set; }
 
         [Input("ldapSearchBindPassword")]
-        public Input<string>? LdapSearchBindPassword { get; set; }
+        private Input<string>? _ldapSearchBindPassword;
+        public Input<string>? LdapSearchBindPassword
+        {
+            get => _ldapSearchBindPassword;
+            set
+            {
+                var emptySecret = Output.CreateSecret(0);
+                _ldapSearchBindPassword = Output.Tuple<Input<string>?, int>(value, emptySecret).Apply(t => t.Item1);
+            }
+        }
 
         [Input("ldapUserBaseDn")]
         public Input<string>? LdapUserBaseDn { get; set; }
@@ -653,7 +854,16 @@ namespace AdaptiveScale.Adaptive
         public Input<string>? OrganizationId { get; set; }
 
         [Input("password")]
-        public Input<string>? Password { get; set; }
+        private Input<string>? _password;
+        public Input<string>? Password
+        {
+            get => _password;
+            set
+            {
+                var emptySecret = Output.CreateSecret(0);
+                _password = Output.Tuple<Input<string>?, int>(value, emptySecret).Apply(t => t.Item1);
+            }
+        }
 
         [Input("port")]
         public Input<string>? Port { get; set; }
@@ -662,7 +872,16 @@ namespace AdaptiveScale.Adaptive
         public Input<string>? Prestart { get; set; }
 
         [Input("privateKey")]
-        public Input<string>? PrivateKey { get; set; }
+        private Input<string>? _privateKey;
+        public Input<string>? PrivateKey
+        {
+            get => _privateKey;
+            set
+            {
+                var emptySecret = Output.CreateSecret(0);
+                _privateKey = Output.Tuple<Input<string>?, int>(value, emptySecret).Apply(t => t.Item1);
+            }
+        }
 
         [Input("projectId")]
         public Input<string>? ProjectId { get; set; }
@@ -671,7 +890,16 @@ namespace AdaptiveScale.Adaptive
         public Input<string>? Protocol { get; set; }
 
         [Input("proxysqlAdminPassword")]
-        public Input<string>? ProxysqlAdminPassword { get; set; }
+        private Input<string>? _proxysqlAdminPassword;
+        public Input<string>? ProxysqlAdminPassword
+        {
+            get => _proxysqlAdminPassword;
+            set
+            {
+                var emptySecret = Output.CreateSecret(0);
+                _proxysqlAdminPassword = Output.Tuple<Input<string>?, int>(value, emptySecret).Apply(t => t.Item1);
+            }
+        }
 
         [Input("proxysqlAdminPort")]
         public Input<string>? ProxysqlAdminPort { get; set; }
@@ -707,10 +935,28 @@ namespace AdaptiveScale.Adaptive
         public Input<string>? Script { get; set; }
 
         [Input("secretAccessKey")]
-        public Input<string>? SecretAccessKey { get; set; }
+        private Input<string>? _secretAccessKey;
+        public Input<string>? SecretAccessKey
+        {
+            get => _secretAccessKey;
+            set
+            {
+                var emptySecret = Output.CreateSecret(0);
+                _secretAccessKey = Output.Tuple<Input<string>?, int>(value, emptySecret).Apply(t => t.Item1);
+            }
+        }
 
         [Input("secretId")]
-        public Input<string>? SecretId { get; set; }
+        private Input<string>? _secretId;
+        public Input<string>? SecretId
+        {
+            get => _secretId;
+            set
+            {
+                var emptySecret = Output.CreateSecret(0);
+                _secretId = Output.Tuple<Input<string>?, int>(value, emptySecret).Apply(t => t.Item1);
+            }
+        }
 
         [Input("serviceAccount")]
         public Input<string>? ServiceAccount { get; set; }
@@ -722,7 +968,16 @@ namespace AdaptiveScale.Adaptive
         public Input<string>? ServiceName { get; set; }
 
         [Input("sharedSecret")]
-        public Input<string>? SharedSecret { get; set; }
+        private Input<string>? _sharedSecret;
+        public Input<string>? SharedSecret
+        {
+            get => _sharedSecret;
+            set
+            {
+                var emptySecret = Output.CreateSecret(0);
+                _sharedSecret = Output.Tuple<Input<string>?, int>(value, emptySecret).Apply(t => t.Item1);
+            }
+        }
 
         [Input("sslMode")]
         public Input<string>? SslMode { get; set; }
@@ -746,7 +1001,16 @@ namespace AdaptiveScale.Adaptive
         }
 
         [Input("targets")]
-        public Input<string>? Targets { get; set; }
+        private Input<string>? _targets;
+        public Input<string>? Targets
+        {
+            get => _targets;
+            set
+            {
+                var emptySecret = Output.CreateSecret(0);
+                _targets = Output.Tuple<Input<string>?, int>(value, emptySecret).Apply(t => t.Item1);
+            }
+        }
 
         [Input("tenantId")]
         public Input<string>? TenantId { get; set; }
@@ -761,7 +1025,16 @@ namespace AdaptiveScale.Adaptive
         public Input<bool>? TlsEnabled { get; set; }
 
         [Input("tlsKeyFile")]
-        public Input<string>? TlsKeyFile { get; set; }
+        private Input<string>? _tlsKeyFile;
+        public Input<string>? TlsKeyFile
+        {
+            get => _tlsKeyFile;
+            set
+            {
+                var emptySecret = Output.CreateSecret(0);
+                _tlsKeyFile = Output.Tuple<Input<string>?, int>(value, emptySecret).Apply(t => t.Item1);
+            }
+        }
 
         [Input("tlsRootCert")]
         public Input<string>? TlsRootCert { get; set; }
@@ -770,10 +1043,28 @@ namespace AdaptiveScale.Adaptive
         public Input<bool>? TlsSkipVerify { get; set; }
 
         [Input("token")]
-        public Input<string>? Token { get; set; }
+        private Input<string>? _token;
+        public Input<string>? Token
+        {
+            get => _token;
+            set
+            {
+                var emptySecret = Output.CreateSecret(0);
+                _token = Output.Tuple<Input<string>?, int>(value, emptySecret).Apply(t => t.Item1);
+            }
+        }
 
         [Input("tokenId")]
-        public Input<string>? TokenId { get; set; }
+        private Input<string>? _tokenId;
+        public Input<string>? TokenId
+        {
+            get => _tokenId;
+            set
+            {
+                var emptySecret = Output.CreateSecret(0);
+                _tokenId = Output.Tuple<Input<string>?, int>(value, emptySecret).Apply(t => t.Item1);
+            }
+        }
 
         [Input("tolerations")]
         public Input<string>? Tolerations { get; set; }
@@ -785,7 +1076,16 @@ namespace AdaptiveScale.Adaptive
         public Input<string> Type { get; set; } = null!;
 
         [Input("uri")]
-        public Input<string>? Uri { get; set; }
+        private Input<string>? _uri;
+        public Input<string>? Uri
+        {
+            get => _uri;
+            set
+            {
+                var emptySecret = Output.CreateSecret(0);
+                _uri = Output.Tuple<Input<string>?, int>(value, emptySecret).Apply(t => t.Item1);
+            }
+        }
 
         [Input("url")]
         public Input<string>? Url { get; set; }
@@ -821,7 +1121,16 @@ namespace AdaptiveScale.Adaptive
         public Input<string>? Warehouse { get; set; }
 
         [Input("webhookUrl")]
-        public Input<string>? WebhookUrl { get; set; }
+        private Input<string>? _webhookUrl;
+        public Input<string>? WebhookUrl
+        {
+            get => _webhookUrl;
+            set
+            {
+                var emptySecret = Output.CreateSecret(0);
+                _webhookUrl = Output.Tuple<Input<string>?, int>(value, emptySecret).Apply(t => t.Item1);
+            }
+        }
 
         [Input("webuiPort")]
         public Input<string>? WebuiPort { get; set; }

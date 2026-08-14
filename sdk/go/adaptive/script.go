@@ -17,6 +17,8 @@ type Script struct {
 
 	// The command the script runs. Write-only: the Adaptive API never returns script bodies, so drift in the command cannot be detected and `pulumi import` leaves it empty.
 	Command pulumi.StringOutput `pulumi:"command"`
+	// Opaque server fingerprint of the script body, used to detect out-of-band command changes on refresh.
+	CommandDigest pulumi.StringPtrOutput `pulumi:"commandDigest"`
 	// An optional description of the script.
 	Description pulumi.StringPtrOutput `pulumi:"description"`
 	// The endpoint the script is attached to. Cannot be changed after creation.
@@ -45,6 +47,13 @@ func NewScript(ctx *pulumi.Context,
 	if args.Name == nil {
 		return nil, errors.New("invalid value for required argument 'Name'")
 	}
+	if args.Command != nil {
+		args.Command = pulumi.ToSecret(args.Command).(pulumi.StringInput)
+	}
+	secrets := pulumi.AdditionalSecretOutputs([]string{
+		"command",
+	})
+	opts = append(opts, secrets)
 	opts = internal.PkgResourceDefaultOpts(opts)
 	var resource Script
 	err := ctx.RegisterResource("adaptive:index:Script", name, args, &resource, opts...)
@@ -194,6 +203,11 @@ func (o ScriptOutput) ToScriptOutputWithContext(ctx context.Context) ScriptOutpu
 // The command the script runs. Write-only: the Adaptive API never returns script bodies, so drift in the command cannot be detected and `pulumi import` leaves it empty.
 func (o ScriptOutput) Command() pulumi.StringOutput {
 	return o.ApplyT(func(v *Script) pulumi.StringOutput { return v.Command }).(pulumi.StringOutput)
+}
+
+// Opaque server fingerprint of the script body, used to detect out-of-band command changes on refresh.
+func (o ScriptOutput) CommandDigest() pulumi.StringPtrOutput {
+	return o.ApplyT(func(v *Script) pulumi.StringPtrOutput { return v.CommandDigest }).(pulumi.StringPtrOutput)
 }
 
 // An optional description of the script.

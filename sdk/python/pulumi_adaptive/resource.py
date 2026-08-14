@@ -1802,37 +1802,37 @@ class Resource(pulumi.CustomResource):
             __props__.__dict__["access_key_id"] = access_key_id
             __props__.__dict__["annotations"] = annotations
             __props__.__dict__["api_client_id"] = api_client_id
-            __props__.__dict__["api_client_secret"] = api_client_secret
-            __props__.__dict__["api_key"] = api_key
-            __props__.__dict__["api_secret"] = api_secret
+            __props__.__dict__["api_client_secret"] = None if api_client_secret is None else pulumi.Output.secret(api_client_secret)
+            __props__.__dict__["api_key"] = None if api_key is None else pulumi.Output.secret(api_key)
+            __props__.__dict__["api_secret"] = None if api_secret is None else pulumi.Output.secret(api_secret)
             __props__.__dict__["api_server"] = api_server
-            __props__.__dict__["api_token"] = api_token
+            __props__.__dict__["api_token"] = None if api_token is None else pulumi.Output.secret(api_token)
             __props__.__dict__["app_id"] = app_id
-            __props__.__dict__["app_key"] = app_key
+            __props__.__dict__["app_key"] = None if app_key is None else pulumi.Output.secret(app_key)
             __props__.__dict__["application_id"] = application_id
             __props__.__dict__["application_name"] = application_name
             __props__.__dict__["arn"] = arn
             __props__.__dict__["automation_mode"] = automation_mode
             __props__.__dict__["aws_arn"] = aws_arn
             __props__.__dict__["aws_region_name"] = aws_region_name
-            __props__.__dict__["client_cert"] = client_cert
-            __props__.__dict__["client_certificate"] = client_certificate
-            __props__.__dict__["client_configuration"] = client_configuration
+            __props__.__dict__["client_cert"] = None if client_cert is None else pulumi.Output.secret(client_cert)
+            __props__.__dict__["client_certificate"] = None if client_certificate is None else pulumi.Output.secret(client_certificate)
+            __props__.__dict__["client_configuration"] = None if client_configuration is None else pulumi.Output.secret(client_configuration)
             __props__.__dict__["client_id"] = client_id
-            __props__.__dict__["client_key"] = client_key
-            __props__.__dict__["client_secret"] = client_secret
-            __props__.__dict__["clientcert"] = clientcert
+            __props__.__dict__["client_key"] = None if client_key is None else pulumi.Output.secret(client_key)
+            __props__.__dict__["client_secret"] = None if client_secret is None else pulumi.Output.secret(client_secret)
+            __props__.__dict__["clientcert"] = None if clientcert is None else pulumi.Output.secret(clientcert)
             __props__.__dict__["cluster_cert"] = cluster_cert
-            __props__.__dict__["cluster_token"] = cluster_token
+            __props__.__dict__["cluster_token"] = None if cluster_token is None else pulumi.Output.secret(cluster_token)
             __props__.__dict__["connect_server_url"] = connect_server_url
             __props__.__dict__["cpu"] = cpu
             __props__.__dict__["create_if_not_exists"] = create_if_not_exists
-            __props__.__dict__["credential_json"] = credential_json
+            __props__.__dict__["credential_json"] = None if credential_json is None else pulumi.Output.secret(credential_json)
             __props__.__dict__["database_account"] = database_account
             __props__.__dict__["database_name"] = database_name
-            __props__.__dict__["database_password"] = database_password
+            __props__.__dict__["database_password"] = None if database_password is None else pulumi.Output.secret(database_password)
             __props__.__dict__["database_username"] = database_username
-            __props__.__dict__["dd_api_key"] = dd_api_key
+            __props__.__dict__["dd_api_key"] = None if dd_api_key is None else pulumi.Output.secret(dd_api_key)
             __props__.__dict__["dd_site"] = dd_site
             __props__.__dict__["default_cluster"] = default_cluster
             __props__.__dict__["default_user"] = default_user
@@ -1844,13 +1844,13 @@ class Resource(pulumi.CustomResource):
             __props__.__dict__["image"] = image
             __props__.__dict__["index"] = index
             __props__.__dict__["is_redis_labs"] = is_redis_labs
-            __props__.__dict__["key"] = key
-            __props__.__dict__["key_file"] = key_file
+            __props__.__dict__["key"] = None if key is None else pulumi.Output.secret(key)
+            __props__.__dict__["key_file"] = None if key_file is None else pulumi.Output.secret(key_file)
             __props__.__dict__["ldap_encryption_method"] = ldap_encryption_method
             __props__.__dict__["ldap_hostname"] = ldap_hostname
             __props__.__dict__["ldap_port"] = ldap_port
             __props__.__dict__["ldap_search_bind_dn"] = ldap_search_bind_dn
-            __props__.__dict__["ldap_search_bind_password"] = ldap_search_bind_password
+            __props__.__dict__["ldap_search_bind_password"] = None if ldap_search_bind_password is None else pulumi.Output.secret(ldap_search_bind_password)
             __props__.__dict__["ldap_user_base_dn"] = ldap_user_base_dn
             __props__.__dict__["ldap_user_name_attribute"] = ldap_user_name_attribute
             __props__.__dict__["log_group_name"] = log_group_name
@@ -1867,13 +1867,13 @@ class Resource(pulumi.CustomResource):
             __props__.__dict__["node_selector"] = node_selector
             __props__.__dict__["old_version"] = old_version
             __props__.__dict__["organization_id"] = organization_id
-            __props__.__dict__["password"] = password
+            __props__.__dict__["password"] = None if password is None else pulumi.Output.secret(password)
             __props__.__dict__["port"] = port
             __props__.__dict__["prestart"] = prestart
-            __props__.__dict__["private_key"] = private_key
+            __props__.__dict__["private_key"] = None if private_key is None else pulumi.Output.secret(private_key)
             __props__.__dict__["project_id"] = project_id
             __props__.__dict__["protocol"] = protocol
-            __props__.__dict__["proxysql_admin_password"] = proxysql_admin_password
+            __props__.__dict__["proxysql_admin_password"] = None if proxysql_admin_password is None else pulumi.Output.secret(proxysql_admin_password)
             __props__.__dict__["proxysql_admin_port"] = proxysql_admin_port
             __props__.__dict__["proxysql_admin_username"] = proxysql_admin_username
             __props__.__dict__["proxysql_hostgroup_id"] = proxysql_hostgroup_id
@@ -1885,31 +1885,31 @@ class Resource(pulumi.CustomResource):
             __props__.__dict__["root_cert"] = root_cert
             __props__.__dict__["schema"] = schema
             __props__.__dict__["script"] = script
-            __props__.__dict__["secret_access_key"] = secret_access_key
-            __props__.__dict__["secret_id"] = secret_id
+            __props__.__dict__["secret_access_key"] = None if secret_access_key is None else pulumi.Output.secret(secret_access_key)
+            __props__.__dict__["secret_id"] = None if secret_id is None else pulumi.Output.secret(secret_id)
             __props__.__dict__["service_account"] = service_account
             __props__.__dict__["service_account_name"] = service_account_name
             __props__.__dict__["service_name"] = service_name
-            __props__.__dict__["shared_secret"] = shared_secret
+            __props__.__dict__["shared_secret"] = None if shared_secret is None else pulumi.Output.secret(shared_secret)
             __props__.__dict__["ssl_mode"] = ssl_mode
             __props__.__dict__["storage"] = storage
             __props__.__dict__["sub_system_name"] = sub_system_name
             __props__.__dict__["tags"] = tags
-            __props__.__dict__["targets"] = targets
+            __props__.__dict__["targets"] = None if targets is None else pulumi.Output.secret(targets)
             __props__.__dict__["tenant_id"] = tenant_id
             __props__.__dict__["tls_ca_cert"] = tls_ca_cert
             __props__.__dict__["tls_cert_file"] = tls_cert_file
             __props__.__dict__["tls_enabled"] = tls_enabled
-            __props__.__dict__["tls_key_file"] = tls_key_file
+            __props__.__dict__["tls_key_file"] = None if tls_key_file is None else pulumi.Output.secret(tls_key_file)
             __props__.__dict__["tls_root_cert"] = tls_root_cert
             __props__.__dict__["tls_skip_verify"] = tls_skip_verify
-            __props__.__dict__["token"] = token
-            __props__.__dict__["token_id"] = token_id
+            __props__.__dict__["token"] = None if token is None else pulumi.Output.secret(token)
+            __props__.__dict__["token_id"] = None if token_id is None else pulumi.Output.secret(token_id)
             __props__.__dict__["tolerations"] = tolerations
             if type is None and not opts.urn:
                 raise TypeError("Missing required property 'type'")
             __props__.__dict__["type"] = type
-            __props__.__dict__["uri"] = uri
+            __props__.__dict__["uri"] = None if uri is None else pulumi.Output.secret(uri)
             __props__.__dict__["url"] = url
             __props__.__dict__["urls"] = urls
             __props__.__dict__["use_connect_server"] = use_connect_server
@@ -1921,8 +1921,11 @@ class Resource(pulumi.CustomResource):
             __props__.__dict__["value"] = value
             __props__.__dict__["version"] = version
             __props__.__dict__["warehouse"] = warehouse
-            __props__.__dict__["webhook_url"] = webhook_url
+            __props__.__dict__["webhook_url"] = None if webhook_url is None else pulumi.Output.secret(webhook_url)
             __props__.__dict__["webui_port"] = webui_port
+            __props__.__dict__["redacted_digests"] = None
+        secret_opts = pulumi.ResourceOptions(additional_secret_outputs=["apiClientSecret", "apiKey", "apiSecret", "apiToken", "appKey", "clientCert", "clientCertificate", "clientConfiguration", "clientKey", "clientSecret", "clientcert", "clusterToken", "credentialJson", "databasePassword", "ddApiKey", "key", "keyFile", "ldapSearchBindPassword", "password", "privateKey", "proxysqlAdminPassword", "secretAccessKey", "secretId", "sharedSecret", "targets", "tlsKeyFile", "token", "tokenId", "uri", "webhookUrl"])
+        opts = pulumi.ResourceOptions.merge(opts, secret_opts)
         super(Resource, __self__).__init__(
             'adaptive:index:Resource',
             resource_name,
@@ -2024,6 +2027,7 @@ class Resource(pulumi.CustomResource):
         __props__.__dict__["proxysql_admin_username"] = None
         __props__.__dict__["proxysql_hostgroup_id"] = None
         __props__.__dict__["public_key"] = None
+        __props__.__dict__["redacted_digests"] = None
         __props__.__dict__["region"] = None
         __props__.__dict__["region_name"] = None
         __props__.__dict__["resource"] = None
@@ -2469,6 +2473,14 @@ class Resource(pulumi.CustomResource):
     @pulumi.getter(name="publicKey")
     def public_key(self) -> pulumi.Output[Optional[_builtins.str]]:
         return pulumi.get(self, "public_key")
+
+    @_builtins.property
+    @pulumi.getter(name="redactedDigests")
+    def redacted_digests(self) -> pulumi.Output[Optional[Mapping[str, _builtins.str]]]:
+        """
+        Opaque server fingerprints of the write-only secret fields, used to detect out-of-band secret changes on refresh. Not comparable across resources or workspaces.
+        """
+        return pulumi.get(self, "redacted_digests")
 
     @_builtins.property
     @pulumi.getter

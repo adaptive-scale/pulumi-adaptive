@@ -96,22 +96,24 @@ type Resource struct {
 	ProxysqlAdminUsername pulumi.StringPtrOutput `pulumi:"proxysqlAdminUsername"`
 	ProxysqlHostgroupId   pulumi.StringPtrOutput `pulumi:"proxysqlHostgroupId"`
 	PublicKey             pulumi.StringPtrOutput `pulumi:"publicKey"`
-	Region                pulumi.StringPtrOutput `pulumi:"region"`
-	RegionName            pulumi.StringPtrOutput `pulumi:"regionName"`
-	Resource              pulumi.StringPtrOutput `pulumi:"resource"`
-	Role                  pulumi.StringPtrOutput `pulumi:"role"`
-	RootCert              pulumi.StringPtrOutput `pulumi:"rootCert"`
-	Schema                pulumi.StringPtrOutput `pulumi:"schema"`
-	Script                pulumi.StringPtrOutput `pulumi:"script"`
-	SecretAccessKey       pulumi.StringPtrOutput `pulumi:"secretAccessKey"`
-	SecretId              pulumi.StringPtrOutput `pulumi:"secretId"`
-	ServiceAccount        pulumi.StringPtrOutput `pulumi:"serviceAccount"`
-	ServiceAccountName    pulumi.StringPtrOutput `pulumi:"serviceAccountName"`
-	ServiceName           pulumi.StringPtrOutput `pulumi:"serviceName"`
-	SharedSecret          pulumi.StringPtrOutput `pulumi:"sharedSecret"`
-	SslMode               pulumi.StringPtrOutput `pulumi:"sslMode"`
-	Storage               pulumi.StringPtrOutput `pulumi:"storage"`
-	SubSystemName         pulumi.StringPtrOutput `pulumi:"subSystemName"`
+	// Opaque server fingerprints of the write-only secret fields, used to detect out-of-band secret changes on refresh. Not comparable across resources or workspaces.
+	RedactedDigests    pulumi.StringMapOutput `pulumi:"redactedDigests"`
+	Region             pulumi.StringPtrOutput `pulumi:"region"`
+	RegionName         pulumi.StringPtrOutput `pulumi:"regionName"`
+	Resource           pulumi.StringPtrOutput `pulumi:"resource"`
+	Role               pulumi.StringPtrOutput `pulumi:"role"`
+	RootCert           pulumi.StringPtrOutput `pulumi:"rootCert"`
+	Schema             pulumi.StringPtrOutput `pulumi:"schema"`
+	Script             pulumi.StringPtrOutput `pulumi:"script"`
+	SecretAccessKey    pulumi.StringPtrOutput `pulumi:"secretAccessKey"`
+	SecretId           pulumi.StringPtrOutput `pulumi:"secretId"`
+	ServiceAccount     pulumi.StringPtrOutput `pulumi:"serviceAccount"`
+	ServiceAccountName pulumi.StringPtrOutput `pulumi:"serviceAccountName"`
+	ServiceName        pulumi.StringPtrOutput `pulumi:"serviceName"`
+	SharedSecret       pulumi.StringPtrOutput `pulumi:"sharedSecret"`
+	SslMode            pulumi.StringPtrOutput `pulumi:"sslMode"`
+	Storage            pulumi.StringPtrOutput `pulumi:"storage"`
+	SubSystemName      pulumi.StringPtrOutput `pulumi:"subSystemName"`
 	// Optional tags.
 	Tags          pulumi.StringArrayOutput `pulumi:"tags"`
 	Targets       pulumi.StringPtrOutput   `pulumi:"targets"`
@@ -156,6 +158,129 @@ func NewResource(ctx *pulumi.Context,
 	if args.Type == nil {
 		return nil, errors.New("invalid value for required argument 'Type'")
 	}
+	if args.ApiClientSecret != nil {
+		args.ApiClientSecret = pulumi.ToSecret(args.ApiClientSecret).(pulumi.StringPtrInput)
+	}
+	if args.ApiKey != nil {
+		args.ApiKey = pulumi.ToSecret(args.ApiKey).(pulumi.StringPtrInput)
+	}
+	if args.ApiSecret != nil {
+		args.ApiSecret = pulumi.ToSecret(args.ApiSecret).(pulumi.StringPtrInput)
+	}
+	if args.ApiToken != nil {
+		args.ApiToken = pulumi.ToSecret(args.ApiToken).(pulumi.StringPtrInput)
+	}
+	if args.AppKey != nil {
+		args.AppKey = pulumi.ToSecret(args.AppKey).(pulumi.StringPtrInput)
+	}
+	if args.ClientCert != nil {
+		args.ClientCert = pulumi.ToSecret(args.ClientCert).(pulumi.StringPtrInput)
+	}
+	if args.ClientCertificate != nil {
+		args.ClientCertificate = pulumi.ToSecret(args.ClientCertificate).(pulumi.StringPtrInput)
+	}
+	if args.ClientConfiguration != nil {
+		args.ClientConfiguration = pulumi.ToSecret(args.ClientConfiguration).(pulumi.StringPtrInput)
+	}
+	if args.ClientKey != nil {
+		args.ClientKey = pulumi.ToSecret(args.ClientKey).(pulumi.StringPtrInput)
+	}
+	if args.ClientSecret != nil {
+		args.ClientSecret = pulumi.ToSecret(args.ClientSecret).(pulumi.StringPtrInput)
+	}
+	if args.Clientcert != nil {
+		args.Clientcert = pulumi.ToSecret(args.Clientcert).(pulumi.StringPtrInput)
+	}
+	if args.ClusterToken != nil {
+		args.ClusterToken = pulumi.ToSecret(args.ClusterToken).(pulumi.StringPtrInput)
+	}
+	if args.CredentialJson != nil {
+		args.CredentialJson = pulumi.ToSecret(args.CredentialJson).(pulumi.StringPtrInput)
+	}
+	if args.DatabasePassword != nil {
+		args.DatabasePassword = pulumi.ToSecret(args.DatabasePassword).(pulumi.StringPtrInput)
+	}
+	if args.DdApiKey != nil {
+		args.DdApiKey = pulumi.ToSecret(args.DdApiKey).(pulumi.StringPtrInput)
+	}
+	if args.Key != nil {
+		args.Key = pulumi.ToSecret(args.Key).(pulumi.StringPtrInput)
+	}
+	if args.KeyFile != nil {
+		args.KeyFile = pulumi.ToSecret(args.KeyFile).(pulumi.StringPtrInput)
+	}
+	if args.LdapSearchBindPassword != nil {
+		args.LdapSearchBindPassword = pulumi.ToSecret(args.LdapSearchBindPassword).(pulumi.StringPtrInput)
+	}
+	if args.Password != nil {
+		args.Password = pulumi.ToSecret(args.Password).(pulumi.StringPtrInput)
+	}
+	if args.PrivateKey != nil {
+		args.PrivateKey = pulumi.ToSecret(args.PrivateKey).(pulumi.StringPtrInput)
+	}
+	if args.ProxysqlAdminPassword != nil {
+		args.ProxysqlAdminPassword = pulumi.ToSecret(args.ProxysqlAdminPassword).(pulumi.StringPtrInput)
+	}
+	if args.SecretAccessKey != nil {
+		args.SecretAccessKey = pulumi.ToSecret(args.SecretAccessKey).(pulumi.StringPtrInput)
+	}
+	if args.SecretId != nil {
+		args.SecretId = pulumi.ToSecret(args.SecretId).(pulumi.StringPtrInput)
+	}
+	if args.SharedSecret != nil {
+		args.SharedSecret = pulumi.ToSecret(args.SharedSecret).(pulumi.StringPtrInput)
+	}
+	if args.Targets != nil {
+		args.Targets = pulumi.ToSecret(args.Targets).(pulumi.StringPtrInput)
+	}
+	if args.TlsKeyFile != nil {
+		args.TlsKeyFile = pulumi.ToSecret(args.TlsKeyFile).(pulumi.StringPtrInput)
+	}
+	if args.Token != nil {
+		args.Token = pulumi.ToSecret(args.Token).(pulumi.StringPtrInput)
+	}
+	if args.TokenId != nil {
+		args.TokenId = pulumi.ToSecret(args.TokenId).(pulumi.StringPtrInput)
+	}
+	if args.Uri != nil {
+		args.Uri = pulumi.ToSecret(args.Uri).(pulumi.StringPtrInput)
+	}
+	if args.WebhookUrl != nil {
+		args.WebhookUrl = pulumi.ToSecret(args.WebhookUrl).(pulumi.StringPtrInput)
+	}
+	secrets := pulumi.AdditionalSecretOutputs([]string{
+		"apiClientSecret",
+		"apiKey",
+		"apiSecret",
+		"apiToken",
+		"appKey",
+		"clientCert",
+		"clientCertificate",
+		"clientConfiguration",
+		"clientKey",
+		"clientSecret",
+		"clientcert",
+		"clusterToken",
+		"credentialJson",
+		"databasePassword",
+		"ddApiKey",
+		"key",
+		"keyFile",
+		"ldapSearchBindPassword",
+		"password",
+		"privateKey",
+		"proxysqlAdminPassword",
+		"secretAccessKey",
+		"secretId",
+		"sharedSecret",
+		"targets",
+		"tlsKeyFile",
+		"token",
+		"tokenId",
+		"uri",
+		"webhookUrl",
+	})
+	opts = append(opts, secrets)
 	opts = internal.PkgResourceDefaultOpts(opts)
 	var resource Resource
 	err := ctx.RegisterResource("adaptive:index:Resource", name, args, &resource, opts...)
@@ -850,6 +975,11 @@ func (o ResourceOutput) ProxysqlHostgroupId() pulumi.StringPtrOutput {
 
 func (o ResourceOutput) PublicKey() pulumi.StringPtrOutput {
 	return o.ApplyT(func(v *Resource) pulumi.StringPtrOutput { return v.PublicKey }).(pulumi.StringPtrOutput)
+}
+
+// Opaque server fingerprints of the write-only secret fields, used to detect out-of-band secret changes on refresh. Not comparable across resources or workspaces.
+func (o ResourceOutput) RedactedDigests() pulumi.StringMapOutput {
+	return o.ApplyT(func(v *Resource) pulumi.StringMapOutput { return v.RedactedDigests }).(pulumi.StringMapOutput)
 }
 
 func (o ResourceOutput) Region() pulumi.StringPtrOutput {

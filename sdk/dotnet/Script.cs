@@ -20,6 +20,12 @@ namespace AdaptiveScale.Adaptive
         public Output<string> Command { get; private set; } = null!;
 
         /// <summary>
+        /// Opaque server fingerprint of the script body, used to detect out-of-band command changes on refresh.
+        /// </summary>
+        [Output("commandDigest")]
+        public Output<string?> CommandDigest { get; private set; } = null!;
+
+        /// <summary>
         /// An optional description of the script.
         /// </summary>
         [Output("description")]
@@ -73,6 +79,10 @@ namespace AdaptiveScale.Adaptive
             {
                 Version = Utilities.Version,
                 PluginDownloadURL = "github://api.github.com/adaptive-scale/pulumi-adaptive",
+                AdditionalSecretOutputs =
+                {
+                    "command",
+                },
             };
             var merged = CustomResourceOptions.Merge(defaultOptions, options);
             // Override the ID if one was specified for consistency with other language SDKs.
@@ -95,11 +105,21 @@ namespace AdaptiveScale.Adaptive
 
     public sealed class ScriptArgs : global::Pulumi.ResourceArgs
     {
+        [Input("command", required: true)]
+        private Input<string>? _command;
+
         /// <summary>
         /// The command the script runs. Write-only: the Adaptive API never returns script bodies, so drift in the command cannot be detected and `pulumi import` leaves it empty.
         /// </summary>
-        [Input("command", required: true)]
-        public Input<string> Command { get; set; } = null!;
+        public Input<string>? Command
+        {
+            get => _command;
+            set
+            {
+                var emptySecret = Output.CreateSecret(0);
+                _command = Output.Tuple<Input<string>?, int>(value, emptySecret).Apply(t => t.Item1);
+            }
+        }
 
         /// <summary>
         /// An optional description of the script.

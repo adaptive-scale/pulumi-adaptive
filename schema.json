@@ -578,25 +578,30 @@
           "type": "string"
         },
         "apiClientSecret": {
-          "type": "string"
+          "type": "string",
+          "secret": true
         },
         "apiKey": {
-          "type": "string"
+          "type": "string",
+          "secret": true
         },
         "apiSecret": {
-          "type": "string"
+          "type": "string",
+          "secret": true
         },
         "apiServer": {
           "type": "string"
         },
         "apiToken": {
-          "type": "string"
+          "type": "string",
+          "secret": true
         },
         "appId": {
           "type": "string"
         },
         "appKey": {
-          "type": "string"
+          "type": "string",
+          "secret": true
         },
         "applicationId": {
           "type": "string"
@@ -617,31 +622,38 @@
           "type": "string"
         },
         "clientCert": {
-          "type": "string"
+          "type": "string",
+          "secret": true
         },
         "clientCertificate": {
-          "type": "string"
+          "type": "string",
+          "secret": true
         },
         "clientConfiguration": {
-          "type": "string"
+          "type": "string",
+          "secret": true
         },
         "clientId": {
           "type": "string"
         },
         "clientKey": {
-          "type": "string"
+          "type": "string",
+          "secret": true
         },
         "clientSecret": {
-          "type": "string"
+          "type": "string",
+          "secret": true
         },
         "clientcert": {
-          "type": "string"
+          "type": "string",
+          "secret": true
         },
         "clusterCert": {
           "type": "string"
         },
         "clusterToken": {
-          "type": "string"
+          "type": "string",
+          "secret": true
         },
         "connectServerUrl": {
           "type": "string"
@@ -653,7 +665,8 @@
           "type": "boolean"
         },
         "credentialJson": {
-          "type": "string"
+          "type": "string",
+          "secret": true
         },
         "databaseAccount": {
           "type": "string"
@@ -662,13 +675,15 @@
           "type": "string"
         },
         "databasePassword": {
-          "type": "string"
+          "type": "string",
+          "secret": true
         },
         "databaseUsername": {
           "type": "string"
         },
         "ddApiKey": {
-          "type": "string"
+          "type": "string",
+          "secret": true
         },
         "ddSite": {
           "type": "string"
@@ -708,10 +723,12 @@
           "type": "boolean"
         },
         "key": {
-          "type": "string"
+          "type": "string",
+          "secret": true
         },
         "keyFile": {
-          "type": "string"
+          "type": "string",
+          "secret": true
         },
         "ldapEncryptionMethod": {
           "type": "string"
@@ -726,7 +743,8 @@
           "type": "string"
         },
         "ldapSearchBindPassword": {
-          "type": "string"
+          "type": "string",
+          "secret": true
         },
         "ldapUserBaseDn": {
           "type": "string"
@@ -772,7 +790,8 @@
           "type": "string"
         },
         "password": {
-          "type": "string"
+          "type": "string",
+          "secret": true
         },
         "port": {
           "type": "string"
@@ -781,7 +800,8 @@
           "type": "string"
         },
         "privateKey": {
-          "type": "string"
+          "type": "string",
+          "secret": true
         },
         "projectId": {
           "type": "string"
@@ -790,7 +810,8 @@
           "type": "string"
         },
         "proxysqlAdminPassword": {
-          "type": "string"
+          "type": "string",
+          "secret": true
         },
         "proxysqlAdminPort": {
           "type": "string"
@@ -803,6 +824,13 @@
         },
         "publicKey": {
           "type": "string"
+        },
+        "redactedDigests": {
+          "type": "object",
+          "additionalProperties": {
+            "type": "string"
+          },
+          "description": "Opaque server fingerprints of the write-only secret fields, used to detect out-of-band secret changes on refresh. Not comparable across resources or workspaces."
         },
         "region": {
           "type": "string"
@@ -826,10 +854,12 @@
           "type": "string"
         },
         "secretAccessKey": {
-          "type": "string"
+          "type": "string",
+          "secret": true
         },
         "secretId": {
-          "type": "string"
+          "type": "string",
+          "secret": true
         },
         "serviceAccount": {
           "type": "string"
@@ -841,7 +871,8 @@
           "type": "string"
         },
         "sharedSecret": {
-          "type": "string"
+          "type": "string",
+          "secret": true
         },
         "sslMode": {
           "type": "string"
@@ -860,7 +891,8 @@
           "description": "Optional tags."
         },
         "targets": {
-          "type": "string"
+          "type": "string",
+          "secret": true
         },
         "tenantId": {
           "type": "string"
@@ -875,7 +907,8 @@
           "type": "boolean"
         },
         "tlsKeyFile": {
-          "type": "string"
+          "type": "string",
+          "secret": true
         },
         "tlsRootCert": {
           "type": "string"
@@ -884,10 +917,12 @@
           "type": "boolean"
         },
         "token": {
-          "type": "string"
+          "type": "string",
+          "secret": true
         },
         "tokenId": {
-          "type": "string"
+          "type": "string",
+          "secret": true
         },
         "tolerations": {
           "type": "string"
@@ -897,7 +932,8 @@
           "description": "Type of the Adaptive resource (integration), e.g. postgres, mysql, mongodb, ssh, kubernetes, aws, gcp, azure, snowflake."
         },
         "uri": {
-          "type": "string"
+          "type": "string",
+          "secret": true
         },
         "url": {
           "type": "string"
@@ -933,7 +969,8 @@
           "type": "string"
         },
         "webhookUrl": {
-          "type": "string"
+          "type": "string",
+          "secret": true
         },
         "webuiPort": {
           "type": "string"
@@ -960,25 +997,30 @@
           "type": "string"
         },
         "apiClientSecret": {
-          "type": "string"
+          "type": "string",
+          "secret": true
         },
         "apiKey": {
-          "type": "string"
+          "type": "string",
+          "secret": true
         },
         "apiSecret": {
-          "type": "string"
+          "type": "string",
+          "secret": true
         },
         "apiServer": {
           "type": "string"
         },
         "apiToken": {
-          "type": "string"
+          "type": "string",
+          "secret": true
         },
         "appId": {
           "type": "string"
         },
         "appKey": {
-          "type": "string"
+          "type": "string",
+          "secret": true
         },
         "applicationId": {
           "type": "string"
@@ -999,31 +1041,38 @@
           "type": "string"
         },
         "clientCert": {
-          "type": "string"
+          "type": "string",
+          "secret": true
         },
         "clientCertificate": {
-          "type": "string"
+          "type": "string",
+          "secret": true
         },
         "clientConfiguration": {
-          "type": "string"
+          "type": "string",
+          "secret": true
         },
         "clientId": {
           "type": "string"
         },
         "clientKey": {
-          "type": "string"
+          "type": "string",
+          "secret": true
         },
         "clientSecret": {
-          "type": "string"
+          "type": "string",
+          "secret": true
         },
         "clientcert": {
-          "type": "string"
+          "type": "string",
+          "secret": true
         },
         "clusterCert": {
           "type": "string"
         },
         "clusterToken": {
-          "type": "string"
+          "type": "string",
+          "secret": true
         },
         "connectServerUrl": {
           "type": "string"
@@ -1035,7 +1084,8 @@
           "type": "boolean"
         },
         "credentialJson": {
-          "type": "string"
+          "type": "string",
+          "secret": true
         },
         "databaseAccount": {
           "type": "string"
@@ -1044,13 +1094,15 @@
           "type": "string"
         },
         "databasePassword": {
-          "type": "string"
+          "type": "string",
+          "secret": true
         },
         "databaseUsername": {
           "type": "string"
         },
         "ddApiKey": {
-          "type": "string"
+          "type": "string",
+          "secret": true
         },
         "ddSite": {
           "type": "string"
@@ -1090,10 +1142,12 @@
           "type": "boolean"
         },
         "key": {
-          "type": "string"
+          "type": "string",
+          "secret": true
         },
         "keyFile": {
-          "type": "string"
+          "type": "string",
+          "secret": true
         },
         "ldapEncryptionMethod": {
           "type": "string"
@@ -1108,7 +1162,8 @@
           "type": "string"
         },
         "ldapSearchBindPassword": {
-          "type": "string"
+          "type": "string",
+          "secret": true
         },
         "ldapUserBaseDn": {
           "type": "string"
@@ -1154,7 +1209,8 @@
           "type": "string"
         },
         "password": {
-          "type": "string"
+          "type": "string",
+          "secret": true
         },
         "port": {
           "type": "string"
@@ -1163,7 +1219,8 @@
           "type": "string"
         },
         "privateKey": {
-          "type": "string"
+          "type": "string",
+          "secret": true
         },
         "projectId": {
           "type": "string"
@@ -1172,7 +1229,8 @@
           "type": "string"
         },
         "proxysqlAdminPassword": {
-          "type": "string"
+          "type": "string",
+          "secret": true
         },
         "proxysqlAdminPort": {
           "type": "string"
@@ -1208,10 +1266,12 @@
           "type": "string"
         },
         "secretAccessKey": {
-          "type": "string"
+          "type": "string",
+          "secret": true
         },
         "secretId": {
-          "type": "string"
+          "type": "string",
+          "secret": true
         },
         "serviceAccount": {
           "type": "string"
@@ -1223,7 +1283,8 @@
           "type": "string"
         },
         "sharedSecret": {
-          "type": "string"
+          "type": "string",
+          "secret": true
         },
         "sslMode": {
           "type": "string"
@@ -1242,7 +1303,8 @@
           "description": "Optional tags."
         },
         "targets": {
-          "type": "string"
+          "type": "string",
+          "secret": true
         },
         "tenantId": {
           "type": "string"
@@ -1257,7 +1319,8 @@
           "type": "boolean"
         },
         "tlsKeyFile": {
-          "type": "string"
+          "type": "string",
+          "secret": true
         },
         "tlsRootCert": {
           "type": "string"
@@ -1266,10 +1329,12 @@
           "type": "boolean"
         },
         "token": {
-          "type": "string"
+          "type": "string",
+          "secret": true
         },
         "tokenId": {
-          "type": "string"
+          "type": "string",
+          "secret": true
         },
         "tolerations": {
           "type": "string"
@@ -1279,7 +1344,8 @@
           "description": "Type of the Adaptive resource (integration), e.g. postgres, mysql, mongodb, ssh, kubernetes, aws, gcp, azure, snowflake."
         },
         "uri": {
-          "type": "string"
+          "type": "string",
+          "secret": true
         },
         "url": {
           "type": "string"
@@ -1315,7 +1381,8 @@
           "type": "string"
         },
         "webhookUrl": {
-          "type": "string"
+          "type": "string",
+          "secret": true
         },
         "webuiPort": {
           "type": "string"
@@ -1540,7 +1607,12 @@
       "properties": {
         "command": {
           "type": "string",
-          "description": "The command the script runs. Write-only: the Adaptive API never returns script bodies, so drift in the command cannot be detected and `pulumi import` leaves it empty."
+          "description": "The command the script runs. Write-only: the Adaptive API never returns script bodies, so drift in the command cannot be detected and `pulumi import` leaves it empty.",
+          "secret": true
+        },
+        "commandDigest": {
+          "type": "string",
+          "description": "Opaque server fingerprint of the script body, used to detect out-of-band command changes on refresh."
         },
         "description": {
           "type": "string",
@@ -1574,7 +1646,8 @@
       "inputProperties": {
         "command": {
           "type": "string",
-          "description": "The command the script runs. Write-only: the Adaptive API never returns script bodies, so drift in the command cannot be detected and `pulumi import` leaves it empty."
+          "description": "The command the script runs. Write-only: the Adaptive API never returns script bodies, so drift in the command cannot be detected and `pulumi import` leaves it empty.",
+          "secret": true
         },
         "description": {
           "type": "string",

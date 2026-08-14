@@ -192,8 +192,12 @@ type ResourceReadResponse struct {
 	DefaultCluster  string         `json:"defaultCluster"`
 	Configuration   map[string]any `json:"configuration"` // secret values are stripped server-side
 	RedactedKeys    []string       `json:"redactedKeys"`
-	CreatedAt       string         `json:"createdAt"`
-	UpdatedAt       string         `json:"updatedAt"`
+	// RedactedDigests carries an opaque server-side fingerprint per redacted
+	// key so secret drift can be detected without the value ever crossing the
+	// wire. Absent on servers that predate the feature.
+	RedactedDigests map[string]string `json:"redactedDigests"`
+	CreatedAt       string            `json:"createdAt"`
+	UpdatedAt       string            `json:"updatedAt"`
 }
 
 type SessionReadResponse struct {
@@ -257,8 +261,11 @@ type ScriptReadResponse struct {
 	ParameterDescriptions map[string]string `json:"parameterDescriptions"`
 	IsAutoGen             bool              `json:"isAutoGen"`
 	CommandOmitted        bool              `json:"commandOmitted"` // command is write-only
-	CreatedBy             string            `json:"createdBy"`
-	CreatedAt             string            `json:"createdAt"`
+	// CommandDigest is an opaque server-side fingerprint of the script body,
+	// used to detect out-of-band command changes. Absent on older servers.
+	CommandDigest string `json:"commandDigest"`
+	CreatedBy     string `json:"createdBy"`
+	CreatedAt     string `json:"createdAt"`
 }
 
 type ScheduleReadResponse struct {

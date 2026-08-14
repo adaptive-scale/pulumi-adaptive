@@ -36,6 +36,10 @@ export class Script extends pulumi.CustomResource {
      */
     declare public readonly command: pulumi.Output<string>;
     /**
+     * Opaque server fingerprint of the script body, used to detect out-of-band command changes on refresh.
+     */
+    declare public /*out*/ readonly commandDigest: pulumi.Output<string | undefined>;
+    /**
      * An optional description of the script.
      */
     declare public readonly description: pulumi.Output<string | undefined>;
@@ -76,14 +80,16 @@ export class Script extends pulumi.CustomResource {
             if (args?.name === undefined && !opts.urn) {
                 throw new Error("Missing required property 'name'");
             }
-            resourceInputs["command"] = args?.command;
+            resourceInputs["command"] = args?.command ? pulumi.secret(args.command) : undefined;
             resourceInputs["description"] = args?.description;
             resourceInputs["endpoint"] = args?.endpoint;
             resourceInputs["name"] = args?.name;
             resourceInputs["parameterDescriptions"] = args?.parameterDescriptions;
+            resourceInputs["commandDigest"] = undefined /*out*/;
             resourceInputs["isAutoGen"] = undefined /*out*/;
         } else {
             resourceInputs["command"] = undefined /*out*/;
+            resourceInputs["commandDigest"] = undefined /*out*/;
             resourceInputs["description"] = undefined /*out*/;
             resourceInputs["endpoint"] = undefined /*out*/;
             resourceInputs["isAutoGen"] = undefined /*out*/;
@@ -91,6 +97,8 @@ export class Script extends pulumi.CustomResource {
             resourceInputs["parameterDescriptions"] = undefined /*out*/;
         }
         opts = pulumi.mergeOptions(utilities.resourceOptsDefaults(), opts);
+        const secretOpts = { additionalSecretOutputs: ["command"] };
+        opts = pulumi.mergeOptions(opts, secretOpts);
         super(Script.__pulumiType, name, resourceInputs, opts);
     }
 }

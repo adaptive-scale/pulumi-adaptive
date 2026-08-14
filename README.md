@@ -134,6 +134,45 @@ pulumi up
 > sqlserver, …) and kubernetes, `permissions` must be structured YAML — a bare
 > value like `"SELECT"` is rejected by the API. See `examples/go/main.go`.
 
+## Secrets
+
+Credential-bearing fields (`password`, `secretAccessKey`, `clientSecret`, SSH
+keys, API tokens, webhook URLs, connection-string `uri`s, script `command`s, …)
+are marked secret in the provider schema. The engine therefore shows them as
+`[secret]` in `pulumi preview`/`up` output and encrypts them in the stack
+state — **even when the program passes a plaintext literal**, in every
+language.
+
+To keep secrets out of source code, put them in stack config:
+
+```bash
+pulumi config set --secret dbPassword 'S3cret!'
+```
+
+```python
+cfg = pulumi.Config()
+db = adaptive.Resource("db",
+    name="prod-postgres", type="postgres",
+    host="...", username="app",
+    password=cfg.require_secret("dbPassword"))
+```
+
+**Secret drift detection.** The Adaptive API never returns secret values, but
+it returns an opaque server-side fingerprint per secret field
+(`redactedDigests` on resources, `commandDigest` on scripts). The provider
+records these in state and compares them on `pulumi refresh`: when a secret was
+changed out-of-band (e.g. rotated in the UI), refresh clears that field in
+state and the next `pulumi up` re-applies your program's value — shown as
+`[secret]`, never in plaintext. Notes:
+
+- Requires an Adaptive backend with digest support; against older servers,
+  refresh keeps the prior value silently (previous behavior).
+- Fingerprints are HMACs under a server-held key (`ADAPTIVE_SECRET_DIGEST_KEY`)
+  — they cannot be reversed or brute-forced, and rotating that key causes one
+  self-healing drift cycle.
+- `pulumi import` cannot recover secret values: set them in config, and the
+  first `pulumi up` re-establishes them; drift detection is active from then on.
+
 ## Importing existing objects
 
 Every resource type imports by its Adaptive object ID:

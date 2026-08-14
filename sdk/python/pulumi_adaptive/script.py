@@ -165,7 +165,7 @@ class Script(pulumi.CustomResource):
 
             if command is None and not opts.urn:
                 raise TypeError("Missing required property 'command'")
-            __props__.__dict__["command"] = command
+            __props__.__dict__["command"] = None if command is None else pulumi.Output.secret(command)
             __props__.__dict__["description"] = description
             if endpoint is None and not opts.urn:
                 raise TypeError("Missing required property 'endpoint'")
@@ -174,7 +174,10 @@ class Script(pulumi.CustomResource):
                 raise TypeError("Missing required property 'name'")
             __props__.__dict__["name"] = name
             __props__.__dict__["parameter_descriptions"] = parameter_descriptions
+            __props__.__dict__["command_digest"] = None
             __props__.__dict__["is_auto_gen"] = None
+        secret_opts = pulumi.ResourceOptions(additional_secret_outputs=["command"])
+        opts = pulumi.ResourceOptions.merge(opts, secret_opts)
         super(Script, __self__).__init__(
             'adaptive:index:Script',
             resource_name,
@@ -198,6 +201,7 @@ class Script(pulumi.CustomResource):
         __props__ = ScriptArgs.__new__(ScriptArgs)
 
         __props__.__dict__["command"] = None
+        __props__.__dict__["command_digest"] = None
         __props__.__dict__["description"] = None
         __props__.__dict__["endpoint"] = None
         __props__.__dict__["is_auto_gen"] = None
@@ -212,6 +216,14 @@ class Script(pulumi.CustomResource):
         The command the script runs. Write-only: the Adaptive API never returns script bodies, so drift in the command cannot be detected and `pulumi import` leaves it empty.
         """
         return pulumi.get(self, "command")
+
+    @_builtins.property
+    @pulumi.getter(name="commandDigest")
+    def command_digest(self) -> pulumi.Output[Optional[_builtins.str]]:
+        """
+        Opaque server fingerprint of the script body, used to detect out-of-band command changes on refresh.
+        """
+        return pulumi.get(self, "command_digest")
 
     @_builtins.property
     @pulumi.getter
