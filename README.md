@@ -14,6 +14,11 @@ It is built with [`pulumi-go-provider`](https://github.com/pulumi/pulumi-go-prov
 and talks directly to the Adaptive REST API — there is no dependency on
 Terraform or the Terraform bridge.
 
+> 📖 **Full documentation** — installation, configuration, and a complete
+> field reference for every resource — lives at
+> [documentation.adaptive.live/developer-guide/pulumi](https://documentation.adaptive.live/developer-guide/pulumi).
+> This README is the in-repo quickstart and developer guide.
+
 ## Resources
 
 | Pulumi resource | Description |

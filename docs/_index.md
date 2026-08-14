@@ -14,7 +14,7 @@ and other infrastructure. This provider manages that surface declaratively:
 
 - `adaptive.Resource` — a connection to an external service (database, cloud
   account, Kubernetes cluster, …). The `type` field selects the integration;
-  around 50 are supported.
+  every integration type the platform registers (~82) is supported.
 - `adaptive.Endpoint` — a secure, time-limited access point to a resource
   (TTL, just-in-time approval, users/groups).
 - `adaptive.Authorization` — a permission policy for a resource type.
@@ -22,6 +22,9 @@ and other infrastructure. This provider manages that surface declaratively:
 - `adaptive.Script` — a command attached to an endpoint.
 - `adaptive.Schedule` — an auto-approval schedule window for users, groups, and endpoints.
 - `adaptive.DataProtection` — a data-masking policy for a resource.
+
+Full documentation, including a field reference for every resource, is at
+[documentation.adaptive.live/developer-guide/pulumi](https://documentation.adaptive.live/developer-guide/pulumi).
 
 ## Example
 
