@@ -45,6 +45,9 @@ func (c *Client) scriptAPI() string        { return c.workspaceURL + "/terraform
 func (c *Client) resourceAPI() string      { return c.workspaceURL + "/terraform/resource" }
 func (c *Client) sessionAPI() string       { return c.workspaceURL + "/terraform/session" }
 func (c *Client) scheduleAPI() string      { return c.workspaceURL + "/terraform/schedule" }
+func (c *Client) dataProtectionAPI() string {
+	return c.workspaceURL + "/terraform/dataprotection"
+}
 
 func (c *Client) do(ctx context.Context, req *http.Request) (*http.Response, error) {
 	req = req.WithContext(ctx)
@@ -142,9 +145,43 @@ type ScheduleRequest struct {
 	OperationType string   `json:"operationType,omitempty"`
 }
 
+// DataProtectionRequest mirrors the server's TerraformDataProtectionRequest.
+type DataProtectionRequest struct {
+	ResourceName string               `json:"resourceName"`
+	Scoped       *bool                `json:"scoped,omitempty"` // nil means true (server default)
+	Masks        []DataProtectionMask `json:"masks"`
+}
+
+type DataProtectionMask struct {
+	DatabaseName string                `json:"databaseName" pulumi:"databaseName"`
+	Tables       []DataProtectionTable `json:"tables" pulumi:"tables,optional"`
+}
+
+type DataProtectionTable struct {
+	TableName     string                     `json:"tableName" pulumi:"tableName"`
+	Schema        string                     `json:"schema,omitempty" pulumi:"schema,optional"`
+	Masked        *bool                      `json:"masked,omitempty" pulumi:"masked,optional"`
+	MaskedColumns []DataProtectionColumnMask `json:"maskedColumns" pulumi:"maskedColumns,optional"`
+}
+
+type DataProtectionColumnMask struct {
+	ColumnName  string `json:"columnName" pulumi:"columnName"`
+	MaskingType string `json:"maskingType" pulumi:"maskingType"`
+}
+
 // ---------------------------------------------------------------------------
 // Read models — canonical camelCase keys of the /terraform/<type>/read/:id DTOs.
 // ---------------------------------------------------------------------------
+
+type DataProtectionReadResponse struct {
+	ID                string               `json:"id"` // the resource (integration) id
+	ResourceName      string               `json:"resourceName"`
+	AuthorizationName string               `json:"authorizationName"` // "masked_<resourceName>"
+	Scoped            *bool                `json:"scoped"`
+	Masks             []DataProtectionMask `json:"masks"`
+	Status            string               `json:"status"`
+	LastAppliedAt     string               `json:"lastAppliedAt"`
+}
 
 type ResourceReadResponse struct {
 	ID              string         `json:"id"`
@@ -752,6 +789,73 @@ func (c *Client) DeleteSchedule(ctx context.Context, id string) error {
 	defer resp.Body.Close()
 	if resp.StatusCode != http.StatusOK {
 		return fmt.Errorf("error deleting schedule %s: %s", id, readBody(resp))
+	}
+	return nil
+}
+
+// ---------------------------------------------------------------------------
+// Data protection (masking policies)
+// ---------------------------------------------------------------------------
+
+// CreateDataProtection creates (or adopts — the server upserts per resource) a
+// masking policy. The returned ID is the resource's integration ID.
+func (c *Client) CreateDataProtection(ctx context.Context, req DataProtectionRequest) (*DataProtectionReadResponse, error) {
+	body, err := encode(req)
+	if err != nil {
+		return nil, err
+	}
+	resp, err := c.do(ctx, mustReq("POST", c.dataProtectionAPI()+"/create", body))
+	if err != nil {
+		return nil, err
+	}
+	defer resp.Body.Close()
+	if resp.StatusCode != http.StatusOK {
+		return nil, fmt.Errorf("error creating data protection for %s: %s", req.ResourceName, readBody(resp))
+	}
+	var out DataProtectionReadResponse
+	if err := json.NewDecoder(resp.Body).Decode(&out); err != nil {
+		return nil, err
+	}
+	return &out, nil
+}
+
+func (c *Client) UpdateDataProtection(ctx context.Context, id string, req DataProtectionRequest) (*DataProtectionReadResponse, error) {
+	body, err := encode(req)
+	if err != nil {
+		return nil, err
+	}
+	resp, err := c.do(ctx, mustReq("POST", fmt.Sprintf("%s/update/%s", c.dataProtectionAPI(), id), body))
+	if err != nil {
+		return nil, err
+	}
+	defer resp.Body.Close()
+	if resp.StatusCode != http.StatusOK {
+		return nil, fmt.Errorf("error updating data protection %s: %s", id, readBody(resp))
+	}
+	var out DataProtectionReadResponse
+	if err := json.NewDecoder(resp.Body).Decode(&out); err != nil {
+		return nil, err
+	}
+	return &out, nil
+}
+
+// ReadDataProtection fetches a masking policy by resource (integration) ID.
+// Returns (nil, nil) when the resource or its policy no longer exists.
+func (c *Client) ReadDataProtection(ctx context.Context, id string) (*DataProtectionReadResponse, error) {
+	return readTyped[DataProtectionReadResponse](c, ctx, fmt.Sprintf("%s/read/%s", c.dataProtectionAPI(), id), "data protection", id)
+}
+
+// DeleteDataProtection turns masking off for the resource — the server applies
+// the documented "off" shape (scoped: false, masks: []) rather than deleting
+// rows, matching the admin CLI's behavior. Idempotent.
+func (c *Client) DeleteDataProtection(ctx context.Context, id string) error {
+	resp, err := c.do(ctx, mustReq("POST", fmt.Sprintf("%s/delete/%s", c.dataProtectionAPI(), id), nil))
+	if err != nil {
+		return err
+	}
+	defer resp.Body.Close()
+	if resp.StatusCode != http.StatusOK {
+		return fmt.Errorf("error deleting data protection %s: %s", id, readBody(resp))
 	}
 	return nil
 }

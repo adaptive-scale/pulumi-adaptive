@@ -23,6 +23,8 @@ func (m *module) Construct(ctx *pulumi.Context, name, typ, urn string) (r pulumi
 	switch typ {
 	case "adaptive:index:Authorization":
 		r = &Authorization{}
+	case "adaptive:index:DataProtection":
+		r = &DataProtection{}
 	case "adaptive:index:Endpoint":
 		r = &Endpoint{}
 	case "adaptive:index:Group":

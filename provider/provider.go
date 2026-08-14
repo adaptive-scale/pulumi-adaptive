@@ -132,6 +132,7 @@ func buildProvider() (p.Provider, error) {
 			infer.Resource(&Group{}),
 			infer.Resource(&Script{}),
 			infer.Resource(&Schedule{}),
+			infer.Resource(&DataProtection{}),
 		).
 		Build()
 }

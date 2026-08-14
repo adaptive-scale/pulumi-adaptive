@@ -21,6 +21,7 @@ and other infrastructure. This provider manages that surface declaratively:
 - `adaptive.Group` — a bundle of users and endpoints.
 - `adaptive.Script` — a command attached to an endpoint.
 - `adaptive.Schedule` — an auto-approval schedule window for users, groups, and endpoints.
+- `adaptive.DataProtection` — a data-masking policy for a resource.
 
 ## Example
 

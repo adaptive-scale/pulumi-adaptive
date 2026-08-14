@@ -24,9 +24,44 @@ Terraform or the Terraform bridge.
 | `adaptive.Group` | A bundle of users and endpoints, optionally linked to a Slack channel. |
 | `adaptive.Script` | A command attached to an endpoint, with optional description and parameter docs. |
 | `adaptive.Schedule` | An auto-approval (or auto-reject) schedule window applied to users, groups, and endpoints. |
+| `adaptive.DataProtection` | A data-masking policy for a resource (per-database/table/column masking rules). |
 
 Notification/webhook integrations (e.g. MS Teams workflows) are managed through
 `adaptive.Resource` with the matching `type` (e.g. `msteams_workflow` + `webhookUrl`).
+
+### Data protection (masking)
+
+```typescript
+const policy = new adaptive.DataProtection("mask-pii", {
+    resource: db.name,
+    masks: [{
+        databaseName: "shop",
+        tables: [{
+            tableName: "users",
+            schema: "public",
+            maskedColumns: [
+                { columnName: "email", maskingType: "email" },
+                { columnName: "ssn", maskingType: "ssn" },
+            ],
+        }],
+    }],
+});
+
+// Serve masked sessions by attaching the generated authorization:
+const masked = new adaptive.Endpoint("masked-access", {
+    name: "shop-masked",
+    resource: db.name,
+    authorization: policy.authorizationName,
+});
+```
+
+Masking types: `name`, `email`, `ssn`, `phone`, `cc`, `aadhar`, `first4`,
+`last4`, `redact`, `hash`, and `disable` (omits the column entirely). Caveats:
+creating a policy for a resource that already has one (e.g. configured in the
+UI) adopts and overwrites it; `pulumi destroy` turns masking **off** (the
+platform's documented behavior — there is no hard delete), leaving the
+`masked_<resource>` authorization and any already-provisioned masked views in
+place; masked views are created lazily when a session starts.
 
 All resources support `pulumi refresh` (drift detection, including out-of-band
 deletion) and `pulumi import` (see [Importing existing objects](#importing-existing-objects)).
@@ -110,7 +145,11 @@ pulumi import adaptive:index:Authorization my-auth   <authorization-id>
 pulumi import adaptive:index:Group        my-group   <group-id>
 pulumi import adaptive:index:Script       my-script  <script-id>
 pulumi import adaptive:index:Schedule     my-window  <schedule-id>
+pulumi import adaptive:index:DataProtection my-policy <resource-id>
 ```
+
+(`DataProtection` imports by the protected **resource's** ID — a policy has no
+separate identity of its own.)
 
 Caveats — some values are write-only in the Adaptive API and cannot be
 recovered on import:

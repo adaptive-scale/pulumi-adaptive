@@ -10,6 +10,11 @@ export type Authorization = import("./authorization").Authorization;
 export const Authorization: typeof import("./authorization").Authorization = null as any;
 utilities.lazyLoad(exports, ["Authorization"], () => require("./authorization"));
 
+export { DataProtectionArgs } from "./dataProtection";
+export type DataProtection = import("./dataProtection").DataProtection;
+export const DataProtection: typeof import("./dataProtection").DataProtection = null as any;
+utilities.lazyLoad(exports, ["DataProtection"], () => require("./dataProtection"));
+
 export { EndpointArgs } from "./endpoint";
 export type Endpoint = import("./endpoint").Endpoint;
 export const Endpoint: typeof import("./endpoint").Endpoint = null as any;
@@ -43,9 +48,11 @@ utilities.lazyLoad(exports, ["Script"], () => require("./script"));
 
 // Export sub-modules:
 import * as config from "./config";
+import * as types from "./types";
 
 export {
     config,
+    types,
 };
 
 const _module = {
@@ -54,6 +61,8 @@ const _module = {
         switch (type) {
             case "adaptive:index:Authorization":
                 return new Authorization(name, <any>undefined, { urn })
+            case "adaptive:index:DataProtection":
+                return new DataProtection(name, <any>undefined, { urn })
             case "adaptive:index:Endpoint":
                 return new Endpoint(name, <any>undefined, { urn })
             case "adaptive:index:Group":

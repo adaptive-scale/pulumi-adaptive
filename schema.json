@@ -68,6 +68,63 @@
       }
     }
   },
+  "types": {
+    "adaptive:index:DataProtectionColumnMask": {
+      "properties": {
+        "columnName": {
+          "type": "string"
+        },
+        "maskingType": {
+          "type": "string"
+        }
+      },
+      "type": "object",
+      "required": [
+        "columnName",
+        "maskingType"
+      ]
+    },
+    "adaptive:index:DataProtectionMask": {
+      "properties": {
+        "databaseName": {
+          "type": "string"
+        },
+        "tables": {
+          "type": "array",
+          "items": {
+            "$ref": "#/types/adaptive:index:DataProtectionTable"
+          }
+        }
+      },
+      "type": "object",
+      "required": [
+        "databaseName"
+      ]
+    },
+    "adaptive:index:DataProtectionTable": {
+      "properties": {
+        "masked": {
+          "type": "boolean"
+        },
+        "maskedColumns": {
+          "type": "array",
+          "items": {
+            "$ref": "#/types/adaptive:index:DataProtectionColumnMask"
+          }
+        },
+        "schema": {
+          "type": "string"
+        },
+        "tableName": {
+          "type": "string"
+        }
+      },
+      "type": "object",
+      "required": [
+        "tableName"
+      ]
+    }
+  },
   "provider": {
     "properties": {
       "serviceToken": {
@@ -167,6 +224,60 @@
         "name",
         "resourceType",
         "permissions"
+      ]
+    },
+    "adaptive:index:DataProtection": {
+      "properties": {
+        "authorizationName": {
+          "type": "string",
+          "description": "Name of the generated masking authorization (masked_\u003cresource\u003e). Attach it to an Endpoint's `authorization` to serve masked sessions."
+        },
+        "lastAppliedAt": {
+          "type": "string",
+          "description": "Last time the policy was applied to the target database."
+        },
+        "masks": {
+          "type": "array",
+          "items": {
+            "$ref": "#/types/adaptive:index:DataProtectionMask"
+          },
+          "description": "Masking rules, grouped per database and table."
+        },
+        "resource": {
+          "type": "string",
+          "description": "Name of the resource (integration) this masking policy protects. Cannot be changed after creation. Note: creating a policy for a resource that already has one (e.g. configured in the UI) adopts and overwrites it."
+        },
+        "scoped": {
+          "type": "boolean",
+          "description": "When true (the default), session users only see the generated masked views. When false, users see everything except the raw masked tables (requires synced metadata)."
+        },
+        "status": {
+          "type": "string",
+          "description": "Provisioning status of the policy. Masked views are created lazily at session start."
+        }
+      },
+      "required": [
+        "resource"
+      ],
+      "inputProperties": {
+        "masks": {
+          "type": "array",
+          "items": {
+            "$ref": "#/types/adaptive:index:DataProtectionMask"
+          },
+          "description": "Masking rules, grouped per database and table."
+        },
+        "resource": {
+          "type": "string",
+          "description": "Name of the resource (integration) this masking policy protects. Cannot be changed after creation. Note: creating a policy for a resource that already has one (e.g. configured in the UI) adopts and overwrites it."
+        },
+        "scoped": {
+          "type": "boolean",
+          "description": "When true (the default), session users only see the generated masked views. When false, users see everything except the raw masked tables (requires synced metadata)."
+        }
+      },
+      "requiredInputs": [
+        "resource"
       ]
     },
     "adaptive:index:Endpoint": {
