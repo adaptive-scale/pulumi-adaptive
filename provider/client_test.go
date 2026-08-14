@@ -1,6 +1,9 @@
 package adaptive
 
-import "testing"
+import (
+	"strings"
+	"testing"
+)
 
 func TestNewClientURL(t *testing.T) {
 	cases := map[string]string{
@@ -36,6 +39,56 @@ func TestResolveToken(t *testing.T) {
 			t.Fatalf("got (%q,%q,%v)", tok, url, err)
 		}
 	})
+	t.Run("single deployment needs no default marker", func(t *testing.T) {
+		in := `{"deployments":{"only":{"token":"t1","url":"u1"}}}`
+		tok, url, err := resolveToken(in, "ignored")
+		if err != nil || tok != "t1" || url != "u1" {
+			t.Fatalf("got (%q,%q,%v)", tok, url, err)
+		}
+	})
+	t.Run("multiple deployments without default errors", func(t *testing.T) {
+		in := `{"deployments":{"demo":{"token":"td","url":"ud"},"staging":{"token":"ts","url":"us"}}}`
+		_, _, err := resolveToken(in, "ignored")
+		if err == nil {
+			t.Fatal("expected error for ambiguous deployments, got nil")
+		}
+		for _, want := range []string{"demo", "staging", "default"} {
+			if !strings.Contains(err.Error(), want) {
+				t.Errorf("error %q should mention %q", err, want)
+			}
+		}
+	})
+	t.Run("env vars used when config is empty", func(t *testing.T) {
+		t.Setenv("ADAPTIVE_SVC_TOKEN", "env-token")
+		t.Setenv("ADAPTIVE_URL", "http://env-host:8080")
+		tok, url, err := resolveToken("", "")
+		if err != nil || tok != "env-token" || url != "http://env-host:8080" {
+			t.Fatalf("got (%q,%q,%v)", tok, url, err)
+		}
+	})
+	t.Run("explicit config beats env vars", func(t *testing.T) {
+		t.Setenv("ADAPTIVE_SVC_TOKEN", "env-token")
+		t.Setenv("ADAPTIVE_URL", "http://env-host:8080")
+		tok, url, err := resolveToken("explicit-token", "http://explicit:9090")
+		if err != nil || tok != "explicit-token" || url != "http://explicit:9090" {
+			t.Fatalf("got (%q,%q,%v)", tok, url, err)
+		}
+	})
+	t.Run("env token may itself be a deployments config", func(t *testing.T) {
+		t.Setenv("ADAPTIVE_SVC_TOKEN", `{"deployments":{"x":{"token":"tx","url":"ux","default":true}}}`)
+		t.Setenv("ADAPTIVE_URL", "")
+		tok, url, err := resolveToken("", "")
+		if err != nil || tok != "tx" || url != "ux" {
+			t.Fatalf("got (%q,%q,%v)", tok, url, err)
+		}
+	})
+}
+
+func TestDefaultAdaptiveURL(t *testing.T) {
+	// Regression: this was app.adaptive.com, which is not the product domain.
+	if !strings.Contains(defaultAdaptiveURL, "app.adaptive.live") {
+		t.Errorf("defaultAdaptiveURL = %q, want the adaptive.live domain", defaultAdaptiveURL)
+	}
 }
 
 func TestGetSessionType(t *testing.T) {
