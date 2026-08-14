@@ -43,6 +43,10 @@ export class Group extends pulumi.CustomResource {
      * Name of the group. Must be unique.
      */
     declare public readonly name: pulumi.Output<string>;
+    /**
+     * Slack channel ID associated with this group.
+     */
+    declare public readonly slackChannelId: pulumi.Output<string | undefined>;
 
     /**
      * Create a Group resource with the given unique name, arguments, and options.
@@ -61,10 +65,12 @@ export class Group extends pulumi.CustomResource {
             resourceInputs["endpoints"] = args?.endpoints;
             resourceInputs["members"] = args?.members;
             resourceInputs["name"] = args?.name;
+            resourceInputs["slackChannelId"] = args?.slackChannelId;
         } else {
             resourceInputs["endpoints"] = undefined /*out*/;
             resourceInputs["members"] = undefined /*out*/;
             resourceInputs["name"] = undefined /*out*/;
+            resourceInputs["slackChannelId"] = undefined /*out*/;
         }
         opts = pulumi.mergeOptions(utilities.resourceOptsDefaults(), opts);
         super(Group.__pulumiType, name, resourceInputs, opts);
@@ -87,4 +93,8 @@ export interface GroupArgs {
      * Name of the group. Must be unique.
      */
     name: pulumi.Input<string>;
+    /**
+     * Slack channel ID associated with this group.
+     */
+    slackChannelId?: pulumi.Input<string>;
 }

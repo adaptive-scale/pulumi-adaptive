@@ -12,16 +12,18 @@ import (
 	"github.com/stretchr/testify/assert"
 )
 
-// TestMSTeamsWorkflow deploys an MS Teams workflow integration and verifies it
-// appears in the Client App resources list with the msteams_workflow type.
-// (The webhook URL is not returned by the API — see CLIENT_API_GAPS.md.)
+// TestMSTeamsWorkflow deploys an MS Teams workflow integration via the generic
+// Resource type and verifies it appears in the Client App resources list with
+// the msteams_workflow type. (The webhook URL is not returned by the API — see
+// CLIENT_API_GAPS.md.)
 func TestMSTeamsWorkflow(t *testing.T) {
 	cfg := harness.RequireConfig(t)
 	name := uniqueName("pulumi-it-msteams")
 
 	outs := harness.Deploy(t, cfg, stackName("msteams"), func(ctx *pulumi.Context) error {
-		wf, err := adaptive.NewMSTeamsWorkflow(ctx, "wf", &adaptive.MSTeamsWorkflowArgs{
+		wf, err := adaptive.NewResource(ctx, "wf", &adaptive.ResourceArgs{
 			Name:       pulumi.String(name),
+			Type:       pulumi.String("msteams_workflow"),
 			WebhookUrl: pulumi.String("https://example.com/webhook"),
 		})
 		if err != nil {

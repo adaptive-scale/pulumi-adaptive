@@ -23,14 +23,16 @@ func (m *module) Construct(ctx *pulumi.Context, name, typ, urn string) (r pulumi
 	switch typ {
 	case "adaptive:index:Authorization":
 		r = &Authorization{}
+	case "adaptive:index:DataProtection":
+		r = &DataProtection{}
 	case "adaptive:index:Endpoint":
 		r = &Endpoint{}
 	case "adaptive:index:Group":
 		r = &Group{}
-	case "adaptive:index:MSTeamsWorkflow":
-		r = &MSTeamsWorkflow{}
 	case "adaptive:index:Resource":
 		r = &Resource{}
+	case "adaptive:index:Schedule":
+		r = &Schedule{}
 	case "adaptive:index:Script":
 		r = &Script{}
 	default:

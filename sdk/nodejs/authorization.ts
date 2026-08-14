@@ -47,6 +47,10 @@ export class Authorization extends pulumi.CustomResource {
      * Resource type to grant permission on, e.g. postgres, mysql, mongodb, kubernetes, ssh.
      */
     declare public readonly resourceType: pulumi.Output<string>;
+    /**
+     * Current lifecycle status of the authorization.
+     */
+    declare public /*out*/ readonly status: pulumi.Output<string | undefined>;
 
     /**
      * Create a Authorization resource with the given unique name, arguments, and options.
@@ -72,11 +76,13 @@ export class Authorization extends pulumi.CustomResource {
             resourceInputs["name"] = args?.name;
             resourceInputs["permissions"] = args?.permissions;
             resourceInputs["resourceType"] = args?.resourceType;
+            resourceInputs["status"] = undefined /*out*/;
         } else {
             resourceInputs["description"] = undefined /*out*/;
             resourceInputs["name"] = undefined /*out*/;
             resourceInputs["permissions"] = undefined /*out*/;
             resourceInputs["resourceType"] = undefined /*out*/;
+            resourceInputs["status"] = undefined /*out*/;
         }
         opts = pulumi.mergeOptions(utilities.resourceOptsDefaults(), opts);
         super(Authorization.__pulumiType, name, resourceInputs, opts);

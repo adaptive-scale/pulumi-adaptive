@@ -21,23 +21,31 @@ class ScriptArgs:
     def __init__(__self__, *,
                  command: pulumi.Input[_builtins.str],
                  endpoint: pulumi.Input[_builtins.str],
-                 name: pulumi.Input[_builtins.str]):
+                 name: pulumi.Input[_builtins.str],
+                 description: Optional[pulumi.Input[_builtins.str]] = None,
+                 parameter_descriptions: Optional[pulumi.Input[Mapping[str, pulumi.Input[_builtins.str]]]] = None):
         """
         The set of arguments for constructing a Script resource.
 
-        :param pulumi.Input[_builtins.str] command: The command the script runs.
+        :param pulumi.Input[_builtins.str] command: The command the script runs. Write-only: the Adaptive API never returns script bodies, so drift in the command cannot be detected and `pulumi import` leaves it empty.
         :param pulumi.Input[_builtins.str] endpoint: The endpoint the script is attached to. Cannot be changed after creation.
         :param pulumi.Input[_builtins.str] name: The name of the script.
+        :param pulumi.Input[_builtins.str] description: An optional description of the script.
+        :param pulumi.Input[Mapping[str, pulumi.Input[_builtins.str]]] parameter_descriptions: Descriptions for the script's parameters, keyed by parameter name.
         """
         pulumi.set(__self__, "command", command)
         pulumi.set(__self__, "endpoint", endpoint)
         pulumi.set(__self__, "name", name)
+        if description is not None:
+            pulumi.set(__self__, "description", description)
+        if parameter_descriptions is not None:
+            pulumi.set(__self__, "parameter_descriptions", parameter_descriptions)
 
     @_builtins.property
     @pulumi.getter
     def command(self) -> pulumi.Input[_builtins.str]:
         """
-        The command the script runs.
+        The command the script runs. Write-only: the Adaptive API never returns script bodies, so drift in the command cannot be detected and `pulumi import` leaves it empty.
         """
         return pulumi.get(self, "command")
 
@@ -69,6 +77,30 @@ class ScriptArgs:
     def name(self, value: pulumi.Input[_builtins.str]):
         pulumi.set(self, "name", value)
 
+    @_builtins.property
+    @pulumi.getter
+    def description(self) -> Optional[pulumi.Input[_builtins.str]]:
+        """
+        An optional description of the script.
+        """
+        return pulumi.get(self, "description")
+
+    @description.setter
+    def description(self, value: Optional[pulumi.Input[_builtins.str]]):
+        pulumi.set(self, "description", value)
+
+    @_builtins.property
+    @pulumi.getter(name="parameterDescriptions")
+    def parameter_descriptions(self) -> Optional[pulumi.Input[Mapping[str, pulumi.Input[_builtins.str]]]]:
+        """
+        Descriptions for the script's parameters, keyed by parameter name.
+        """
+        return pulumi.get(self, "parameter_descriptions")
+
+    @parameter_descriptions.setter
+    def parameter_descriptions(self, value: Optional[pulumi.Input[Mapping[str, pulumi.Input[_builtins.str]]]]):
+        pulumi.set(self, "parameter_descriptions", value)
+
 
 @pulumi.type_token("adaptive:index:Script")
 class Script(pulumi.CustomResource):
@@ -77,17 +109,21 @@ class Script(pulumi.CustomResource):
                  resource_name: str,
                  opts: Optional[pulumi.ResourceOptions] = None,
                  command: Optional[pulumi.Input[_builtins.str]] = None,
+                 description: Optional[pulumi.Input[_builtins.str]] = None,
                  endpoint: Optional[pulumi.Input[_builtins.str]] = None,
                  name: Optional[pulumi.Input[_builtins.str]] = None,
+                 parameter_descriptions: Optional[pulumi.Input[Mapping[str, pulumi.Input[_builtins.str]]]] = None,
                  __props__=None):
         """
         Create a Script resource with the given unique name, props, and options.
 
         :param str resource_name: The name of the resource.
         :param pulumi.ResourceOptions opts: Options for the resource.
-        :param pulumi.Input[_builtins.str] command: The command the script runs.
+        :param pulumi.Input[_builtins.str] command: The command the script runs. Write-only: the Adaptive API never returns script bodies, so drift in the command cannot be detected and `pulumi import` leaves it empty.
+        :param pulumi.Input[_builtins.str] description: An optional description of the script.
         :param pulumi.Input[_builtins.str] endpoint: The endpoint the script is attached to. Cannot be changed after creation.
         :param pulumi.Input[_builtins.str] name: The name of the script.
+        :param pulumi.Input[Mapping[str, pulumi.Input[_builtins.str]]] parameter_descriptions: Descriptions for the script's parameters, keyed by parameter name.
         """
         ...
     @overload
@@ -114,8 +150,10 @@ class Script(pulumi.CustomResource):
                  resource_name: str,
                  opts: Optional[pulumi.ResourceOptions] = None,
                  command: Optional[pulumi.Input[_builtins.str]] = None,
+                 description: Optional[pulumi.Input[_builtins.str]] = None,
                  endpoint: Optional[pulumi.Input[_builtins.str]] = None,
                  name: Optional[pulumi.Input[_builtins.str]] = None,
+                 parameter_descriptions: Optional[pulumi.Input[Mapping[str, pulumi.Input[_builtins.str]]]] = None,
                  __props__=None):
         opts = pulumi.ResourceOptions.merge(_utilities.get_resource_opts_defaults(), opts)
         if not isinstance(opts, pulumi.ResourceOptions):
@@ -127,13 +165,19 @@ class Script(pulumi.CustomResource):
 
             if command is None and not opts.urn:
                 raise TypeError("Missing required property 'command'")
-            __props__.__dict__["command"] = command
+            __props__.__dict__["command"] = None if command is None else pulumi.Output.secret(command)
+            __props__.__dict__["description"] = description
             if endpoint is None and not opts.urn:
                 raise TypeError("Missing required property 'endpoint'")
             __props__.__dict__["endpoint"] = endpoint
             if name is None and not opts.urn:
                 raise TypeError("Missing required property 'name'")
             __props__.__dict__["name"] = name
+            __props__.__dict__["parameter_descriptions"] = parameter_descriptions
+            __props__.__dict__["command_digest"] = None
+            __props__.__dict__["is_auto_gen"] = None
+        secret_opts = pulumi.ResourceOptions(additional_secret_outputs=["command"])
+        opts = pulumi.ResourceOptions.merge(opts, secret_opts)
         super(Script, __self__).__init__(
             'adaptive:index:Script',
             resource_name,
@@ -157,17 +201,37 @@ class Script(pulumi.CustomResource):
         __props__ = ScriptArgs.__new__(ScriptArgs)
 
         __props__.__dict__["command"] = None
+        __props__.__dict__["command_digest"] = None
+        __props__.__dict__["description"] = None
         __props__.__dict__["endpoint"] = None
+        __props__.__dict__["is_auto_gen"] = None
         __props__.__dict__["name"] = None
+        __props__.__dict__["parameter_descriptions"] = None
         return Script(resource_name, opts=opts, __props__=__props__)
 
     @_builtins.property
     @pulumi.getter
     def command(self) -> pulumi.Output[_builtins.str]:
         """
-        The command the script runs.
+        The command the script runs. Write-only: the Adaptive API never returns script bodies, so drift in the command cannot be detected and `pulumi import` leaves it empty.
         """
         return pulumi.get(self, "command")
+
+    @_builtins.property
+    @pulumi.getter(name="commandDigest")
+    def command_digest(self) -> pulumi.Output[Optional[_builtins.str]]:
+        """
+        Opaque server fingerprint of the script body, used to detect out-of-band command changes on refresh.
+        """
+        return pulumi.get(self, "command_digest")
+
+    @_builtins.property
+    @pulumi.getter
+    def description(self) -> pulumi.Output[Optional[_builtins.str]]:
+        """
+        An optional description of the script.
+        """
+        return pulumi.get(self, "description")
 
     @_builtins.property
     @pulumi.getter
@@ -178,10 +242,26 @@ class Script(pulumi.CustomResource):
         return pulumi.get(self, "endpoint")
 
     @_builtins.property
+    @pulumi.getter(name="isAutoGen")
+    def is_auto_gen(self) -> pulumi.Output[Optional[_builtins.bool]]:
+        """
+        Whether the script was auto-generated by Adaptive.
+        """
+        return pulumi.get(self, "is_auto_gen")
+
+    @_builtins.property
     @pulumi.getter
     def name(self) -> pulumi.Output[_builtins.str]:
         """
         The name of the script.
         """
         return pulumi.get(self, "name")
+
+    @_builtins.property
+    @pulumi.getter(name="parameterDescriptions")
+    def parameter_descriptions(self) -> pulumi.Output[Optional[Mapping[str, _builtins.str]]]:
+        """
+        Descriptions for the script's parameters, keyed by parameter name.
+        """
+        return pulumi.get(self, "parameter_descriptions")
 

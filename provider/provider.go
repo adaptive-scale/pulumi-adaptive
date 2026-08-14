@@ -1,7 +1,7 @@
 // Package adaptive implements a native Pulumi provider for Adaptive
 // (https://adaptive.live), built with pulumi-go-provider. It mirrors the
 // resource surface of the Adaptive Terraform provider: resources, endpoints,
-// authorizations, groups, scripts, and the MS Teams workflow integration.
+// authorizations, groups, scripts, and schedules.
 package adaptive
 
 import (
@@ -13,7 +13,7 @@ import (
 )
 
 // Version is the provider version, overridable at build time via -ldflags.
-var Version = "0.1.0"
+var Version = "0.2.0"
 
 // Config holds provider-level configuration. Values fall back to the
 // ADAPTIVE_SVC_TOKEN and ADAPTIVE_URL environment variables, matching the
@@ -43,6 +43,41 @@ func clientFromConfig(ctx context.Context) (*Client, error) {
 
 // Provider builds the inferred Pulumi provider.
 func Provider() (p.Provider, error) {
+	prov, err := buildProvider()
+	if err != nil {
+		return prov, err
+	}
+
+	// Provider configuration is credentials plus the workspace URL. Changing
+	// either must reconfigure the provider in place — never replace the
+	// resources it manages. The infer layer reports every config change as a
+	// replacement (pulumi-go-provider#409), which the engine cascades into a
+	// full delete/recreate of the whole stack whenever the service token
+	// rotates or the provider version recorded in state differs from the SDK.
+	inner := prov.DiffConfig
+	prov.DiffConfig = func(ctx context.Context, req p.DiffRequest) (p.DiffResponse, error) {
+		resp, err := inner(ctx, req)
+		if err != nil {
+			return resp, err
+		}
+		resp.DeleteBeforeReplace = false
+		for key, d := range resp.DetailedDiff {
+			switch d.Kind {
+			case p.AddReplace:
+				d.Kind = p.Add
+			case p.DeleteReplace:
+				d.Kind = p.Delete
+			case p.UpdateReplace:
+				d.Kind = p.Update
+			}
+			resp.DetailedDiff[key] = d
+		}
+		return resp, nil
+	}
+	return prov, nil
+}
+
+func buildProvider() (p.Provider, error) {
 	return infer.NewProviderBuilder().
 		WithNamespace("adaptive-scale").
 		WithDisplayName("Adaptive").
@@ -96,7 +131,8 @@ func Provider() (p.Provider, error) {
 			infer.Resource(&Authorization{}),
 			infer.Resource(&Group{}),
 			infer.Resource(&Script{}),
-			infer.Resource(&MSTeamsWorkflow{}),
+			infer.Resource(&Schedule{}),
+			infer.Resource(&DataProtection{}),
 		).
 		Build()
 }

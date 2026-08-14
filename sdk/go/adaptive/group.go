@@ -21,6 +21,8 @@ type Group struct {
 	Members pulumi.StringArrayOutput `pulumi:"members"`
 	// Name of the group. Must be unique.
 	Name pulumi.StringOutput `pulumi:"name"`
+	// Slack channel ID associated with this group.
+	SlackChannelId pulumi.StringPtrOutput `pulumi:"slackChannelId"`
 }
 
 // NewGroup registers a new resource with the given unique name, arguments, and options.
@@ -72,6 +74,8 @@ type groupArgs struct {
 	Members []string `pulumi:"members"`
 	// Name of the group. Must be unique.
 	Name string `pulumi:"name"`
+	// Slack channel ID associated with this group.
+	SlackChannelId *string `pulumi:"slackChannelId"`
 }
 
 // The set of arguments for constructing a Group resource.
@@ -82,6 +86,8 @@ type GroupArgs struct {
 	Members pulumi.StringArrayInput
 	// Name of the group. Must be unique.
 	Name pulumi.StringInput
+	// Slack channel ID associated with this group.
+	SlackChannelId pulumi.StringPtrInput
 }
 
 func (GroupArgs) ElementType() reflect.Type {
@@ -184,6 +190,11 @@ func (o GroupOutput) Members() pulumi.StringArrayOutput {
 // Name of the group. Must be unique.
 func (o GroupOutput) Name() pulumi.StringOutput {
 	return o.ApplyT(func(v *Group) pulumi.StringOutput { return v.Name }).(pulumi.StringOutput)
+}
+
+// Slack channel ID associated with this group.
+func (o GroupOutput) SlackChannelId() pulumi.StringPtrOutput {
+	return o.ApplyT(func(v *Group) pulumi.StringPtrOutput { return v.SlackChannelId }).(pulumi.StringPtrOutput)
 }
 
 type GroupArrayOutput struct{ *pulumi.OutputState }

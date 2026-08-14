@@ -19,11 +19,53 @@ namespace AdaptiveScale.Adaptive
         [Output("authorization")]
         public Output<string?> Authorization { get; private set; } = null!;
 
+        /// <summary>
+        /// Automatically approve Just-In-Time access requests.
+        /// </summary>
+        [Output("autoApproval")]
+        public Output<bool?> AutoApproval { get; private set; } = null!;
+
         [Output("cluster")]
         public Output<string?> Cluster { get; private set; } = null!;
 
         [Output("cpu")]
         public Output<string?> Cpu { get; private set; } = null!;
+
+        /// <summary>
+        /// Hide Data Studio for this endpoint (cli endpoints only).
+        /// </summary>
+        [Output("disableDataStudio")]
+        public Output<bool?> DisableDataStudio { get; private set; } = null!;
+
+        /// <summary>
+        /// Do not retain terminal output for this endpoint. The effective value is OR'd with the workspace-level setting: an endpoint cannot re-enable capture that the workspace disabled.
+        /// </summary>
+        [Output("disableOutputCapture")]
+        public Output<bool?> DisableOutputCapture { get; private set; } = null!;
+
+        /// <summary>
+        /// Hide 'Connect via Web CLI' for this endpoint (cli endpoints only).
+        /// </summary>
+        [Output("disableWebCli")]
+        public Output<bool?> DisableWebCli { get; private set; } = null!;
+
+        /// <summary>
+        /// Provisioning status of the service exposure.
+        /// </summary>
+        [Output("exposeStatus")]
+        public Output<string?> ExposeStatus { get; private set; } = null!;
+
+        /// <summary>
+        /// How the endpoint is exposed (e.g. LoadBalancer).
+        /// </summary>
+        [Output("exposeType")]
+        public Output<string?> ExposeType { get; private set; } = null!;
+
+        /// <summary>
+        /// Whether the endpoint is exposed as a service.
+        /// </summary>
+        [Output("exposed")]
+        public Output<bool?> Exposed { get; private set; } = null!;
 
         [Output("groups")]
         public Output<ImmutableArray<string>> Groups { get; private set; } = null!;
@@ -42,6 +84,24 @@ namespace AdaptiveScale.Adaptive
         /// </summary>
         [Output("jitApprovers")]
         public Output<ImmutableArray<string>> JitApprovers { get; private set; } = null!;
+
+        /// <summary>
+        /// Which access paths require Just-In-Time approval: session, script, or both.
+        /// </summary>
+        [Output("jitMode")]
+        public Output<string?> JitMode { get; private set; } = null!;
+
+        /// <summary>
+        /// Require multiple approvers for Just-In-Time access requests.
+        /// </summary>
+        [Output("jitMultiApprover")]
+        public Output<bool?> JitMultiApprover { get; private set; } = null!;
+
+        /// <summary>
+        /// Number of approvals required when multi-approver is enabled.
+        /// </summary>
+        [Output("jitTotalApprovers")]
+        public Output<int?> JitTotalApprovers { get; private set; } = null!;
 
         [Output("memory")]
         public Output<string?> Memory { get; private set; } = null!;
@@ -66,6 +126,12 @@ namespace AdaptiveScale.Adaptive
         /// </summary>
         [Output("scriptOnlyAccess")]
         public Output<bool?> ScriptOnlyAccess { get; private set; } = null!;
+
+        /// <summary>
+        /// Current lifecycle status of the endpoint.
+        /// </summary>
+        [Output("status")]
+        public Output<string?> Status { get; private set; } = null!;
 
         [Output("tags")]
         public Output<ImmutableArray<string>> Tags { get; private set; } = null!;
@@ -137,11 +203,35 @@ namespace AdaptiveScale.Adaptive
         [Input("authorization")]
         public Input<string>? Authorization { get; set; }
 
+        /// <summary>
+        /// Automatically approve Just-In-Time access requests.
+        /// </summary>
+        [Input("autoApproval")]
+        public Input<bool>? AutoApproval { get; set; }
+
         [Input("cluster")]
         public Input<string>? Cluster { get; set; }
 
         [Input("cpu")]
         public Input<string>? Cpu { get; set; }
+
+        /// <summary>
+        /// Hide Data Studio for this endpoint (cli endpoints only).
+        /// </summary>
+        [Input("disableDataStudio")]
+        public Input<bool>? DisableDataStudio { get; set; }
+
+        /// <summary>
+        /// Do not retain terminal output for this endpoint. The effective value is OR'd with the workspace-level setting: an endpoint cannot re-enable capture that the workspace disabled.
+        /// </summary>
+        [Input("disableOutputCapture")]
+        public Input<bool>? DisableOutputCapture { get; set; }
+
+        /// <summary>
+        /// Hide 'Connect via Web CLI' for this endpoint (cli endpoints only).
+        /// </summary>
+        [Input("disableWebCli")]
+        public Input<bool>? DisableWebCli { get; set; }
 
         [Input("groups")]
         private InputList<string>? _groups;
@@ -171,6 +261,24 @@ namespace AdaptiveScale.Adaptive
             get => _jitApprovers ?? (_jitApprovers = new InputList<string>());
             set => _jitApprovers = value;
         }
+
+        /// <summary>
+        /// Which access paths require Just-In-Time approval: session, script, or both.
+        /// </summary>
+        [Input("jitMode")]
+        public Input<string>? JitMode { get; set; }
+
+        /// <summary>
+        /// Require multiple approvers for Just-In-Time access requests.
+        /// </summary>
+        [Input("jitMultiApprover")]
+        public Input<bool>? JitMultiApprover { get; set; }
+
+        /// <summary>
+        /// Number of approvals required when multi-approver is enabled.
+        /// </summary>
+        [Input("jitTotalApprovers")]
+        public Input<int>? JitTotalApprovers { get; set; }
 
         [Input("memory")]
         public Input<string>? Memory { get; set; }

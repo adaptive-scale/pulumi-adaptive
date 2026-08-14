@@ -37,6 +37,12 @@ namespace AdaptiveScale.Adaptive
         [Output("resourceType")]
         public Output<string> ResourceType { get; private set; } = null!;
 
+        /// <summary>
+        /// Current lifecycle status of the authorization.
+        /// </summary>
+        [Output("status")]
+        public Output<string?> Status { get; private set; } = null!;
+
 
         /// <summary>
         /// Create a Authorization resource with the given unique name, arguments, and options.

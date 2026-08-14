@@ -7,12 +7,15 @@ from . import _utilities
 import typing
 # Export this package's modules as members:
 from .authorization import *
+from .data_protection import *
 from .endpoint import *
 from .group import *
-from .ms_teams_workflow import *
 from .provider import *
 from .resource import *
+from .schedule import *
 from .script import *
+from ._inputs import *
+from . import outputs
 
 # Make subpackages available:
 if typing.TYPE_CHECKING:
@@ -30,10 +33,11 @@ _utilities.register(
   "fqn": "pulumi_adaptive",
   "classes": {
    "adaptive:index:Authorization": "Authorization",
+   "adaptive:index:DataProtection": "DataProtection",
    "adaptive:index:Endpoint": "Endpoint",
    "adaptive:index:Group": "Group",
-   "adaptive:index:MSTeamsWorkflow": "MSTeamsWorkflow",
    "adaptive:index:Resource": "Resource",
+   "adaptive:index:Schedule": "Schedule",
    "adaptive:index:Script": "Script"
   }
  }

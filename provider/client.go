@@ -10,6 +10,7 @@ import (
 	"net/http"
 	"os"
 	"path"
+	"sort"
 	"strings"
 	"time"
 )
@@ -22,7 +23,7 @@ type Client struct {
 	httpClient   *http.Client
 }
 
-const defaultAdaptiveURL = "https://app.adaptive.com/api/v1"
+const defaultAdaptiveURL = "https://app.adaptive.live/api/v1"
 
 // NewClient builds a Client. workspaceURL is the base workspace URL (e.g.
 // https://app.adaptive.live); the /api/v1 suffix is appended automatically.
@@ -44,6 +45,10 @@ func (c *Client) teamAPI() string          { return c.workspaceURL + "/terraform
 func (c *Client) scriptAPI() string        { return c.workspaceURL + "/terraform/script" }
 func (c *Client) resourceAPI() string      { return c.workspaceURL + "/terraform/resource" }
 func (c *Client) sessionAPI() string       { return c.workspaceURL + "/terraform/session" }
+func (c *Client) scheduleAPI() string      { return c.workspaceURL + "/terraform/schedule" }
+func (c *Client) dataProtectionAPI() string {
+	return c.workspaceURL + "/terraform/dataprotection"
+}
 
 func (c *Client) do(ctx context.Context, req *http.Request) (*http.Response, error) {
 	req = req.WithContext(ctx)
@@ -99,6 +104,193 @@ type CreateSessionRequest struct {
 	Groups            []string `json:"groups,omitempty"`
 	IdleTimeout       string   `json:"idle_timeout,omitempty"`
 	ScriptOnlyAccess  bool     `json:"script_only_access"`
+
+	DisableOutputCapture bool   `json:"disable_output_capture"`
+	DisableDataStudio    bool   `json:"disable_data_studio"`
+	DisableWebCLI        bool   `json:"disable_web_cli"`
+	JITMode              string `json:"jit_mode,omitempty"`
+	AutoApproval         *bool  `json:"auto_approval,omitempty"`
+	JITMultiApprover     *bool  `json:"jit_multi_approver,omitempty"`
+	JITTotalApprovers    *int   `json:"jit_total_approvers,omitempty"`
+}
+
+type ScriptRequest struct {
+	Name                  string            `json:"Name"`
+	Command               string            `json:"Command"`
+	Endpoint              string            `json:"Endpoint"`
+	Description           string            `json:"Description,omitempty"`
+	ParameterDescriptions map[string]string `json:"ParameterDescriptions,omitempty"`
+}
+
+// ScheduleRequest mirrors the server's TerraformCreateScheduleRequest.
+type ScheduleRequest struct {
+	Name          string   `json:"name"`
+	Description   string   `json:"description,omitempty"`
+	ScheduleType  string   `json:"scheduleType"`
+	IsActive      *bool    `json:"isActive,omitempty"`
+	AllDay        bool     `json:"allDay,omitempty"`
+	StartHour     int      `json:"startHour"`
+	StartMinute   int      `json:"startMinute"`
+	EndHour       int      `json:"endHour"`
+	EndMinute     int      `json:"endMinute"`
+	Weekdays      []string `json:"weekdays,omitempty"`
+	StartDay      int      `json:"startDay,omitempty"`
+	EndDay        int      `json:"endDay,omitempty"`
+	SpecificDates []string `json:"specificDates,omitempty"`
+	Users         []string `json:"users,omitempty"`
+	Teams         []string `json:"teams,omitempty"`
+	Endpoints     []string `json:"endpoints,omitempty"`
+	ExpiresAt     *string  `json:"expiresAt,omitempty"`
+	MaxAccessTime *int     `json:"maxAccessTime,omitempty"`
+	Timezone      string   `json:"timezone,omitempty"`
+	OperationType string   `json:"operationType,omitempty"`
+}
+
+// DataProtectionRequest mirrors the server's TerraformDataProtectionRequest.
+type DataProtectionRequest struct {
+	ResourceName string               `json:"resourceName"`
+	Scoped       *bool                `json:"scoped,omitempty"` // nil means true (server default)
+	Masks        []DataProtectionMask `json:"masks"`
+}
+
+type DataProtectionMask struct {
+	DatabaseName string                `json:"databaseName" pulumi:"databaseName"`
+	Tables       []DataProtectionTable `json:"tables" pulumi:"tables,optional"`
+}
+
+type DataProtectionTable struct {
+	TableName     string                     `json:"tableName" pulumi:"tableName"`
+	Schema        string                     `json:"schema,omitempty" pulumi:"schema,optional"`
+	Masked        *bool                      `json:"masked,omitempty" pulumi:"masked,optional"`
+	MaskedColumns []DataProtectionColumnMask `json:"maskedColumns" pulumi:"maskedColumns,optional"`
+}
+
+type DataProtectionColumnMask struct {
+	ColumnName  string `json:"columnName" pulumi:"columnName"`
+	MaskingType string `json:"maskingType" pulumi:"maskingType"`
+}
+
+// ---------------------------------------------------------------------------
+// Read models — canonical camelCase keys of the /terraform/<type>/read/:id DTOs.
+// ---------------------------------------------------------------------------
+
+type DataProtectionReadResponse struct {
+	ID                string               `json:"id"` // the resource (integration) id
+	ResourceName      string               `json:"resourceName"`
+	AuthorizationName string               `json:"authorizationName"` // "masked_<resourceName>"
+	Scoped            *bool                `json:"scoped"`
+	Masks             []DataProtectionMask `json:"masks"`
+	Status            string               `json:"status"`
+	LastAppliedAt     string               `json:"lastAppliedAt"`
+}
+
+type ResourceReadResponse struct {
+	ID              string         `json:"id"`
+	Name            string         `json:"name"`
+	IntegrationType string         `json:"integrationType"`
+	UserTags        []string       `json:"userTags"`
+	DefaultCluster  string         `json:"defaultCluster"`
+	Configuration   map[string]any `json:"configuration"` // secret values are stripped server-side
+	RedactedKeys    []string       `json:"redactedKeys"`
+	// RedactedDigests carries an opaque server-side fingerprint per redacted
+	// key so secret drift can be detected without the value ever crossing the
+	// wire. Absent on servers that predate the feature.
+	RedactedDigests map[string]string `json:"redactedDigests"`
+	CreatedAt       string            `json:"createdAt"`
+	UpdatedAt       string            `json:"updatedAt"`
+}
+
+type SessionReadResponse struct {
+	ID                   string   `json:"id"`
+	Name                 string   `json:"name"`
+	Resource             string   `json:"resource"` // integration name, not id
+	Cluster              string   `json:"cluster"`
+	Authorization        string   `json:"authorization"`
+	Status               string   `json:"status"`
+	SessionType          string   `json:"sessionType"` // cli | client | services
+	TTL                  string   `json:"ttl"`
+	IdleTimeout          string   `json:"idleTimeout"`
+	PauseTimeout         string   `json:"pauseTimeout"`
+	Memory               string   `json:"memory"`
+	CPU                  string   `json:"cpu"`
+	Storage              string   `json:"storage"`
+	IsJITEnabled         bool     `json:"isJitEnabled"`
+	JITMode              string   `json:"jitMode"`
+	JITMultiApprover     bool     `json:"jitMultiApprover"`
+	JITTotalApprovers    int      `json:"jitTotalApprovers"`
+	AutoApproval         bool     `json:"autoApproval"`
+	SessionUsers         []string `json:"sessionUsers"`
+	AccessApprovers      []string `json:"accessApprovers"`
+	Groups               []string `json:"groups"`
+	UserTags             []string `json:"userTags"`
+	ScriptOnlyAccess     bool     `json:"scriptOnlyAccess"`
+	DisableOutputCapture bool     `json:"disableOutputCapture"`
+	DisableDataStudio    bool     `json:"disableDataStudio"`
+	DisableWebCLI        bool     `json:"disableWebCli"`
+	Public               bool     `json:"public"`
+	Exposed              bool     `json:"exposed"`
+	ExposeType           string   `json:"exposeType"`
+	ExposeStatus         string   `json:"exposeStatus"`
+}
+
+type AuthorizationReadResponse struct {
+	ID           string `json:"id"`
+	Name         string `json:"name"`
+	Description  string `json:"description"`
+	ResourceType string `json:"resourceType"`
+	Permissions  string `json:"permissions"`
+	Status       string `json:"status"`
+	Type         string `json:"type"`
+}
+
+type TeamReadResponse struct {
+	ID             string   `json:"id"`
+	Name           string   `json:"name"`
+	Members        []string `json:"members"`   // emails
+	Endpoints      []string `json:"endpoints"` // endpoint names
+	SlackChannelID string   `json:"slackChannelId"`
+	CreatedBy      string   `json:"createdBy"`
+	CreatedAt      string   `json:"createdAt"`
+}
+
+type ScriptReadResponse struct {
+	ID                    string            `json:"id"`
+	Name                  string            `json:"name"`
+	Endpoint              string            `json:"endpoint"` // endpoint name (resolved)
+	Description           string            `json:"description"`
+	ParameterDescriptions map[string]string `json:"parameterDescriptions"`
+	IsAutoGen             bool              `json:"isAutoGen"`
+	CommandOmitted        bool              `json:"commandOmitted"` // command is write-only
+	// CommandDigest is an opaque server-side fingerprint of the script body,
+	// used to detect out-of-band command changes. Absent on older servers.
+	CommandDigest string `json:"commandDigest"`
+	CreatedBy     string `json:"createdBy"`
+	CreatedAt     string `json:"createdAt"`
+}
+
+type ScheduleReadResponse struct {
+	ID            string   `json:"id"`
+	Name          string   `json:"name"`
+	Description   string   `json:"description"`
+	ScheduleType  string   `json:"scheduleType"`
+	IsActive      bool     `json:"isActive"`
+	AllDay        bool     `json:"allDay"`
+	StartHour     int      `json:"startHour"`
+	StartMinute   int      `json:"startMinute"`
+	EndHour       int      `json:"endHour"`
+	EndMinute     int      `json:"endMinute"`
+	Weekdays      []string `json:"weekdays"`
+	StartDay      int      `json:"startDay"`
+	EndDay        int      `json:"endDay"`
+	SpecificDates []string `json:"specificDates"`
+	Users         []string `json:"users"`
+	Teams         []string `json:"teams"`
+	Endpoints     []string `json:"endpoints"`
+	ExpiresAt     string   `json:"expiresAt"`
+	MaxAccessTime *int     `json:"maxAccessTime"`
+	Timezone      string   `json:"timezone"`
+	OperationType string   `json:"operationType"`
+	UpdatedAt     string   `json:"updatedAt"`
 }
 
 type CreateAuthorizationRequest struct {
@@ -274,35 +466,77 @@ func (c *Client) DeleteSession(ctx context.Context, sessionID string) error {
 	return nil
 }
 
-func (c *Client) readSession(ctx context.Context, sessionID string) (map[string]any, error) {
-	resp, err := c.do(ctx, mustReq("GET", fmt.Sprintf("%s/read/%s", c.sessionAPI(), sessionID), nil))
+// readTyped performs a GET against a /read/:id route and decodes the response.
+// Not-found (404) is reported as (nil, nil) so callers can treat it as "the
+// resource no longer exists" rather than a fault.
+func readTyped[T any](c *Client, ctx context.Context, url, what, id string) (*T, error) {
+	resp, err := c.do(ctx, mustReq("GET", url, nil))
 	if err != nil {
 		return nil, err
 	}
 	defer resp.Body.Close()
-	if resp.StatusCode != http.StatusAccepted {
-		return nil, fmt.Errorf("error reading session %s", sessionID)
+	if resp.StatusCode == http.StatusNotFound {
+		return nil, nil
 	}
-	var out map[string]any
-	if err := json.NewDecoder(resp.Body).Decode(&out); err != nil {
-		return nil, err
+	// Session read historically responds 202 Accepted; every other type uses 200.
+	if resp.StatusCode != http.StatusOK && resp.StatusCode != http.StatusAccepted {
+		return nil, fmt.Errorf("error reading %s %s: %s", what, id, readBody(resp))
+	}
+	out := new(T)
+	if err := json.NewDecoder(resp.Body).Decode(out); err != nil {
+		return nil, fmt.Errorf("failed to decode %s read response: %w", what, err)
 	}
 	return out, nil
 }
 
-func (c *Client) waitForSession(ctx context.Context, sessionID string) (map[string]any, error) {
-	return Do(func() (map[string]any, error) {
-		return c.readSession(ctx, sessionID)
+// ReadSession fetches the current state of an endpoint (session) by ID.
+// Returns (nil, nil) when the session no longer exists.
+func (c *Client) ReadSession(ctx context.Context, sessionID string) (*SessionReadResponse, error) {
+	return readTyped[SessionReadResponse](c, ctx, fmt.Sprintf("%s/read/%s", c.sessionAPI(), sessionID), "session", sessionID)
+}
+
+// ReadResource fetches an integration (resource) by ID. Secret configuration
+// values are stripped server-side; their keys are listed in RedactedKeys.
+// Returns (nil, nil) when the resource no longer exists.
+func (c *Client) ReadResource(ctx context.Context, resourceID string) (*ResourceReadResponse, error) {
+	return readTyped[ResourceReadResponse](c, ctx, fmt.Sprintf("%s/read/%s", c.resourceAPI(), resourceID), "resource", resourceID)
+}
+
+// ReadAuthorization fetches an authorization by ID.
+// Returns (nil, nil) when the authorization no longer exists.
+func (c *Client) ReadAuthorization(ctx context.Context, authID string) (*AuthorizationReadResponse, error) {
+	return readTyped[AuthorizationReadResponse](c, ctx, fmt.Sprintf("%s/read/%s", c.authorizationAPI(), authID), "authorization", authID)
+}
+
+// ReadTeam fetches a team (group) by ID.
+// Returns (nil, nil) when the team no longer exists.
+func (c *Client) ReadTeam(ctx context.Context, teamID string) (*TeamReadResponse, error) {
+	return readTyped[TeamReadResponse](c, ctx, fmt.Sprintf("%s/read/%s", c.teamAPI(), teamID), "team", teamID)
+}
+
+// ReadScript fetches a script by ID. The script body (command) is write-only
+// and never returned; CommandOmitted is set instead.
+// Returns (nil, nil) when the script no longer exists.
+func (c *Client) ReadScript(ctx context.Context, scriptID string) (*ScriptReadResponse, error) {
+	return readTyped[ScriptReadResponse](c, ctx, fmt.Sprintf("%s/read/%s", c.scriptAPI(), scriptID), "script", scriptID)
+}
+
+// ReadSchedule fetches a schedule by ID.
+// Returns (nil, nil) when the schedule no longer exists.
+func (c *Client) ReadSchedule(ctx context.Context, scheduleID string) (*ScheduleReadResponse, error) {
+	return readTyped[ScheduleReadResponse](c, ctx, fmt.Sprintf("%s/read/%s", c.scheduleAPI(), scheduleID), "schedule", scheduleID)
+}
+
+func (c *Client) waitForSession(ctx context.Context, sessionID string) (*SessionReadResponse, error) {
+	return Do(func() (*SessionReadResponse, error) {
+		return c.ReadSession(ctx, sessionID)
 	}, RetryLimit(30), Sleep(10*time.Second), RetryResultChecker(func(r any) bool {
-		res, ok := r.(map[string]any)
+		res, ok := r.(*SessionReadResponse)
 		if !ok || res == nil {
+			// nil means 404: right after create the row may not be readable yet.
 			return true
 		}
-		status, ok := res["Status"].(string)
-		if !ok {
-			return true
-		}
-		return strings.ToLower(status) == "creating"
+		return strings.ToLower(res.Status) == "creating"
 	}))
 }
 
@@ -343,35 +577,16 @@ func (c *Client) CreateAuthorization(ctx context.Context, name, description, per
 	return &out, nil
 }
 
-func (c *Client) readAuthorization(ctx context.Context, authID string) (map[string]any, error) {
-	resp, err := c.do(ctx, mustReq("GET", fmt.Sprintf("%s/read/%s", c.authorizationAPI(), authID), nil))
-	if err != nil {
-		return nil, err
-	}
-	defer resp.Body.Close()
-	if resp.StatusCode != http.StatusOK && resp.StatusCode != http.StatusAccepted {
-		return nil, fmt.Errorf("error reading authorization %s", authID)
-	}
-	var out map[string]any
-	if err := json.NewDecoder(resp.Body).Decode(&out); err != nil {
-		return nil, err
-	}
-	return out, nil
-}
-
-func (c *Client) waitForAuthorization(ctx context.Context, authID string) (map[string]any, error) {
-	return Do(func() (map[string]any, error) {
-		return c.readAuthorization(ctx, authID)
+func (c *Client) waitForAuthorization(ctx context.Context, authID string) (*AuthorizationReadResponse, error) {
+	return Do(func() (*AuthorizationReadResponse, error) {
+		return c.ReadAuthorization(ctx, authID)
 	}, RetryLimit(20), Sleep(10*time.Second), RetryResultChecker(func(r any) bool {
-		res, ok := r.(map[string]any)
+		res, ok := r.(*AuthorizationReadResponse)
 		if !ok || res == nil {
+			// nil means 404: right after create the row may not be readable yet.
 			return true
 		}
-		status, ok := res["Status"].(string)
-		if !ok {
-			return true
-		}
-		return strings.ToLower(status) == "creating"
+		return strings.ToLower(res.Status) == "creating"
 	}))
 }
 
@@ -439,8 +654,8 @@ func (c *Client) CreateTeam(ctx context.Context, name string, members, endpoints
 	return &out, nil
 }
 
-func (c *Client) UpdateTeam(ctx context.Context, id, name string, members, endpoints []string) error {
-	body, err := encode(map[string]any{"Name": name, "Members": members, "Endpoints": endpoints})
+func (c *Client) UpdateTeam(ctx context.Context, id, name string, members, endpoints []string, slackChannelID string) error {
+	body, err := encode(map[string]any{"Name": name, "Members": members, "Endpoints": endpoints, "SlackChannelID": slackChannelID})
 	if err != nil {
 		return err
 	}
@@ -471,8 +686,8 @@ func (c *Client) DeleteTeam(ctx context.Context, id, name string) error {
 // Scripts
 // ---------------------------------------------------------------------------
 
-func (c *Client) CreateScript(ctx context.Context, name, command, endpoint string) (*IDResponse, error) {
-	body, err := encode(map[string]any{"Name": name, "Command": command, "Endpoint": endpoint})
+func (c *Client) CreateScript(ctx context.Context, req ScriptRequest) (*IDResponse, error) {
+	body, err := encode(req)
 	if err != nil {
 		return nil, err
 	}
@@ -482,10 +697,10 @@ func (c *Client) CreateScript(ctx context.Context, name, command, endpoint strin
 	}
 	defer resp.Body.Close()
 	if resp.StatusCode == http.StatusConflict {
-		return nil, fmt.Errorf("duplicate script with name %s", name)
+		return nil, fmt.Errorf("duplicate script with name %s", req.Name)
 	}
 	if resp.StatusCode != http.StatusOK {
-		return nil, fmt.Errorf("error creating script %s: %s", name, readBody(resp))
+		return nil, fmt.Errorf("error creating script %s: %s", req.Name, readBody(resp))
 	}
 	var out IDResponse
 	if err := json.NewDecoder(resp.Body).Decode(&out); err != nil {
@@ -494,8 +709,8 @@ func (c *Client) CreateScript(ctx context.Context, name, command, endpoint strin
 	return &out, nil
 }
 
-func (c *Client) UpdateScript(ctx context.Context, id, name, command, endpoint string) error {
-	body, err := encode(map[string]any{"Name": name, "Command": command, "Endpoint": endpoint})
+func (c *Client) UpdateScript(ctx context.Context, id string, req ScriptRequest) error {
+	body, err := encode(req)
 	if err != nil {
 		return err
 	}
@@ -505,10 +720,10 @@ func (c *Client) UpdateScript(ctx context.Context, id, name, command, endpoint s
 	}
 	defer resp.Body.Close()
 	if resp.StatusCode == http.StatusConflict {
-		return fmt.Errorf("duplicate script with name %s", name)
+		return fmt.Errorf("duplicate script with name %s", req.Name)
 	}
 	if resp.StatusCode != http.StatusOK {
-		return fmt.Errorf("error updating script %s", name)
+		return fmt.Errorf("error updating script %s", req.Name)
 	}
 	return nil
 }
@@ -521,6 +736,134 @@ func (c *Client) DeleteScript(ctx context.Context, id, name string) error {
 	defer resp.Body.Close()
 	if resp.StatusCode != http.StatusOK {
 		return fmt.Errorf("error deleting script %s: %s", name, readBody(resp))
+	}
+	return nil
+}
+
+// ---------------------------------------------------------------------------
+// Schedules
+// ---------------------------------------------------------------------------
+
+// CreateSchedule creates a schedule. Note: the server upserts by name, so
+// creating a schedule whose name already exists adopts the existing row.
+// The response carries the full schedule object including its ID.
+func (c *Client) CreateSchedule(ctx context.Context, req ScheduleRequest) (*ScheduleReadResponse, error) {
+	body, err := encode(req)
+	if err != nil {
+		return nil, err
+	}
+	resp, err := c.do(ctx, mustReq("POST", c.scheduleAPI()+"/create", body))
+	if err != nil {
+		return nil, err
+	}
+	defer resp.Body.Close()
+	if resp.StatusCode != http.StatusOK {
+		return nil, fmt.Errorf("error creating schedule %s: %s", req.Name, readBody(resp))
+	}
+	var out ScheduleReadResponse
+	if err := json.NewDecoder(resp.Body).Decode(&out); err != nil {
+		return nil, err
+	}
+	return &out, nil
+}
+
+func (c *Client) UpdateSchedule(ctx context.Context, id string, req ScheduleRequest) (*ScheduleReadResponse, error) {
+	body, err := encode(req)
+	if err != nil {
+		return nil, err
+	}
+	resp, err := c.do(ctx, mustReq("POST", fmt.Sprintf("%s/update/%s", c.scheduleAPI(), id), body))
+	if err != nil {
+		return nil, err
+	}
+	defer resp.Body.Close()
+	if resp.StatusCode != http.StatusOK {
+		return nil, fmt.Errorf("error updating schedule %s: %s", req.Name, readBody(resp))
+	}
+	var out ScheduleReadResponse
+	if err := json.NewDecoder(resp.Body).Decode(&out); err != nil {
+		return nil, err
+	}
+	return &out, nil
+}
+
+// DeleteSchedule deletes a schedule. The server treats deleting an
+// already-deleted schedule as success.
+func (c *Client) DeleteSchedule(ctx context.Context, id string) error {
+	resp, err := c.do(ctx, mustReq("POST", fmt.Sprintf("%s/delete/%s", c.scheduleAPI(), id), nil))
+	if err != nil {
+		return err
+	}
+	defer resp.Body.Close()
+	if resp.StatusCode != http.StatusOK {
+		return fmt.Errorf("error deleting schedule %s: %s", id, readBody(resp))
+	}
+	return nil
+}
+
+// ---------------------------------------------------------------------------
+// Data protection (masking policies)
+// ---------------------------------------------------------------------------
+
+// CreateDataProtection creates (or adopts — the server upserts per resource) a
+// masking policy. The returned ID is the resource's integration ID.
+func (c *Client) CreateDataProtection(ctx context.Context, req DataProtectionRequest) (*DataProtectionReadResponse, error) {
+	body, err := encode(req)
+	if err != nil {
+		return nil, err
+	}
+	resp, err := c.do(ctx, mustReq("POST", c.dataProtectionAPI()+"/create", body))
+	if err != nil {
+		return nil, err
+	}
+	defer resp.Body.Close()
+	if resp.StatusCode != http.StatusOK {
+		return nil, fmt.Errorf("error creating data protection for %s: %s", req.ResourceName, readBody(resp))
+	}
+	var out DataProtectionReadResponse
+	if err := json.NewDecoder(resp.Body).Decode(&out); err != nil {
+		return nil, err
+	}
+	return &out, nil
+}
+
+func (c *Client) UpdateDataProtection(ctx context.Context, id string, req DataProtectionRequest) (*DataProtectionReadResponse, error) {
+	body, err := encode(req)
+	if err != nil {
+		return nil, err
+	}
+	resp, err := c.do(ctx, mustReq("POST", fmt.Sprintf("%s/update/%s", c.dataProtectionAPI(), id), body))
+	if err != nil {
+		return nil, err
+	}
+	defer resp.Body.Close()
+	if resp.StatusCode != http.StatusOK {
+		return nil, fmt.Errorf("error updating data protection %s: %s", id, readBody(resp))
+	}
+	var out DataProtectionReadResponse
+	if err := json.NewDecoder(resp.Body).Decode(&out); err != nil {
+		return nil, err
+	}
+	return &out, nil
+}
+
+// ReadDataProtection fetches a masking policy by resource (integration) ID.
+// Returns (nil, nil) when the resource or its policy no longer exists.
+func (c *Client) ReadDataProtection(ctx context.Context, id string) (*DataProtectionReadResponse, error) {
+	return readTyped[DataProtectionReadResponse](c, ctx, fmt.Sprintf("%s/read/%s", c.dataProtectionAPI(), id), "data protection", id)
+}
+
+// DeleteDataProtection turns masking off for the resource — the server applies
+// the documented "off" shape (scoped: false, masks: []) rather than deleting
+// rows, matching the admin CLI's behavior. Idempotent.
+func (c *Client) DeleteDataProtection(ctx context.Context, id string) error {
+	resp, err := c.do(ctx, mustReq("POST", fmt.Sprintf("%s/delete/%s", c.dataProtectionAPI(), id), nil))
+	if err != nil {
+		return err
+	}
+	defer resp.Body.Close()
+	if resp.StatusCode != http.StatusOK {
+		return fmt.Errorf("error deleting data protection %s: %s", id, readBody(resp))
 	}
 	return nil
 }
@@ -554,9 +897,23 @@ func readBody(resp *http.Response) string {
 }
 
 // resolveToken mirrors the Terraform provider's token resolution: an explicit
-// token (raw, or JSON in either the deployments-config or simple shape), with a
-// fallback to ~/.adaptive/token.
+// token (raw, or JSON in either the deployments-config or simple shape), then
+// the ADAPTIVE_SVC_TOKEN / ADAPTIVE_URL environment variables, then a fallback
+// to ~/.adaptive/token.
+//
+// The environment is consulted here — at connection time — and not only via
+// the provider's config defaults, because config defaults are applied when the
+// program runs (check phase). Operations that run purely from state, like a
+// plain `pulumi refresh` of a stack whose provider was registered without
+// config (e.g. by `pulumi import`), never go through that phase and would
+// otherwise silently ignore the environment.
 func resolveToken(serviceToken, workspaceURL string) (string, string, error) {
+	if serviceToken == "" {
+		serviceToken = os.Getenv("ADAPTIVE_SVC_TOKEN")
+	}
+	if workspaceURL == "" {
+		workspaceURL = os.Getenv("ADAPTIVE_URL")
+	}
 	if serviceToken == "" {
 		home, err := os.UserHomeDir()
 		if err != nil {
@@ -583,9 +940,27 @@ func resolveToken(serviceToken, workspaceURL string) (string, string, error) {
 				return d.Token, d.URL, nil
 			}
 		}
-		for _, d := range deployments.Deployments {
-			return d.Token, d.URL, nil
+		// Exactly one deployment: unambiguous even without a default marker.
+		if len(deployments.Deployments) == 1 {
+			for _, d := range deployments.Deployments {
+				return d.Token, d.URL, nil
+			}
 		}
+		// Multiple deployments and no default used to silently pick one at
+		// map-iteration (i.e. random) order — sending credentials to whichever
+		// environment happened to come up first. Refuse instead.
+		names := make([]string, 0, len(deployments.Deployments))
+		for name, d := range deployments.Deployments {
+			if name == "" {
+				name = d.URL
+			}
+			names = append(names, name)
+		}
+		sort.Strings(names)
+		return "", "", fmt.Errorf(
+			"the adaptive token config lists %d deployments (%s) and none is marked \"default\": true; "+
+				"mark one as default, or set ADAPTIVE_SVC_TOKEN and ADAPTIVE_URL explicitly",
+			len(names), strings.Join(names, ", "))
 	}
 
 	// simple {token,url} shape

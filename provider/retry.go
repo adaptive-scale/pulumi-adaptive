@@ -16,9 +16,9 @@ var (
 
 type RetryOption func(*retryOptions)
 
-func Timeout(d time.Duration) RetryOption    { return func(o *retryOptions) { o.Timeout = d } }
-func RetryLimit(n int) RetryOption           { return func(o *retryOptions) { o.RetryLimit = n } }
-func Sleep(d time.Duration) RetryOption      { return func(o *retryOptions) { o.Sleep = d } }
+func Timeout(d time.Duration) RetryOption { return func(o *retryOptions) { o.Timeout = d } }
+func RetryLimit(n int) RetryOption        { return func(o *retryOptions) { o.RetryLimit = n } }
+func Sleep(d time.Duration) RetryOption   { return func(o *retryOptions) { o.Sleep = d } }
 func RetryChecker(f func(any, error) bool) RetryOption {
 	return func(o *retryOptions) { o.Checker = f }
 }

@@ -18,12 +18,53 @@ Terraform or the Terraform bridge.
 
 | Pulumi resource | Description |
 |---|---|
-| `adaptive.Resource` | A connection to an external service (database, cloud, Kubernetes, …). The `type` field selects the integration; ~50 are supported. |
-| `adaptive.Endpoint` | A secure, time-limited access point to a resource (TTL, JIT approval, users/groups). |
+| `adaptive.Resource` | A connection to an external service (database, cloud, Kubernetes, …). The `type` field selects the integration; every integration type the Adaptive platform registers (~82) is supported. |
+| `adaptive.Endpoint` | A secure, time-limited access point to a resource (TTL, JIT approval and modes, users/groups, web-access toggles, output capture). |
 | `adaptive.Authorization` | A permission policy for a resource type. |
-| `adaptive.Group` | A bundle of users and endpoints. |
-| `adaptive.Script` | A command attached to an endpoint. |
-| `adaptive.MSTeamsWorkflow` | An MS Teams workflow webhook integration. |
+| `adaptive.Group` | A bundle of users and endpoints, optionally linked to a Slack channel. |
+| `adaptive.Script` | A command attached to an endpoint, with optional description and parameter docs. |
+| `adaptive.Schedule` | An auto-approval (or auto-reject) schedule window applied to users, groups, and endpoints. |
+| `adaptive.DataProtection` | A data-masking policy for a resource (per-database/table/column masking rules). |
+
+Notification/webhook integrations (e.g. MS Teams workflows) are managed through
+`adaptive.Resource` with the matching `type` (e.g. `msteams_workflow` + `webhookUrl`).
+
+### Data protection (masking)
+
+```typescript
+const policy = new adaptive.DataProtection("mask-pii", {
+    resource: db.name,
+    masks: [{
+        databaseName: "shop",
+        tables: [{
+            tableName: "users",
+            schema: "public",
+            maskedColumns: [
+                { columnName: "email", maskingType: "email" },
+                { columnName: "ssn", maskingType: "ssn" },
+            ],
+        }],
+    }],
+});
+
+// Serve masked sessions by attaching the generated authorization:
+const masked = new adaptive.Endpoint("masked-access", {
+    name: "shop-masked",
+    resource: db.name,
+    authorization: policy.authorizationName,
+});
+```
+
+Masking types: `name`, `email`, `ssn`, `phone`, `cc`, `aadhar`, `first4`,
+`last4`, `redact`, `hash`, and `disable` (omits the column entirely). Caveats:
+creating a policy for a resource that already has one (e.g. configured in the
+UI) adopts and overwrites it; `pulumi destroy` turns masking **off** (the
+platform's documented behavior — there is no hard delete), leaving the
+`masked_<resource>` authorization and any already-provisioned masked views in
+place; masked views are created lazily when a session starts.
+
+All resources support `pulumi refresh` (drift detection, including out-of-band
+deletion) and `pulumi import` (see [Importing existing objects](#importing-existing-objects)).
 
 ## Installation
 
@@ -92,6 +133,81 @@ pulumi up
 > **Authorization permissions:** for SQL resource types (postgres, mysql,
 > sqlserver, …) and kubernetes, `permissions` must be structured YAML — a bare
 > value like `"SELECT"` is rejected by the API. See `examples/go/main.go`.
+
+## Secrets
+
+Credential-bearing fields (`password`, `secretAccessKey`, `clientSecret`, SSH
+keys, API tokens, webhook URLs, connection-string `uri`s, script `command`s, …)
+are marked secret in the provider schema. The engine therefore shows them as
+`[secret]` in `pulumi preview`/`up` output and encrypts them in the stack
+state — **even when the program passes a plaintext literal**, in every
+language.
+
+To keep secrets out of source code, put them in stack config:
+
+```bash
+pulumi config set --secret dbPassword 'S3cret!'
+```
+
+```python
+cfg = pulumi.Config()
+db = adaptive.Resource("db",
+    name="prod-postgres", type="postgres",
+    host="...", username="app",
+    password=cfg.require_secret("dbPassword"))
+```
+
+**Secret drift detection.** The Adaptive API never returns secret values, but
+it returns an opaque server-side fingerprint per secret field
+(`redactedDigests` on resources, `commandDigest` on scripts). The provider
+records these in state and compares them on `pulumi refresh`: when a secret was
+changed out-of-band (e.g. rotated in the UI), refresh clears that field in
+state and the next `pulumi up` re-applies your program's value — shown as
+`[secret]`, never in plaintext. Notes:
+
+- Requires an Adaptive backend with digest support; against older servers,
+  refresh keeps the prior value silently (previous behavior).
+- Fingerprints are HMACs under a server-held key (`ADAPTIVE_SECRET_DIGEST_KEY`)
+  — they cannot be reversed or brute-forced, and rotating that key causes one
+  self-healing drift cycle.
+- `pulumi import` cannot recover secret values: set them in config, and the
+  first `pulumi up` re-establishes them; drift detection is active from then on.
+
+## Importing existing objects
+
+Every resource type imports by its Adaptive object ID:
+
+```bash
+pulumi import adaptive:index:Resource     my-db      <resource-id>
+pulumi import adaptive:index:Endpoint     my-access  <endpoint-id>
+pulumi import adaptive:index:Authorization my-auth   <authorization-id>
+pulumi import adaptive:index:Group        my-group   <group-id>
+pulumi import adaptive:index:Script       my-script  <script-id>
+pulumi import adaptive:index:Schedule     my-window  <schedule-id>
+pulumi import adaptive:index:DataProtection my-policy <resource-id>
+```
+
+(`DataProtection` imports by the protected **resource's** ID — a policy has no
+separate identity of its own.)
+
+Caveats — some values are write-only in the Adaptive API and cannot be
+recovered on import:
+
+- **Script `command`**: script bodies are never returned by the API. After
+  importing a script, set `command` in your program; the first `pulumi up`
+  rewrites it (refresh never touches it).
+- **Resource secrets**: secret configuration values (passwords, keys, tokens)
+  are stripped from API reads. The import warns with the exact list of
+  redacted fields to fill in. On refresh, secrets already in state are kept.
+- **Webhook URLs** (e.g. `msteams_workflow` resources): redacted like other secrets.
+- **Schedules are upserted by name**: creating a schedule whose name already
+  exists on the backend adopts the existing schedule instead of failing.
+
+Refresh behavior: optional inputs you never set are not overwritten with
+server-computed defaults (memory/cpu/cluster/idle timeout), so refresh stays
+clean; out-of-band deletion drops the resource from state; against Adaptive
+servers older than the accompanying backend change, refreshing a deleted
+endpoint/authorization fails loudly instead of pruning it.
 
 ## Development
 

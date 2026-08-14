@@ -10,6 +10,11 @@ export type Authorization = import("./authorization").Authorization;
 export const Authorization: typeof import("./authorization").Authorization = null as any;
 utilities.lazyLoad(exports, ["Authorization"], () => require("./authorization"));
 
+export { DataProtectionArgs } from "./dataProtection";
+export type DataProtection = import("./dataProtection").DataProtection;
+export const DataProtection: typeof import("./dataProtection").DataProtection = null as any;
+utilities.lazyLoad(exports, ["DataProtection"], () => require("./dataProtection"));
+
 export { EndpointArgs } from "./endpoint";
 export type Endpoint = import("./endpoint").Endpoint;
 export const Endpoint: typeof import("./endpoint").Endpoint = null as any;
@@ -19,11 +24,6 @@ export { GroupArgs } from "./group";
 export type Group = import("./group").Group;
 export const Group: typeof import("./group").Group = null as any;
 utilities.lazyLoad(exports, ["Group"], () => require("./group"));
-
-export { MSTeamsWorkflowArgs } from "./msteamsWorkflow";
-export type MSTeamsWorkflow = import("./msteamsWorkflow").MSTeamsWorkflow;
-export const MSTeamsWorkflow: typeof import("./msteamsWorkflow").MSTeamsWorkflow = null as any;
-utilities.lazyLoad(exports, ["MSTeamsWorkflow"], () => require("./msteamsWorkflow"));
 
 export { ProviderArgs } from "./provider";
 export type Provider = import("./provider").Provider;
@@ -35,6 +35,11 @@ export type Resource = import("./resource").Resource;
 export const Resource: typeof import("./resource").Resource = null as any;
 utilities.lazyLoad(exports, ["Resource"], () => require("./resource"));
 
+export { ScheduleArgs } from "./schedule";
+export type Schedule = import("./schedule").Schedule;
+export const Schedule: typeof import("./schedule").Schedule = null as any;
+utilities.lazyLoad(exports, ["Schedule"], () => require("./schedule"));
+
 export { ScriptArgs } from "./script";
 export type Script = import("./script").Script;
 export const Script: typeof import("./script").Script = null as any;
@@ -43,9 +48,11 @@ utilities.lazyLoad(exports, ["Script"], () => require("./script"));
 
 // Export sub-modules:
 import * as config from "./config";
+import * as types from "./types";
 
 export {
     config,
+    types,
 };
 
 const _module = {
@@ -54,14 +61,16 @@ const _module = {
         switch (type) {
             case "adaptive:index:Authorization":
                 return new Authorization(name, <any>undefined, { urn })
+            case "adaptive:index:DataProtection":
+                return new DataProtection(name, <any>undefined, { urn })
             case "adaptive:index:Endpoint":
                 return new Endpoint(name, <any>undefined, { urn })
             case "adaptive:index:Group":
                 return new Group(name, <any>undefined, { urn })
-            case "adaptive:index:MSTeamsWorkflow":
-                return new MSTeamsWorkflow(name, <any>undefined, { urn })
             case "adaptive:index:Resource":
                 return new Resource(name, <any>undefined, { urn })
+            case "adaptive:index:Schedule":
+                return new Schedule(name, <any>undefined, { urn })
             case "adaptive:index:Script":
                 return new Script(name, <any>undefined, { urn })
             default:

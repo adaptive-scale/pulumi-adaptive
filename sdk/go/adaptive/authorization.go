@@ -23,6 +23,8 @@ type Authorization struct {
 	Permissions pulumi.StringOutput `pulumi:"permissions"`
 	// Resource type to grant permission on, e.g. postgres, mysql, mongodb, kubernetes, ssh.
 	ResourceType pulumi.StringOutput `pulumi:"resourceType"`
+	// Current lifecycle status of the authorization.
+	Status pulumi.StringPtrOutput `pulumi:"status"`
 }
 
 // NewAuthorization registers a new resource with the given unique name, arguments, and options.
@@ -201,6 +203,11 @@ func (o AuthorizationOutput) Permissions() pulumi.StringOutput {
 // Resource type to grant permission on, e.g. postgres, mysql, mongodb, kubernetes, ssh.
 func (o AuthorizationOutput) ResourceType() pulumi.StringOutput {
 	return o.ApplyT(func(v *Authorization) pulumi.StringOutput { return v.ResourceType }).(pulumi.StringOutput)
+}
+
+// Current lifecycle status of the authorization.
+func (o AuthorizationOutput) Status() pulumi.StringPtrOutput {
+	return o.ApplyT(func(v *Authorization) pulumi.StringPtrOutput { return v.Status }).(pulumi.StringPtrOutput)
 }
 
 type AuthorizationArrayOutput struct{ *pulumi.OutputState }
