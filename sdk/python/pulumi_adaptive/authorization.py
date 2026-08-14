@@ -154,6 +154,7 @@ class Authorization(pulumi.CustomResource):
             if resource_type is None and not opts.urn:
                 raise TypeError("Missing required property 'resource_type'")
             __props__.__dict__["resource_type"] = resource_type
+            __props__.__dict__["status"] = None
         super(Authorization, __self__).__init__(
             'adaptive:index:Authorization',
             resource_name,
@@ -180,6 +181,7 @@ class Authorization(pulumi.CustomResource):
         __props__.__dict__["name"] = None
         __props__.__dict__["permissions"] = None
         __props__.__dict__["resource_type"] = None
+        __props__.__dict__["status"] = None
         return Authorization(resource_name, opts=opts, __props__=__props__)
 
     @_builtins.property
@@ -213,4 +215,12 @@ class Authorization(pulumi.CustomResource):
         Resource type to grant permission on, e.g. postgres, mysql, mongodb, kubernetes, ssh.
         """
         return pulumi.get(self, "resource_type")
+
+    @_builtins.property
+    @pulumi.getter
+    def status(self) -> pulumi.Output[Optional[_builtins.str]]:
+        """
+        Current lifecycle status of the authorization.
+        """
+        return pulumi.get(self, "status")
 

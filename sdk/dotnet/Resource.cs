@@ -13,6 +13,12 @@ namespace AdaptiveScale.Adaptive
     [AdaptiveResourceType("adaptive:index:Resource")]
     public partial class Resource : global::Pulumi.CustomResource
     {
+        [Output("accessControlGroup")]
+        public Output<string?> AccessControlGroup { get; private set; } = null!;
+
+        [Output("accessControlMethod")]
+        public Output<string?> AccessControlMethod { get; private set; } = null!;
+
         [Output("accessKeyId")]
         public Output<string?> AccessKeyId { get; private set; } = null!;
 
@@ -27,6 +33,9 @@ namespace AdaptiveScale.Adaptive
 
         [Output("apiKey")]
         public Output<string?> ApiKey { get; private set; } = null!;
+
+        [Output("apiSecret")]
+        public Output<string?> ApiSecret { get; private set; } = null!;
 
         [Output("apiServer")]
         public Output<string?> ApiServer { get; private set; } = null!;
@@ -49,14 +58,29 @@ namespace AdaptiveScale.Adaptive
         [Output("arn")]
         public Output<string?> Arn { get; private set; } = null!;
 
+        [Output("automationMode")]
+        public Output<string?> AutomationMode { get; private set; } = null!;
+
         [Output("awsArn")]
         public Output<string?> AwsArn { get; private set; } = null!;
 
         [Output("awsRegionName")]
         public Output<string?> AwsRegionName { get; private set; } = null!;
 
+        [Output("clientCert")]
+        public Output<string?> ClientCert { get; private set; } = null!;
+
+        [Output("clientCertificate")]
+        public Output<string?> ClientCertificate { get; private set; } = null!;
+
+        [Output("clientConfiguration")]
+        public Output<string?> ClientConfiguration { get; private set; } = null!;
+
         [Output("clientId")]
         public Output<string?> ClientId { get; private set; } = null!;
+
+        [Output("clientKey")]
+        public Output<string?> ClientKey { get; private set; } = null!;
 
         [Output("clientSecret")]
         public Output<string?> ClientSecret { get; private set; } = null!;
@@ -70,8 +94,17 @@ namespace AdaptiveScale.Adaptive
         [Output("clusterToken")]
         public Output<string?> ClusterToken { get; private set; } = null!;
 
+        [Output("connectServerUrl")]
+        public Output<string?> ConnectServerUrl { get; private set; } = null!;
+
+        [Output("cpu")]
+        public Output<string?> Cpu { get; private set; } = null!;
+
         [Output("createIfNotExists")]
         public Output<bool?> CreateIfNotExists { get; private set; } = null!;
+
+        [Output("credentialJson")]
+        public Output<string?> CredentialJson { get; private set; } = null!;
 
         [Output("databaseAccount")]
         public Output<string?> DatabaseAccount { get; private set; } = null!;
@@ -103,6 +136,9 @@ namespace AdaptiveScale.Adaptive
         [Output("domain")]
         public Output<string?> Domain { get; private set; } = null!;
 
+        [Output("fields")]
+        public Output<string?> Fields { get; private set; } = null!;
+
         [Output("host")]
         public Output<string?> Host { get; private set; } = null!;
 
@@ -118,14 +154,50 @@ namespace AdaptiveScale.Adaptive
         [Output("index")]
         public Output<string?> Index { get; private set; } = null!;
 
+        [Output("isRedisLabs")]
+        public Output<bool?> IsRedisLabs { get; private set; } = null!;
+
         [Output("key")]
         public Output<string?> Key { get; private set; } = null!;
 
         [Output("keyFile")]
         public Output<string?> KeyFile { get; private set; } = null!;
 
+        [Output("ldapEncryptionMethod")]
+        public Output<string?> LdapEncryptionMethod { get; private set; } = null!;
+
+        [Output("ldapHostname")]
+        public Output<string?> LdapHostname { get; private set; } = null!;
+
+        [Output("ldapPort")]
+        public Output<string?> LdapPort { get; private set; } = null!;
+
+        [Output("ldapSearchBindDn")]
+        public Output<string?> LdapSearchBindDn { get; private set; } = null!;
+
+        [Output("ldapSearchBindPassword")]
+        public Output<string?> LdapSearchBindPassword { get; private set; } = null!;
+
+        [Output("ldapUserBaseDn")]
+        public Output<string?> LdapUserBaseDn { get; private set; } = null!;
+
+        [Output("ldapUserNameAttribute")]
+        public Output<string?> LdapUserNameAttribute { get; private set; } = null!;
+
+        [Output("logGroupName")]
+        public Output<string?> LogGroupName { get; private set; } = null!;
+
+        [Output("logStreamName")]
+        public Output<string?> LogStreamName { get; private set; } = null!;
+
         [Output("loginUrl")]
         public Output<string?> LoginUrl { get; private set; } = null!;
+
+        [Output("machine")]
+        public Output<string?> Machine { get; private set; } = null!;
+
+        [Output("memory")]
+        public Output<string?> Memory { get; private set; } = null!;
 
         /// <summary>
         /// Name of the Adaptive resource.
@@ -145,6 +217,9 @@ namespace AdaptiveScale.Adaptive
         [Output("nodeSelector")]
         public Output<string?> NodeSelector { get; private set; } = null!;
 
+        [Output("oldVersion")]
+        public Output<bool?> OldVersion { get; private set; } = null!;
+
         [Output("organizationId")]
         public Output<string?> OrganizationId { get; private set; } = null!;
 
@@ -153,6 +228,9 @@ namespace AdaptiveScale.Adaptive
 
         [Output("port")]
         public Output<string?> Port { get; private set; } = null!;
+
+        [Output("prestart")]
+        public Output<string?> Prestart { get; private set; } = null!;
 
         [Output("privateKey")]
         public Output<string?> PrivateKey { get; private set; } = null!;
@@ -163,6 +241,18 @@ namespace AdaptiveScale.Adaptive
         [Output("protocol")]
         public Output<string?> Protocol { get; private set; } = null!;
 
+        [Output("proxysqlAdminPassword")]
+        public Output<string?> ProxysqlAdminPassword { get; private set; } = null!;
+
+        [Output("proxysqlAdminPort")]
+        public Output<string?> ProxysqlAdminPort { get; private set; } = null!;
+
+        [Output("proxysqlAdminUsername")]
+        public Output<string?> ProxysqlAdminUsername { get; private set; } = null!;
+
+        [Output("proxysqlHostgroupId")]
+        public Output<string?> ProxysqlHostgroupId { get; private set; } = null!;
+
         [Output("publicKey")]
         public Output<string?> PublicKey { get; private set; } = null!;
 
@@ -171,6 +261,9 @@ namespace AdaptiveScale.Adaptive
 
         [Output("regionName")]
         public Output<string?> RegionName { get; private set; } = null!;
+
+        [Output("resource")]
+        public Output<string?> Resource { get; private set; } = null!;
 
         [Output("role")]
         public Output<string?> Role { get; private set; } = null!;
@@ -181,20 +274,32 @@ namespace AdaptiveScale.Adaptive
         [Output("schema")]
         public Output<string?> Schema { get; private set; } = null!;
 
+        [Output("script")]
+        public Output<string?> Script { get; private set; } = null!;
+
         [Output("secretAccessKey")]
         public Output<string?> SecretAccessKey { get; private set; } = null!;
 
         [Output("secretId")]
         public Output<string?> SecretId { get; private set; } = null!;
 
+        [Output("serviceAccount")]
+        public Output<string?> ServiceAccount { get; private set; } = null!;
+
         [Output("serviceAccountName")]
         public Output<string?> ServiceAccountName { get; private set; } = null!;
+
+        [Output("serviceName")]
+        public Output<string?> ServiceName { get; private set; } = null!;
 
         [Output("sharedSecret")]
         public Output<string?> SharedSecret { get; private set; } = null!;
 
         [Output("sslMode")]
         public Output<string?> SslMode { get; private set; } = null!;
+
+        [Output("storage")]
+        public Output<string?> Storage { get; private set; } = null!;
 
         [Output("subSystemName")]
         public Output<string?> SubSystemName { get; private set; } = null!;
@@ -205,17 +310,32 @@ namespace AdaptiveScale.Adaptive
         [Output("tags")]
         public Output<ImmutableArray<string>> Tags { get; private set; } = null!;
 
+        [Output("targets")]
+        public Output<string?> Targets { get; private set; } = null!;
+
         [Output("tenantId")]
         public Output<string?> TenantId { get; private set; } = null!;
 
+        [Output("tlsCaCert")]
+        public Output<string?> TlsCaCert { get; private set; } = null!;
+
         [Output("tlsCertFile")]
         public Output<string?> TlsCertFile { get; private set; } = null!;
+
+        [Output("tlsEnabled")]
+        public Output<bool?> TlsEnabled { get; private set; } = null!;
 
         [Output("tlsKeyFile")]
         public Output<string?> TlsKeyFile { get; private set; } = null!;
 
         [Output("tlsRootCert")]
         public Output<string?> TlsRootCert { get; private set; } = null!;
+
+        [Output("tlsSkipVerify")]
+        public Output<bool?> TlsSkipVerify { get; private set; } = null!;
+
+        [Output("token")]
+        public Output<string?> Token { get; private set; } = null!;
 
         [Output("tokenId")]
         public Output<string?> TokenId { get; private set; } = null!;
@@ -238,6 +358,9 @@ namespace AdaptiveScale.Adaptive
         [Output("urls")]
         public Output<string?> Urls { get; private set; } = null!;
 
+        [Output("useConnectServer")]
+        public Output<bool?> UseConnectServer { get; private set; } = null!;
+
         [Output("useProxy")]
         public Output<bool?> UseProxy { get; private set; } = null!;
 
@@ -247,8 +370,14 @@ namespace AdaptiveScale.Adaptive
         [Output("useTenant")]
         public Output<bool?> UseTenant { get; private set; } = null!;
 
+        [Output("useTls")]
+        public Output<bool?> UseTls { get; private set; } = null!;
+
         [Output("username")]
         public Output<string?> Username { get; private set; } = null!;
+
+        [Output("value")]
+        public Output<string?> Value { get; private set; } = null!;
 
         [Output("version")]
         public Output<string?> Version { get; private set; } = null!;
@@ -308,6 +437,12 @@ namespace AdaptiveScale.Adaptive
 
     public sealed class ResourceArgs : global::Pulumi.ResourceArgs
     {
+        [Input("accessControlGroup")]
+        public Input<string>? AccessControlGroup { get; set; }
+
+        [Input("accessControlMethod")]
+        public Input<string>? AccessControlMethod { get; set; }
+
         [Input("accessKeyId")]
         public Input<string>? AccessKeyId { get; set; }
 
@@ -322,6 +457,9 @@ namespace AdaptiveScale.Adaptive
 
         [Input("apiKey")]
         public Input<string>? ApiKey { get; set; }
+
+        [Input("apiSecret")]
+        public Input<string>? ApiSecret { get; set; }
 
         [Input("apiServer")]
         public Input<string>? ApiServer { get; set; }
@@ -344,14 +482,29 @@ namespace AdaptiveScale.Adaptive
         [Input("arn")]
         public Input<string>? Arn { get; set; }
 
+        [Input("automationMode")]
+        public Input<string>? AutomationMode { get; set; }
+
         [Input("awsArn")]
         public Input<string>? AwsArn { get; set; }
 
         [Input("awsRegionName")]
         public Input<string>? AwsRegionName { get; set; }
 
+        [Input("clientCert")]
+        public Input<string>? ClientCert { get; set; }
+
+        [Input("clientCertificate")]
+        public Input<string>? ClientCertificate { get; set; }
+
+        [Input("clientConfiguration")]
+        public Input<string>? ClientConfiguration { get; set; }
+
         [Input("clientId")]
         public Input<string>? ClientId { get; set; }
+
+        [Input("clientKey")]
+        public Input<string>? ClientKey { get; set; }
 
         [Input("clientSecret")]
         public Input<string>? ClientSecret { get; set; }
@@ -365,8 +518,17 @@ namespace AdaptiveScale.Adaptive
         [Input("clusterToken")]
         public Input<string>? ClusterToken { get; set; }
 
+        [Input("connectServerUrl")]
+        public Input<string>? ConnectServerUrl { get; set; }
+
+        [Input("cpu")]
+        public Input<string>? Cpu { get; set; }
+
         [Input("createIfNotExists")]
         public Input<bool>? CreateIfNotExists { get; set; }
+
+        [Input("credentialJson")]
+        public Input<string>? CredentialJson { get; set; }
 
         [Input("databaseAccount")]
         public Input<string>? DatabaseAccount { get; set; }
@@ -398,6 +560,9 @@ namespace AdaptiveScale.Adaptive
         [Input("domain")]
         public Input<string>? Domain { get; set; }
 
+        [Input("fields")]
+        public Input<string>? Fields { get; set; }
+
         [Input("host")]
         public Input<string>? Host { get; set; }
 
@@ -418,14 +583,50 @@ namespace AdaptiveScale.Adaptive
         [Input("index")]
         public Input<string>? Index { get; set; }
 
+        [Input("isRedisLabs")]
+        public Input<bool>? IsRedisLabs { get; set; }
+
         [Input("key")]
         public Input<string>? Key { get; set; }
 
         [Input("keyFile")]
         public Input<string>? KeyFile { get; set; }
 
+        [Input("ldapEncryptionMethod")]
+        public Input<string>? LdapEncryptionMethod { get; set; }
+
+        [Input("ldapHostname")]
+        public Input<string>? LdapHostname { get; set; }
+
+        [Input("ldapPort")]
+        public Input<string>? LdapPort { get; set; }
+
+        [Input("ldapSearchBindDn")]
+        public Input<string>? LdapSearchBindDn { get; set; }
+
+        [Input("ldapSearchBindPassword")]
+        public Input<string>? LdapSearchBindPassword { get; set; }
+
+        [Input("ldapUserBaseDn")]
+        public Input<string>? LdapUserBaseDn { get; set; }
+
+        [Input("ldapUserNameAttribute")]
+        public Input<string>? LdapUserNameAttribute { get; set; }
+
+        [Input("logGroupName")]
+        public Input<string>? LogGroupName { get; set; }
+
+        [Input("logStreamName")]
+        public Input<string>? LogStreamName { get; set; }
+
         [Input("loginUrl")]
         public Input<string>? LoginUrl { get; set; }
+
+        [Input("machine")]
+        public Input<string>? Machine { get; set; }
+
+        [Input("memory")]
+        public Input<string>? Memory { get; set; }
 
         /// <summary>
         /// Name of the Adaptive resource.
@@ -445,6 +646,9 @@ namespace AdaptiveScale.Adaptive
         [Input("nodeSelector")]
         public Input<string>? NodeSelector { get; set; }
 
+        [Input("oldVersion")]
+        public Input<bool>? OldVersion { get; set; }
+
         [Input("organizationId")]
         public Input<string>? OrganizationId { get; set; }
 
@@ -453,6 +657,9 @@ namespace AdaptiveScale.Adaptive
 
         [Input("port")]
         public Input<string>? Port { get; set; }
+
+        [Input("prestart")]
+        public Input<string>? Prestart { get; set; }
 
         [Input("privateKey")]
         public Input<string>? PrivateKey { get; set; }
@@ -463,6 +670,18 @@ namespace AdaptiveScale.Adaptive
         [Input("protocol")]
         public Input<string>? Protocol { get; set; }
 
+        [Input("proxysqlAdminPassword")]
+        public Input<string>? ProxysqlAdminPassword { get; set; }
+
+        [Input("proxysqlAdminPort")]
+        public Input<string>? ProxysqlAdminPort { get; set; }
+
+        [Input("proxysqlAdminUsername")]
+        public Input<string>? ProxysqlAdminUsername { get; set; }
+
+        [Input("proxysqlHostgroupId")]
+        public Input<string>? ProxysqlHostgroupId { get; set; }
+
         [Input("publicKey")]
         public Input<string>? PublicKey { get; set; }
 
@@ -471,6 +690,9 @@ namespace AdaptiveScale.Adaptive
 
         [Input("regionName")]
         public Input<string>? RegionName { get; set; }
+
+        [Input("resource")]
+        public Input<string>? Resource { get; set; }
 
         [Input("role")]
         public Input<string>? Role { get; set; }
@@ -481,20 +703,32 @@ namespace AdaptiveScale.Adaptive
         [Input("schema")]
         public Input<string>? Schema { get; set; }
 
+        [Input("script")]
+        public Input<string>? Script { get; set; }
+
         [Input("secretAccessKey")]
         public Input<string>? SecretAccessKey { get; set; }
 
         [Input("secretId")]
         public Input<string>? SecretId { get; set; }
 
+        [Input("serviceAccount")]
+        public Input<string>? ServiceAccount { get; set; }
+
         [Input("serviceAccountName")]
         public Input<string>? ServiceAccountName { get; set; }
+
+        [Input("serviceName")]
+        public Input<string>? ServiceName { get; set; }
 
         [Input("sharedSecret")]
         public Input<string>? SharedSecret { get; set; }
 
         [Input("sslMode")]
         public Input<string>? SslMode { get; set; }
+
+        [Input("storage")]
+        public Input<string>? Storage { get; set; }
 
         [Input("subSystemName")]
         public Input<string>? SubSystemName { get; set; }
@@ -511,17 +745,32 @@ namespace AdaptiveScale.Adaptive
             set => _tags = value;
         }
 
+        [Input("targets")]
+        public Input<string>? Targets { get; set; }
+
         [Input("tenantId")]
         public Input<string>? TenantId { get; set; }
 
+        [Input("tlsCaCert")]
+        public Input<string>? TlsCaCert { get; set; }
+
         [Input("tlsCertFile")]
         public Input<string>? TlsCertFile { get; set; }
+
+        [Input("tlsEnabled")]
+        public Input<bool>? TlsEnabled { get; set; }
 
         [Input("tlsKeyFile")]
         public Input<string>? TlsKeyFile { get; set; }
 
         [Input("tlsRootCert")]
         public Input<string>? TlsRootCert { get; set; }
+
+        [Input("tlsSkipVerify")]
+        public Input<bool>? TlsSkipVerify { get; set; }
+
+        [Input("token")]
+        public Input<string>? Token { get; set; }
 
         [Input("tokenId")]
         public Input<string>? TokenId { get; set; }
@@ -544,6 +793,9 @@ namespace AdaptiveScale.Adaptive
         [Input("urls")]
         public Input<string>? Urls { get; set; }
 
+        [Input("useConnectServer")]
+        public Input<bool>? UseConnectServer { get; set; }
+
         [Input("useProxy")]
         public Input<bool>? UseProxy { get; set; }
 
@@ -553,8 +805,14 @@ namespace AdaptiveScale.Adaptive
         [Input("useTenant")]
         public Input<bool>? UseTenant { get; set; }
 
+        [Input("useTls")]
+        public Input<bool>? UseTls { get; set; }
+
         [Input("username")]
         public Input<string>? Username { get; set; }
+
+        [Input("value")]
+        public Input<string>? Value { get; set; }
 
         [Input("version")]
         public Input<string>? Version { get; set; }

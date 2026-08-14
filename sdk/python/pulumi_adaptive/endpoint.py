@@ -22,12 +22,19 @@ class EndpointArgs:
                  name: pulumi.Input[_builtins.str],
                  resource: pulumi.Input[_builtins.str],
                  authorization: Optional[pulumi.Input[_builtins.str]] = None,
+                 auto_approval: Optional[pulumi.Input[_builtins.bool]] = None,
                  cluster: Optional[pulumi.Input[_builtins.str]] = None,
                  cpu: Optional[pulumi.Input[_builtins.str]] = None,
+                 disable_data_studio: Optional[pulumi.Input[_builtins.bool]] = None,
+                 disable_output_capture: Optional[pulumi.Input[_builtins.bool]] = None,
+                 disable_web_cli: Optional[pulumi.Input[_builtins.bool]] = None,
                  groups: Optional[pulumi.Input[Sequence[pulumi.Input[_builtins.str]]]] = None,
                  idle_timeout: Optional[pulumi.Input[_builtins.str]] = None,
                  is_jit_enabled: Optional[pulumi.Input[_builtins.bool]] = None,
                  jit_approvers: Optional[pulumi.Input[Sequence[pulumi.Input[_builtins.str]]]] = None,
+                 jit_mode: Optional[pulumi.Input[_builtins.str]] = None,
+                 jit_multi_approver: Optional[pulumi.Input[_builtins.bool]] = None,
+                 jit_total_approvers: Optional[pulumi.Input[_builtins.int]] = None,
                  memory: Optional[pulumi.Input[_builtins.str]] = None,
                  pause_timeout: Optional[pulumi.Input[_builtins.str]] = None,
                  script_only_access: Optional[pulumi.Input[_builtins.bool]] = None,
@@ -41,8 +48,15 @@ class EndpointArgs:
         :param pulumi.Input[_builtins.str] name: The name of the endpoint to create.
         :param pulumi.Input[_builtins.str] resource: The resource (by name) this endpoint grants access to.
         :param pulumi.Input[_builtins.str] authorization: The authorization (by name) to apply to this endpoint.
+        :param pulumi.Input[_builtins.bool] auto_approval: Automatically approve Just-In-Time access requests.
+        :param pulumi.Input[_builtins.bool] disable_data_studio: Hide Data Studio for this endpoint (cli endpoints only).
+        :param pulumi.Input[_builtins.bool] disable_output_capture: Do not retain terminal output for this endpoint. The effective value is OR'd with the workspace-level setting: an endpoint cannot re-enable capture that the workspace disabled.
+        :param pulumi.Input[_builtins.bool] disable_web_cli: Hide 'Connect via Web CLI' for this endpoint (cli endpoints only).
         :param pulumi.Input[_builtins.bool] is_jit_enabled: Whether Just-In-Time access approval is enabled.
         :param pulumi.Input[Sequence[pulumi.Input[_builtins.str]]] jit_approvers: Emails of users who can approve Just-In-Time access requests.
+        :param pulumi.Input[_builtins.str] jit_mode: Which access paths require Just-In-Time approval: session, script, or both.
+        :param pulumi.Input[_builtins.bool] jit_multi_approver: Require multiple approvers for Just-In-Time access requests.
+        :param pulumi.Input[_builtins.int] jit_total_approvers: Number of approvals required when multi-approver is enabled.
         :param pulumi.Input[_builtins.bool] script_only_access: Whether the endpoint is only accessible via script.
         :param pulumi.Input[_builtins.str] ttl: Time-to-live for the endpoint, e.g. 8h, 7d, 90d.
         :param pulumi.Input[_builtins.str] type: The type of session: direct, client, cli, or services.
@@ -51,10 +65,18 @@ class EndpointArgs:
         pulumi.set(__self__, "resource", resource)
         if authorization is not None:
             pulumi.set(__self__, "authorization", authorization)
+        if auto_approval is not None:
+            pulumi.set(__self__, "auto_approval", auto_approval)
         if cluster is not None:
             pulumi.set(__self__, "cluster", cluster)
         if cpu is not None:
             pulumi.set(__self__, "cpu", cpu)
+        if disable_data_studio is not None:
+            pulumi.set(__self__, "disable_data_studio", disable_data_studio)
+        if disable_output_capture is not None:
+            pulumi.set(__self__, "disable_output_capture", disable_output_capture)
+        if disable_web_cli is not None:
+            pulumi.set(__self__, "disable_web_cli", disable_web_cli)
         if groups is not None:
             pulumi.set(__self__, "groups", groups)
         if idle_timeout is not None:
@@ -63,6 +85,12 @@ class EndpointArgs:
             pulumi.set(__self__, "is_jit_enabled", is_jit_enabled)
         if jit_approvers is not None:
             pulumi.set(__self__, "jit_approvers", jit_approvers)
+        if jit_mode is not None:
+            pulumi.set(__self__, "jit_mode", jit_mode)
+        if jit_multi_approver is not None:
+            pulumi.set(__self__, "jit_multi_approver", jit_multi_approver)
+        if jit_total_approvers is not None:
+            pulumi.set(__self__, "jit_total_approvers", jit_total_approvers)
         if memory is not None:
             pulumi.set(__self__, "memory", memory)
         if pause_timeout is not None:
@@ -117,6 +145,18 @@ class EndpointArgs:
         pulumi.set(self, "authorization", value)
 
     @_builtins.property
+    @pulumi.getter(name="autoApproval")
+    def auto_approval(self) -> Optional[pulumi.Input[_builtins.bool]]:
+        """
+        Automatically approve Just-In-Time access requests.
+        """
+        return pulumi.get(self, "auto_approval")
+
+    @auto_approval.setter
+    def auto_approval(self, value: Optional[pulumi.Input[_builtins.bool]]):
+        pulumi.set(self, "auto_approval", value)
+
+    @_builtins.property
     @pulumi.getter
     def cluster(self) -> Optional[pulumi.Input[_builtins.str]]:
         return pulumi.get(self, "cluster")
@@ -133,6 +173,42 @@ class EndpointArgs:
     @cpu.setter
     def cpu(self, value: Optional[pulumi.Input[_builtins.str]]):
         pulumi.set(self, "cpu", value)
+
+    @_builtins.property
+    @pulumi.getter(name="disableDataStudio")
+    def disable_data_studio(self) -> Optional[pulumi.Input[_builtins.bool]]:
+        """
+        Hide Data Studio for this endpoint (cli endpoints only).
+        """
+        return pulumi.get(self, "disable_data_studio")
+
+    @disable_data_studio.setter
+    def disable_data_studio(self, value: Optional[pulumi.Input[_builtins.bool]]):
+        pulumi.set(self, "disable_data_studio", value)
+
+    @_builtins.property
+    @pulumi.getter(name="disableOutputCapture")
+    def disable_output_capture(self) -> Optional[pulumi.Input[_builtins.bool]]:
+        """
+        Do not retain terminal output for this endpoint. The effective value is OR'd with the workspace-level setting: an endpoint cannot re-enable capture that the workspace disabled.
+        """
+        return pulumi.get(self, "disable_output_capture")
+
+    @disable_output_capture.setter
+    def disable_output_capture(self, value: Optional[pulumi.Input[_builtins.bool]]):
+        pulumi.set(self, "disable_output_capture", value)
+
+    @_builtins.property
+    @pulumi.getter(name="disableWebCli")
+    def disable_web_cli(self) -> Optional[pulumi.Input[_builtins.bool]]:
+        """
+        Hide 'Connect via Web CLI' for this endpoint (cli endpoints only).
+        """
+        return pulumi.get(self, "disable_web_cli")
+
+    @disable_web_cli.setter
+    def disable_web_cli(self, value: Optional[pulumi.Input[_builtins.bool]]):
+        pulumi.set(self, "disable_web_cli", value)
 
     @_builtins.property
     @pulumi.getter
@@ -175,6 +251,42 @@ class EndpointArgs:
     @jit_approvers.setter
     def jit_approvers(self, value: Optional[pulumi.Input[Sequence[pulumi.Input[_builtins.str]]]]):
         pulumi.set(self, "jit_approvers", value)
+
+    @_builtins.property
+    @pulumi.getter(name="jitMode")
+    def jit_mode(self) -> Optional[pulumi.Input[_builtins.str]]:
+        """
+        Which access paths require Just-In-Time approval: session, script, or both.
+        """
+        return pulumi.get(self, "jit_mode")
+
+    @jit_mode.setter
+    def jit_mode(self, value: Optional[pulumi.Input[_builtins.str]]):
+        pulumi.set(self, "jit_mode", value)
+
+    @_builtins.property
+    @pulumi.getter(name="jitMultiApprover")
+    def jit_multi_approver(self) -> Optional[pulumi.Input[_builtins.bool]]:
+        """
+        Require multiple approvers for Just-In-Time access requests.
+        """
+        return pulumi.get(self, "jit_multi_approver")
+
+    @jit_multi_approver.setter
+    def jit_multi_approver(self, value: Optional[pulumi.Input[_builtins.bool]]):
+        pulumi.set(self, "jit_multi_approver", value)
+
+    @_builtins.property
+    @pulumi.getter(name="jitTotalApprovers")
+    def jit_total_approvers(self) -> Optional[pulumi.Input[_builtins.int]]:
+        """
+        Number of approvals required when multi-approver is enabled.
+        """
+        return pulumi.get(self, "jit_total_approvers")
+
+    @jit_total_approvers.setter
+    def jit_total_approvers(self, value: Optional[pulumi.Input[_builtins.int]]):
+        pulumi.set(self, "jit_total_approvers", value)
 
     @_builtins.property
     @pulumi.getter
@@ -256,12 +368,19 @@ class Endpoint(pulumi.CustomResource):
                  resource_name: str,
                  opts: Optional[pulumi.ResourceOptions] = None,
                  authorization: Optional[pulumi.Input[_builtins.str]] = None,
+                 auto_approval: Optional[pulumi.Input[_builtins.bool]] = None,
                  cluster: Optional[pulumi.Input[_builtins.str]] = None,
                  cpu: Optional[pulumi.Input[_builtins.str]] = None,
+                 disable_data_studio: Optional[pulumi.Input[_builtins.bool]] = None,
+                 disable_output_capture: Optional[pulumi.Input[_builtins.bool]] = None,
+                 disable_web_cli: Optional[pulumi.Input[_builtins.bool]] = None,
                  groups: Optional[pulumi.Input[Sequence[pulumi.Input[_builtins.str]]]] = None,
                  idle_timeout: Optional[pulumi.Input[_builtins.str]] = None,
                  is_jit_enabled: Optional[pulumi.Input[_builtins.bool]] = None,
                  jit_approvers: Optional[pulumi.Input[Sequence[pulumi.Input[_builtins.str]]]] = None,
+                 jit_mode: Optional[pulumi.Input[_builtins.str]] = None,
+                 jit_multi_approver: Optional[pulumi.Input[_builtins.bool]] = None,
+                 jit_total_approvers: Optional[pulumi.Input[_builtins.int]] = None,
                  memory: Optional[pulumi.Input[_builtins.str]] = None,
                  name: Optional[pulumi.Input[_builtins.str]] = None,
                  pause_timeout: Optional[pulumi.Input[_builtins.str]] = None,
@@ -278,8 +397,15 @@ class Endpoint(pulumi.CustomResource):
         :param str resource_name: The name of the resource.
         :param pulumi.ResourceOptions opts: Options for the resource.
         :param pulumi.Input[_builtins.str] authorization: The authorization (by name) to apply to this endpoint.
+        :param pulumi.Input[_builtins.bool] auto_approval: Automatically approve Just-In-Time access requests.
+        :param pulumi.Input[_builtins.bool] disable_data_studio: Hide Data Studio for this endpoint (cli endpoints only).
+        :param pulumi.Input[_builtins.bool] disable_output_capture: Do not retain terminal output for this endpoint. The effective value is OR'd with the workspace-level setting: an endpoint cannot re-enable capture that the workspace disabled.
+        :param pulumi.Input[_builtins.bool] disable_web_cli: Hide 'Connect via Web CLI' for this endpoint (cli endpoints only).
         :param pulumi.Input[_builtins.bool] is_jit_enabled: Whether Just-In-Time access approval is enabled.
         :param pulumi.Input[Sequence[pulumi.Input[_builtins.str]]] jit_approvers: Emails of users who can approve Just-In-Time access requests.
+        :param pulumi.Input[_builtins.str] jit_mode: Which access paths require Just-In-Time approval: session, script, or both.
+        :param pulumi.Input[_builtins.bool] jit_multi_approver: Require multiple approvers for Just-In-Time access requests.
+        :param pulumi.Input[_builtins.int] jit_total_approvers: Number of approvals required when multi-approver is enabled.
         :param pulumi.Input[_builtins.str] name: The name of the endpoint to create.
         :param pulumi.Input[_builtins.str] resource: The resource (by name) this endpoint grants access to.
         :param pulumi.Input[_builtins.bool] script_only_access: Whether the endpoint is only accessible via script.
@@ -311,12 +437,19 @@ class Endpoint(pulumi.CustomResource):
                  resource_name: str,
                  opts: Optional[pulumi.ResourceOptions] = None,
                  authorization: Optional[pulumi.Input[_builtins.str]] = None,
+                 auto_approval: Optional[pulumi.Input[_builtins.bool]] = None,
                  cluster: Optional[pulumi.Input[_builtins.str]] = None,
                  cpu: Optional[pulumi.Input[_builtins.str]] = None,
+                 disable_data_studio: Optional[pulumi.Input[_builtins.bool]] = None,
+                 disable_output_capture: Optional[pulumi.Input[_builtins.bool]] = None,
+                 disable_web_cli: Optional[pulumi.Input[_builtins.bool]] = None,
                  groups: Optional[pulumi.Input[Sequence[pulumi.Input[_builtins.str]]]] = None,
                  idle_timeout: Optional[pulumi.Input[_builtins.str]] = None,
                  is_jit_enabled: Optional[pulumi.Input[_builtins.bool]] = None,
                  jit_approvers: Optional[pulumi.Input[Sequence[pulumi.Input[_builtins.str]]]] = None,
+                 jit_mode: Optional[pulumi.Input[_builtins.str]] = None,
+                 jit_multi_approver: Optional[pulumi.Input[_builtins.bool]] = None,
+                 jit_total_approvers: Optional[pulumi.Input[_builtins.int]] = None,
                  memory: Optional[pulumi.Input[_builtins.str]] = None,
                  name: Optional[pulumi.Input[_builtins.str]] = None,
                  pause_timeout: Optional[pulumi.Input[_builtins.str]] = None,
@@ -336,12 +469,19 @@ class Endpoint(pulumi.CustomResource):
             __props__ = EndpointArgs.__new__(EndpointArgs)
 
             __props__.__dict__["authorization"] = authorization
+            __props__.__dict__["auto_approval"] = auto_approval
             __props__.__dict__["cluster"] = cluster
             __props__.__dict__["cpu"] = cpu
+            __props__.__dict__["disable_data_studio"] = disable_data_studio
+            __props__.__dict__["disable_output_capture"] = disable_output_capture
+            __props__.__dict__["disable_web_cli"] = disable_web_cli
             __props__.__dict__["groups"] = groups
             __props__.__dict__["idle_timeout"] = idle_timeout
             __props__.__dict__["is_jit_enabled"] = is_jit_enabled
             __props__.__dict__["jit_approvers"] = jit_approvers
+            __props__.__dict__["jit_mode"] = jit_mode
+            __props__.__dict__["jit_multi_approver"] = jit_multi_approver
+            __props__.__dict__["jit_total_approvers"] = jit_total_approvers
             __props__.__dict__["memory"] = memory
             if name is None and not opts.urn:
                 raise TypeError("Missing required property 'name'")
@@ -357,6 +497,10 @@ class Endpoint(pulumi.CustomResource):
                 type = 'direct'
             __props__.__dict__["type"] = type
             __props__.__dict__["users"] = users
+            __props__.__dict__["expose_status"] = None
+            __props__.__dict__["expose_type"] = None
+            __props__.__dict__["exposed"] = None
+            __props__.__dict__["status"] = None
         super(Endpoint, __self__).__init__(
             'adaptive:index:Endpoint',
             resource_name,
@@ -380,17 +524,28 @@ class Endpoint(pulumi.CustomResource):
         __props__ = EndpointArgs.__new__(EndpointArgs)
 
         __props__.__dict__["authorization"] = None
+        __props__.__dict__["auto_approval"] = None
         __props__.__dict__["cluster"] = None
         __props__.__dict__["cpu"] = None
+        __props__.__dict__["disable_data_studio"] = None
+        __props__.__dict__["disable_output_capture"] = None
+        __props__.__dict__["disable_web_cli"] = None
+        __props__.__dict__["expose_status"] = None
+        __props__.__dict__["expose_type"] = None
+        __props__.__dict__["exposed"] = None
         __props__.__dict__["groups"] = None
         __props__.__dict__["idle_timeout"] = None
         __props__.__dict__["is_jit_enabled"] = None
         __props__.__dict__["jit_approvers"] = None
+        __props__.__dict__["jit_mode"] = None
+        __props__.__dict__["jit_multi_approver"] = None
+        __props__.__dict__["jit_total_approvers"] = None
         __props__.__dict__["memory"] = None
         __props__.__dict__["name"] = None
         __props__.__dict__["pause_timeout"] = None
         __props__.__dict__["resource"] = None
         __props__.__dict__["script_only_access"] = None
+        __props__.__dict__["status"] = None
         __props__.__dict__["tags"] = None
         __props__.__dict__["ttl"] = None
         __props__.__dict__["type"] = None
@@ -406,6 +561,14 @@ class Endpoint(pulumi.CustomResource):
         return pulumi.get(self, "authorization")
 
     @_builtins.property
+    @pulumi.getter(name="autoApproval")
+    def auto_approval(self) -> pulumi.Output[Optional[_builtins.bool]]:
+        """
+        Automatically approve Just-In-Time access requests.
+        """
+        return pulumi.get(self, "auto_approval")
+
+    @_builtins.property
     @pulumi.getter
     def cluster(self) -> pulumi.Output[Optional[_builtins.str]]:
         return pulumi.get(self, "cluster")
@@ -414,6 +577,54 @@ class Endpoint(pulumi.CustomResource):
     @pulumi.getter
     def cpu(self) -> pulumi.Output[Optional[_builtins.str]]:
         return pulumi.get(self, "cpu")
+
+    @_builtins.property
+    @pulumi.getter(name="disableDataStudio")
+    def disable_data_studio(self) -> pulumi.Output[Optional[_builtins.bool]]:
+        """
+        Hide Data Studio for this endpoint (cli endpoints only).
+        """
+        return pulumi.get(self, "disable_data_studio")
+
+    @_builtins.property
+    @pulumi.getter(name="disableOutputCapture")
+    def disable_output_capture(self) -> pulumi.Output[Optional[_builtins.bool]]:
+        """
+        Do not retain terminal output for this endpoint. The effective value is OR'd with the workspace-level setting: an endpoint cannot re-enable capture that the workspace disabled.
+        """
+        return pulumi.get(self, "disable_output_capture")
+
+    @_builtins.property
+    @pulumi.getter(name="disableWebCli")
+    def disable_web_cli(self) -> pulumi.Output[Optional[_builtins.bool]]:
+        """
+        Hide 'Connect via Web CLI' for this endpoint (cli endpoints only).
+        """
+        return pulumi.get(self, "disable_web_cli")
+
+    @_builtins.property
+    @pulumi.getter(name="exposeStatus")
+    def expose_status(self) -> pulumi.Output[Optional[_builtins.str]]:
+        """
+        Provisioning status of the service exposure.
+        """
+        return pulumi.get(self, "expose_status")
+
+    @_builtins.property
+    @pulumi.getter(name="exposeType")
+    def expose_type(self) -> pulumi.Output[Optional[_builtins.str]]:
+        """
+        How the endpoint is exposed (e.g. LoadBalancer).
+        """
+        return pulumi.get(self, "expose_type")
+
+    @_builtins.property
+    @pulumi.getter
+    def exposed(self) -> pulumi.Output[Optional[_builtins.bool]]:
+        """
+        Whether the endpoint is exposed as a service.
+        """
+        return pulumi.get(self, "exposed")
 
     @_builtins.property
     @pulumi.getter
@@ -440,6 +651,30 @@ class Endpoint(pulumi.CustomResource):
         Emails of users who can approve Just-In-Time access requests.
         """
         return pulumi.get(self, "jit_approvers")
+
+    @_builtins.property
+    @pulumi.getter(name="jitMode")
+    def jit_mode(self) -> pulumi.Output[Optional[_builtins.str]]:
+        """
+        Which access paths require Just-In-Time approval: session, script, or both.
+        """
+        return pulumi.get(self, "jit_mode")
+
+    @_builtins.property
+    @pulumi.getter(name="jitMultiApprover")
+    def jit_multi_approver(self) -> pulumi.Output[Optional[_builtins.bool]]:
+        """
+        Require multiple approvers for Just-In-Time access requests.
+        """
+        return pulumi.get(self, "jit_multi_approver")
+
+    @_builtins.property
+    @pulumi.getter(name="jitTotalApprovers")
+    def jit_total_approvers(self) -> pulumi.Output[Optional[_builtins.int]]:
+        """
+        Number of approvals required when multi-approver is enabled.
+        """
+        return pulumi.get(self, "jit_total_approvers")
 
     @_builtins.property
     @pulumi.getter
@@ -474,6 +709,14 @@ class Endpoint(pulumi.CustomResource):
         Whether the endpoint is only accessible via script.
         """
         return pulumi.get(self, "script_only_access")
+
+    @_builtins.property
+    @pulumi.getter
+    def status(self) -> pulumi.Output[Optional[_builtins.str]]:
+        """
+        Current lifecycle status of the endpoint.
+        """
+        return pulumi.get(self, "status")
 
     @_builtins.property
     @pulumi.getter

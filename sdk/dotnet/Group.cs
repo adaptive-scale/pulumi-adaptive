@@ -31,6 +31,12 @@ namespace AdaptiveScale.Adaptive
         [Output("name")]
         public Output<string> Name { get; private set; } = null!;
 
+        /// <summary>
+        /// Slack channel ID associated with this group.
+        /// </summary>
+        [Output("slackChannelId")]
+        public Output<string?> SlackChannelId { get; private set; } = null!;
+
 
         /// <summary>
         /// Create a Group resource with the given unique name, arguments, and options.
@@ -106,6 +112,12 @@ namespace AdaptiveScale.Adaptive
         /// </summary>
         [Input("name", required: true)]
         public Input<string> Name { get; set; } = null!;
+
+        /// <summary>
+        /// Slack channel ID associated with this group.
+        /// </summary>
+        [Input("slackChannelId")]
+        public Input<string>? SlackChannelId { get; set; }
 
         public GroupArgs()
         {

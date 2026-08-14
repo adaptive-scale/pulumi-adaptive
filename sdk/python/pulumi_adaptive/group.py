@@ -21,19 +21,23 @@ class GroupArgs:
     def __init__(__self__, *,
                  name: pulumi.Input[_builtins.str],
                  endpoints: Optional[pulumi.Input[Sequence[pulumi.Input[_builtins.str]]]] = None,
-                 members: Optional[pulumi.Input[Sequence[pulumi.Input[_builtins.str]]]] = None):
+                 members: Optional[pulumi.Input[Sequence[pulumi.Input[_builtins.str]]]] = None,
+                 slack_channel_id: Optional[pulumi.Input[_builtins.str]] = None):
         """
         The set of arguments for constructing a Group resource.
 
         :param pulumi.Input[_builtins.str] name: Name of the group. Must be unique.
         :param pulumi.Input[Sequence[pulumi.Input[_builtins.str]]] endpoints: Names of endpoints to add to this group.
         :param pulumi.Input[Sequence[pulumi.Input[_builtins.str]]] members: Emails of users to add to the group.
+        :param pulumi.Input[_builtins.str] slack_channel_id: Slack channel ID associated with this group.
         """
         pulumi.set(__self__, "name", name)
         if endpoints is not None:
             pulumi.set(__self__, "endpoints", endpoints)
         if members is not None:
             pulumi.set(__self__, "members", members)
+        if slack_channel_id is not None:
+            pulumi.set(__self__, "slack_channel_id", slack_channel_id)
 
     @_builtins.property
     @pulumi.getter
@@ -71,6 +75,18 @@ class GroupArgs:
     def members(self, value: Optional[pulumi.Input[Sequence[pulumi.Input[_builtins.str]]]]):
         pulumi.set(self, "members", value)
 
+    @_builtins.property
+    @pulumi.getter(name="slackChannelId")
+    def slack_channel_id(self) -> Optional[pulumi.Input[_builtins.str]]:
+        """
+        Slack channel ID associated with this group.
+        """
+        return pulumi.get(self, "slack_channel_id")
+
+    @slack_channel_id.setter
+    def slack_channel_id(self, value: Optional[pulumi.Input[_builtins.str]]):
+        pulumi.set(self, "slack_channel_id", value)
+
 
 @pulumi.type_token("adaptive:index:Group")
 class Group(pulumi.CustomResource):
@@ -81,6 +97,7 @@ class Group(pulumi.CustomResource):
                  endpoints: Optional[pulumi.Input[Sequence[pulumi.Input[_builtins.str]]]] = None,
                  members: Optional[pulumi.Input[Sequence[pulumi.Input[_builtins.str]]]] = None,
                  name: Optional[pulumi.Input[_builtins.str]] = None,
+                 slack_channel_id: Optional[pulumi.Input[_builtins.str]] = None,
                  __props__=None):
         """
         Create a Group resource with the given unique name, props, and options.
@@ -90,6 +107,7 @@ class Group(pulumi.CustomResource):
         :param pulumi.Input[Sequence[pulumi.Input[_builtins.str]]] endpoints: Names of endpoints to add to this group.
         :param pulumi.Input[Sequence[pulumi.Input[_builtins.str]]] members: Emails of users to add to the group.
         :param pulumi.Input[_builtins.str] name: Name of the group. Must be unique.
+        :param pulumi.Input[_builtins.str] slack_channel_id: Slack channel ID associated with this group.
         """
         ...
     @overload
@@ -118,6 +136,7 @@ class Group(pulumi.CustomResource):
                  endpoints: Optional[pulumi.Input[Sequence[pulumi.Input[_builtins.str]]]] = None,
                  members: Optional[pulumi.Input[Sequence[pulumi.Input[_builtins.str]]]] = None,
                  name: Optional[pulumi.Input[_builtins.str]] = None,
+                 slack_channel_id: Optional[pulumi.Input[_builtins.str]] = None,
                  __props__=None):
         opts = pulumi.ResourceOptions.merge(_utilities.get_resource_opts_defaults(), opts)
         if not isinstance(opts, pulumi.ResourceOptions):
@@ -132,6 +151,7 @@ class Group(pulumi.CustomResource):
             if name is None and not opts.urn:
                 raise TypeError("Missing required property 'name'")
             __props__.__dict__["name"] = name
+            __props__.__dict__["slack_channel_id"] = slack_channel_id
         super(Group, __self__).__init__(
             'adaptive:index:Group',
             resource_name,
@@ -157,6 +177,7 @@ class Group(pulumi.CustomResource):
         __props__.__dict__["endpoints"] = None
         __props__.__dict__["members"] = None
         __props__.__dict__["name"] = None
+        __props__.__dict__["slack_channel_id"] = None
         return Group(resource_name, opts=opts, __props__=__props__)
 
     @_builtins.property
@@ -182,4 +203,12 @@ class Group(pulumi.CustomResource):
         Name of the group. Must be unique.
         """
         return pulumi.get(self, "name")
+
+    @_builtins.property
+    @pulumi.getter(name="slackChannelId")
+    def slack_channel_id(self) -> pulumi.Output[Optional[_builtins.str]]:
+        """
+        Slack channel ID associated with this group.
+        """
+        return pulumi.get(self, "slack_channel_id")
 

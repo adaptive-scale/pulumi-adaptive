@@ -16,24 +16,46 @@ type Endpoint struct {
 	pulumi.CustomResourceState
 
 	// The authorization (by name) to apply to this endpoint.
-	Authorization pulumi.StringPtrOutput   `pulumi:"authorization"`
-	Cluster       pulumi.StringPtrOutput   `pulumi:"cluster"`
-	Cpu           pulumi.StringPtrOutput   `pulumi:"cpu"`
-	Groups        pulumi.StringArrayOutput `pulumi:"groups"`
-	IdleTimeout   pulumi.StringPtrOutput   `pulumi:"idleTimeout"`
+	Authorization pulumi.StringPtrOutput `pulumi:"authorization"`
+	// Automatically approve Just-In-Time access requests.
+	AutoApproval pulumi.BoolPtrOutput   `pulumi:"autoApproval"`
+	Cluster      pulumi.StringPtrOutput `pulumi:"cluster"`
+	Cpu          pulumi.StringPtrOutput `pulumi:"cpu"`
+	// Hide Data Studio for this endpoint (cli endpoints only).
+	DisableDataStudio pulumi.BoolPtrOutput `pulumi:"disableDataStudio"`
+	// Do not retain terminal output for this endpoint. The effective value is OR'd with the workspace-level setting: an endpoint cannot re-enable capture that the workspace disabled.
+	DisableOutputCapture pulumi.BoolPtrOutput `pulumi:"disableOutputCapture"`
+	// Hide 'Connect via Web CLI' for this endpoint (cli endpoints only).
+	DisableWebCli pulumi.BoolPtrOutput `pulumi:"disableWebCli"`
+	// Provisioning status of the service exposure.
+	ExposeStatus pulumi.StringPtrOutput `pulumi:"exposeStatus"`
+	// How the endpoint is exposed (e.g. LoadBalancer).
+	ExposeType pulumi.StringPtrOutput `pulumi:"exposeType"`
+	// Whether the endpoint is exposed as a service.
+	Exposed     pulumi.BoolPtrOutput     `pulumi:"exposed"`
+	Groups      pulumi.StringArrayOutput `pulumi:"groups"`
+	IdleTimeout pulumi.StringPtrOutput   `pulumi:"idleTimeout"`
 	// Whether Just-In-Time access approval is enabled.
 	IsJitEnabled pulumi.BoolPtrOutput `pulumi:"isJitEnabled"`
 	// Emails of users who can approve Just-In-Time access requests.
 	JitApprovers pulumi.StringArrayOutput `pulumi:"jitApprovers"`
-	Memory       pulumi.StringPtrOutput   `pulumi:"memory"`
+	// Which access paths require Just-In-Time approval: session, script, or both.
+	JitMode pulumi.StringPtrOutput `pulumi:"jitMode"`
+	// Require multiple approvers for Just-In-Time access requests.
+	JitMultiApprover pulumi.BoolPtrOutput `pulumi:"jitMultiApprover"`
+	// Number of approvals required when multi-approver is enabled.
+	JitTotalApprovers pulumi.IntPtrOutput    `pulumi:"jitTotalApprovers"`
+	Memory            pulumi.StringPtrOutput `pulumi:"memory"`
 	// The name of the endpoint to create.
 	Name         pulumi.StringOutput    `pulumi:"name"`
 	PauseTimeout pulumi.StringPtrOutput `pulumi:"pauseTimeout"`
 	// The resource (by name) this endpoint grants access to.
 	Resource pulumi.StringOutput `pulumi:"resource"`
 	// Whether the endpoint is only accessible via script.
-	ScriptOnlyAccess pulumi.BoolPtrOutput     `pulumi:"scriptOnlyAccess"`
-	Tags             pulumi.StringArrayOutput `pulumi:"tags"`
+	ScriptOnlyAccess pulumi.BoolPtrOutput `pulumi:"scriptOnlyAccess"`
+	// Current lifecycle status of the endpoint.
+	Status pulumi.StringPtrOutput   `pulumi:"status"`
+	Tags   pulumi.StringArrayOutput `pulumi:"tags"`
 	// Time-to-live for the endpoint, e.g. 8h, 7d, 90d.
 	Ttl pulumi.StringPtrOutput `pulumi:"ttl"`
 	// The type of session: direct, client, cli, or services.
@@ -91,16 +113,30 @@ func (EndpointState) ElementType() reflect.Type {
 
 type endpointArgs struct {
 	// The authorization (by name) to apply to this endpoint.
-	Authorization *string  `pulumi:"authorization"`
-	Cluster       *string  `pulumi:"cluster"`
-	Cpu           *string  `pulumi:"cpu"`
+	Authorization *string `pulumi:"authorization"`
+	// Automatically approve Just-In-Time access requests.
+	AutoApproval *bool   `pulumi:"autoApproval"`
+	Cluster      *string `pulumi:"cluster"`
+	Cpu          *string `pulumi:"cpu"`
+	// Hide Data Studio for this endpoint (cli endpoints only).
+	DisableDataStudio *bool `pulumi:"disableDataStudio"`
+	// Do not retain terminal output for this endpoint. The effective value is OR'd with the workspace-level setting: an endpoint cannot re-enable capture that the workspace disabled.
+	DisableOutputCapture *bool `pulumi:"disableOutputCapture"`
+	// Hide 'Connect via Web CLI' for this endpoint (cli endpoints only).
+	DisableWebCli *bool    `pulumi:"disableWebCli"`
 	Groups        []string `pulumi:"groups"`
 	IdleTimeout   *string  `pulumi:"idleTimeout"`
 	// Whether Just-In-Time access approval is enabled.
 	IsJitEnabled *bool `pulumi:"isJitEnabled"`
 	// Emails of users who can approve Just-In-Time access requests.
 	JitApprovers []string `pulumi:"jitApprovers"`
-	Memory       *string  `pulumi:"memory"`
+	// Which access paths require Just-In-Time approval: session, script, or both.
+	JitMode *string `pulumi:"jitMode"`
+	// Require multiple approvers for Just-In-Time access requests.
+	JitMultiApprover *bool `pulumi:"jitMultiApprover"`
+	// Number of approvals required when multi-approver is enabled.
+	JitTotalApprovers *int    `pulumi:"jitTotalApprovers"`
+	Memory            *string `pulumi:"memory"`
 	// The name of the endpoint to create.
 	Name         string  `pulumi:"name"`
 	PauseTimeout *string `pulumi:"pauseTimeout"`
@@ -120,15 +156,29 @@ type endpointArgs struct {
 type EndpointArgs struct {
 	// The authorization (by name) to apply to this endpoint.
 	Authorization pulumi.StringPtrInput
-	Cluster       pulumi.StringPtrInput
-	Cpu           pulumi.StringPtrInput
+	// Automatically approve Just-In-Time access requests.
+	AutoApproval pulumi.BoolPtrInput
+	Cluster      pulumi.StringPtrInput
+	Cpu          pulumi.StringPtrInput
+	// Hide Data Studio for this endpoint (cli endpoints only).
+	DisableDataStudio pulumi.BoolPtrInput
+	// Do not retain terminal output for this endpoint. The effective value is OR'd with the workspace-level setting: an endpoint cannot re-enable capture that the workspace disabled.
+	DisableOutputCapture pulumi.BoolPtrInput
+	// Hide 'Connect via Web CLI' for this endpoint (cli endpoints only).
+	DisableWebCli pulumi.BoolPtrInput
 	Groups        pulumi.StringArrayInput
 	IdleTimeout   pulumi.StringPtrInput
 	// Whether Just-In-Time access approval is enabled.
 	IsJitEnabled pulumi.BoolPtrInput
 	// Emails of users who can approve Just-In-Time access requests.
 	JitApprovers pulumi.StringArrayInput
-	Memory       pulumi.StringPtrInput
+	// Which access paths require Just-In-Time approval: session, script, or both.
+	JitMode pulumi.StringPtrInput
+	// Require multiple approvers for Just-In-Time access requests.
+	JitMultiApprover pulumi.BoolPtrInput
+	// Number of approvals required when multi-approver is enabled.
+	JitTotalApprovers pulumi.IntPtrInput
+	Memory            pulumi.StringPtrInput
 	// The name of the endpoint to create.
 	Name         pulumi.StringInput
 	PauseTimeout pulumi.StringPtrInput
@@ -236,12 +286,47 @@ func (o EndpointOutput) Authorization() pulumi.StringPtrOutput {
 	return o.ApplyT(func(v *Endpoint) pulumi.StringPtrOutput { return v.Authorization }).(pulumi.StringPtrOutput)
 }
 
+// Automatically approve Just-In-Time access requests.
+func (o EndpointOutput) AutoApproval() pulumi.BoolPtrOutput {
+	return o.ApplyT(func(v *Endpoint) pulumi.BoolPtrOutput { return v.AutoApproval }).(pulumi.BoolPtrOutput)
+}
+
 func (o EndpointOutput) Cluster() pulumi.StringPtrOutput {
 	return o.ApplyT(func(v *Endpoint) pulumi.StringPtrOutput { return v.Cluster }).(pulumi.StringPtrOutput)
 }
 
 func (o EndpointOutput) Cpu() pulumi.StringPtrOutput {
 	return o.ApplyT(func(v *Endpoint) pulumi.StringPtrOutput { return v.Cpu }).(pulumi.StringPtrOutput)
+}
+
+// Hide Data Studio for this endpoint (cli endpoints only).
+func (o EndpointOutput) DisableDataStudio() pulumi.BoolPtrOutput {
+	return o.ApplyT(func(v *Endpoint) pulumi.BoolPtrOutput { return v.DisableDataStudio }).(pulumi.BoolPtrOutput)
+}
+
+// Do not retain terminal output for this endpoint. The effective value is OR'd with the workspace-level setting: an endpoint cannot re-enable capture that the workspace disabled.
+func (o EndpointOutput) DisableOutputCapture() pulumi.BoolPtrOutput {
+	return o.ApplyT(func(v *Endpoint) pulumi.BoolPtrOutput { return v.DisableOutputCapture }).(pulumi.BoolPtrOutput)
+}
+
+// Hide 'Connect via Web CLI' for this endpoint (cli endpoints only).
+func (o EndpointOutput) DisableWebCli() pulumi.BoolPtrOutput {
+	return o.ApplyT(func(v *Endpoint) pulumi.BoolPtrOutput { return v.DisableWebCli }).(pulumi.BoolPtrOutput)
+}
+
+// Provisioning status of the service exposure.
+func (o EndpointOutput) ExposeStatus() pulumi.StringPtrOutput {
+	return o.ApplyT(func(v *Endpoint) pulumi.StringPtrOutput { return v.ExposeStatus }).(pulumi.StringPtrOutput)
+}
+
+// How the endpoint is exposed (e.g. LoadBalancer).
+func (o EndpointOutput) ExposeType() pulumi.StringPtrOutput {
+	return o.ApplyT(func(v *Endpoint) pulumi.StringPtrOutput { return v.ExposeType }).(pulumi.StringPtrOutput)
+}
+
+// Whether the endpoint is exposed as a service.
+func (o EndpointOutput) Exposed() pulumi.BoolPtrOutput {
+	return o.ApplyT(func(v *Endpoint) pulumi.BoolPtrOutput { return v.Exposed }).(pulumi.BoolPtrOutput)
 }
 
 func (o EndpointOutput) Groups() pulumi.StringArrayOutput {
@@ -260,6 +345,21 @@ func (o EndpointOutput) IsJitEnabled() pulumi.BoolPtrOutput {
 // Emails of users who can approve Just-In-Time access requests.
 func (o EndpointOutput) JitApprovers() pulumi.StringArrayOutput {
 	return o.ApplyT(func(v *Endpoint) pulumi.StringArrayOutput { return v.JitApprovers }).(pulumi.StringArrayOutput)
+}
+
+// Which access paths require Just-In-Time approval: session, script, or both.
+func (o EndpointOutput) JitMode() pulumi.StringPtrOutput {
+	return o.ApplyT(func(v *Endpoint) pulumi.StringPtrOutput { return v.JitMode }).(pulumi.StringPtrOutput)
+}
+
+// Require multiple approvers for Just-In-Time access requests.
+func (o EndpointOutput) JitMultiApprover() pulumi.BoolPtrOutput {
+	return o.ApplyT(func(v *Endpoint) pulumi.BoolPtrOutput { return v.JitMultiApprover }).(pulumi.BoolPtrOutput)
+}
+
+// Number of approvals required when multi-approver is enabled.
+func (o EndpointOutput) JitTotalApprovers() pulumi.IntPtrOutput {
+	return o.ApplyT(func(v *Endpoint) pulumi.IntPtrOutput { return v.JitTotalApprovers }).(pulumi.IntPtrOutput)
 }
 
 func (o EndpointOutput) Memory() pulumi.StringPtrOutput {
@@ -283,6 +383,11 @@ func (o EndpointOutput) Resource() pulumi.StringOutput {
 // Whether the endpoint is only accessible via script.
 func (o EndpointOutput) ScriptOnlyAccess() pulumi.BoolPtrOutput {
 	return o.ApplyT(func(v *Endpoint) pulumi.BoolPtrOutput { return v.ScriptOnlyAccess }).(pulumi.BoolPtrOutput)
+}
+
+// Current lifecycle status of the endpoint.
+func (o EndpointOutput) Status() pulumi.StringPtrOutput {
+	return o.ApplyT(func(v *Endpoint) pulumi.StringPtrOutput { return v.Status }).(pulumi.StringPtrOutput)
 }
 
 func (o EndpointOutput) Tags() pulumi.StringArrayOutput {

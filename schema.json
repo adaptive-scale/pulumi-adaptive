@@ -1,7 +1,7 @@
 {
   "name": "adaptive",
   "displayName": "Adaptive",
-  "version": "0.1.0",
+  "version": "0.2.0",
   "description": "A Pulumi provider for managing Adaptive (adaptive.live) infrastructure: resources, endpoints, authorizations, groups, and scripts.",
   "keywords": [
     "pulumi",
@@ -134,6 +134,10 @@
         "resourceType": {
           "type": "string",
           "description": "Resource type to grant permission on, e.g. postgres, mysql, mongodb, kubernetes, ssh."
+        },
+        "status": {
+          "type": "string",
+          "description": "Current lifecycle status of the authorization."
         }
       },
       "required": [
@@ -171,11 +175,39 @@
           "type": "string",
           "description": "The authorization (by name) to apply to this endpoint."
         },
+        "autoApproval": {
+          "type": "boolean",
+          "description": "Automatically approve Just-In-Time access requests."
+        },
         "cluster": {
           "type": "string"
         },
         "cpu": {
           "type": "string"
+        },
+        "disableDataStudio": {
+          "type": "boolean",
+          "description": "Hide Data Studio for this endpoint (cli endpoints only)."
+        },
+        "disableOutputCapture": {
+          "type": "boolean",
+          "description": "Do not retain terminal output for this endpoint. The effective value is OR'd with the workspace-level setting: an endpoint cannot re-enable capture that the workspace disabled."
+        },
+        "disableWebCli": {
+          "type": "boolean",
+          "description": "Hide 'Connect via Web CLI' for this endpoint (cli endpoints only)."
+        },
+        "exposeStatus": {
+          "type": "string",
+          "description": "Provisioning status of the service exposure."
+        },
+        "exposeType": {
+          "type": "string",
+          "description": "How the endpoint is exposed (e.g. LoadBalancer)."
+        },
+        "exposed": {
+          "type": "boolean",
+          "description": "Whether the endpoint is exposed as a service."
         },
         "groups": {
           "type": "array",
@@ -197,6 +229,18 @@
           },
           "description": "Emails of users who can approve Just-In-Time access requests."
         },
+        "jitMode": {
+          "type": "string",
+          "description": "Which access paths require Just-In-Time approval: session, script, or both."
+        },
+        "jitMultiApprover": {
+          "type": "boolean",
+          "description": "Require multiple approvers for Just-In-Time access requests."
+        },
+        "jitTotalApprovers": {
+          "type": "integer",
+          "description": "Number of approvals required when multi-approver is enabled."
+        },
         "memory": {
           "type": "string"
         },
@@ -214,6 +258,10 @@
         "scriptOnlyAccess": {
           "type": "boolean",
           "description": "Whether the endpoint is only accessible via script."
+        },
+        "status": {
+          "type": "string",
+          "description": "Current lifecycle status of the endpoint."
         },
         "tags": {
           "type": "array",
@@ -246,11 +294,27 @@
           "type": "string",
           "description": "The authorization (by name) to apply to this endpoint."
         },
+        "autoApproval": {
+          "type": "boolean",
+          "description": "Automatically approve Just-In-Time access requests."
+        },
         "cluster": {
           "type": "string"
         },
         "cpu": {
           "type": "string"
+        },
+        "disableDataStudio": {
+          "type": "boolean",
+          "description": "Hide Data Studio for this endpoint (cli endpoints only)."
+        },
+        "disableOutputCapture": {
+          "type": "boolean",
+          "description": "Do not retain terminal output for this endpoint. The effective value is OR'd with the workspace-level setting: an endpoint cannot re-enable capture that the workspace disabled."
+        },
+        "disableWebCli": {
+          "type": "boolean",
+          "description": "Hide 'Connect via Web CLI' for this endpoint (cli endpoints only)."
         },
         "groups": {
           "type": "array",
@@ -271,6 +335,18 @@
             "type": "string"
           },
           "description": "Emails of users who can approve Just-In-Time access requests."
+        },
+        "jitMode": {
+          "type": "string",
+          "description": "Which access paths require Just-In-Time approval: session, script, or both."
+        },
+        "jitMultiApprover": {
+          "type": "boolean",
+          "description": "Require multiple approvers for Just-In-Time access requests."
+        },
+        "jitTotalApprovers": {
+          "type": "integer",
+          "description": "Number of approvals required when multi-approver is enabled."
         },
         "memory": {
           "type": "string"
@@ -336,6 +412,10 @@
         "name": {
           "type": "string",
           "description": "Name of the group. Must be unique."
+        },
+        "slackChannelId": {
+          "type": "string",
+          "description": "Slack channel ID associated with this group."
         }
       },
       "required": [
@@ -359,44 +439,24 @@
         "name": {
           "type": "string",
           "description": "Name of the group. Must be unique."
+        },
+        "slackChannelId": {
+          "type": "string",
+          "description": "Slack channel ID associated with this group."
         }
       },
       "requiredInputs": [
         "name"
-      ]
-    },
-    "adaptive:index:MSTeamsWorkflow": {
-      "properties": {
-        "name": {
-          "type": "string",
-          "description": "Name of the MS Teams workflow integration."
-        },
-        "webhookUrl": {
-          "type": "string",
-          "description": "The webhook URL for the MS Teams workflow."
-        }
-      },
-      "required": [
-        "name",
-        "webhookUrl"
-      ],
-      "inputProperties": {
-        "name": {
-          "type": "string",
-          "description": "Name of the MS Teams workflow integration."
-        },
-        "webhookUrl": {
-          "type": "string",
-          "description": "The webhook URL for the MS Teams workflow."
-        }
-      },
-      "requiredInputs": [
-        "name",
-        "webhookUrl"
       ]
     },
     "adaptive:index:Resource": {
       "properties": {
+        "accessControlGroup": {
+          "type": "string"
+        },
+        "accessControlMethod": {
+          "type": "string"
+        },
         "accessKeyId": {
           "type": "string"
         },
@@ -410,6 +470,9 @@
           "type": "string"
         },
         "apiKey": {
+          "type": "string"
+        },
+        "apiSecret": {
           "type": "string"
         },
         "apiServer": {
@@ -433,13 +496,28 @@
         "arn": {
           "type": "string"
         },
+        "automationMode": {
+          "type": "string"
+        },
         "awsArn": {
           "type": "string"
         },
         "awsRegionName": {
           "type": "string"
         },
+        "clientCert": {
+          "type": "string"
+        },
+        "clientCertificate": {
+          "type": "string"
+        },
+        "clientConfiguration": {
+          "type": "string"
+        },
         "clientId": {
+          "type": "string"
+        },
+        "clientKey": {
           "type": "string"
         },
         "clientSecret": {
@@ -454,8 +532,17 @@
         "clusterToken": {
           "type": "string"
         },
+        "connectServerUrl": {
+          "type": "string"
+        },
+        "cpu": {
+          "type": "string"
+        },
         "createIfNotExists": {
           "type": "boolean"
+        },
+        "credentialJson": {
+          "type": "string"
         },
         "databaseAccount": {
           "type": "string"
@@ -485,6 +572,9 @@
         "domain": {
           "type": "string"
         },
+        "fields": {
+          "type": "string"
+        },
         "host": {
           "type": "string"
         },
@@ -503,13 +593,49 @@
         "index": {
           "type": "string"
         },
+        "isRedisLabs": {
+          "type": "boolean"
+        },
         "key": {
           "type": "string"
         },
         "keyFile": {
           "type": "string"
         },
+        "ldapEncryptionMethod": {
+          "type": "string"
+        },
+        "ldapHostname": {
+          "type": "string"
+        },
+        "ldapPort": {
+          "type": "string"
+        },
+        "ldapSearchBindDn": {
+          "type": "string"
+        },
+        "ldapSearchBindPassword": {
+          "type": "string"
+        },
+        "ldapUserBaseDn": {
+          "type": "string"
+        },
+        "ldapUserNameAttribute": {
+          "type": "string"
+        },
+        "logGroupName": {
+          "type": "string"
+        },
+        "logStreamName": {
+          "type": "string"
+        },
         "loginUrl": {
+          "type": "string"
+        },
+        "machine": {
+          "type": "string"
+        },
+        "memory": {
           "type": "string"
         },
         "name": {
@@ -528,6 +654,9 @@
         "nodeSelector": {
           "type": "string"
         },
+        "oldVersion": {
+          "type": "boolean"
+        },
         "organizationId": {
           "type": "string"
         },
@@ -535,6 +664,9 @@
           "type": "string"
         },
         "port": {
+          "type": "string"
+        },
+        "prestart": {
           "type": "string"
         },
         "privateKey": {
@@ -546,6 +678,18 @@
         "protocol": {
           "type": "string"
         },
+        "proxysqlAdminPassword": {
+          "type": "string"
+        },
+        "proxysqlAdminPort": {
+          "type": "string"
+        },
+        "proxysqlAdminUsername": {
+          "type": "string"
+        },
+        "proxysqlHostgroupId": {
+          "type": "string"
+        },
         "publicKey": {
           "type": "string"
         },
@@ -553,6 +697,9 @@
           "type": "string"
         },
         "regionName": {
+          "type": "string"
+        },
+        "resource": {
           "type": "string"
         },
         "role": {
@@ -564,19 +711,31 @@
         "schema": {
           "type": "string"
         },
+        "script": {
+          "type": "string"
+        },
         "secretAccessKey": {
           "type": "string"
         },
         "secretId": {
           "type": "string"
         },
+        "serviceAccount": {
+          "type": "string"
+        },
         "serviceAccountName": {
+          "type": "string"
+        },
+        "serviceName": {
           "type": "string"
         },
         "sharedSecret": {
           "type": "string"
         },
         "sslMode": {
+          "type": "string"
+        },
+        "storage": {
           "type": "string"
         },
         "subSystemName": {
@@ -589,16 +748,31 @@
           },
           "description": "Optional tags."
         },
+        "targets": {
+          "type": "string"
+        },
         "tenantId": {
+          "type": "string"
+        },
+        "tlsCaCert": {
           "type": "string"
         },
         "tlsCertFile": {
           "type": "string"
         },
+        "tlsEnabled": {
+          "type": "boolean"
+        },
         "tlsKeyFile": {
           "type": "string"
         },
         "tlsRootCert": {
+          "type": "string"
+        },
+        "tlsSkipVerify": {
+          "type": "boolean"
+        },
+        "token": {
           "type": "string"
         },
         "tokenId": {
@@ -620,6 +794,9 @@
         "urls": {
           "type": "string"
         },
+        "useConnectServer": {
+          "type": "boolean"
+        },
         "useProxy": {
           "type": "boolean"
         },
@@ -629,7 +806,13 @@
         "useTenant": {
           "type": "boolean"
         },
+        "useTls": {
+          "type": "boolean"
+        },
         "username": {
+          "type": "string"
+        },
+        "value": {
           "type": "string"
         },
         "version": {
@@ -650,6 +833,12 @@
         "name"
       ],
       "inputProperties": {
+        "accessControlGroup": {
+          "type": "string"
+        },
+        "accessControlMethod": {
+          "type": "string"
+        },
         "accessKeyId": {
           "type": "string"
         },
@@ -663,6 +852,9 @@
           "type": "string"
         },
         "apiKey": {
+          "type": "string"
+        },
+        "apiSecret": {
           "type": "string"
         },
         "apiServer": {
@@ -686,13 +878,28 @@
         "arn": {
           "type": "string"
         },
+        "automationMode": {
+          "type": "string"
+        },
         "awsArn": {
           "type": "string"
         },
         "awsRegionName": {
           "type": "string"
         },
+        "clientCert": {
+          "type": "string"
+        },
+        "clientCertificate": {
+          "type": "string"
+        },
+        "clientConfiguration": {
+          "type": "string"
+        },
         "clientId": {
+          "type": "string"
+        },
+        "clientKey": {
           "type": "string"
         },
         "clientSecret": {
@@ -707,8 +914,17 @@
         "clusterToken": {
           "type": "string"
         },
+        "connectServerUrl": {
+          "type": "string"
+        },
+        "cpu": {
+          "type": "string"
+        },
         "createIfNotExists": {
           "type": "boolean"
+        },
+        "credentialJson": {
+          "type": "string"
         },
         "databaseAccount": {
           "type": "string"
@@ -738,6 +954,9 @@
         "domain": {
           "type": "string"
         },
+        "fields": {
+          "type": "string"
+        },
         "host": {
           "type": "string"
         },
@@ -756,13 +975,49 @@
         "index": {
           "type": "string"
         },
+        "isRedisLabs": {
+          "type": "boolean"
+        },
         "key": {
           "type": "string"
         },
         "keyFile": {
           "type": "string"
         },
+        "ldapEncryptionMethod": {
+          "type": "string"
+        },
+        "ldapHostname": {
+          "type": "string"
+        },
+        "ldapPort": {
+          "type": "string"
+        },
+        "ldapSearchBindDn": {
+          "type": "string"
+        },
+        "ldapSearchBindPassword": {
+          "type": "string"
+        },
+        "ldapUserBaseDn": {
+          "type": "string"
+        },
+        "ldapUserNameAttribute": {
+          "type": "string"
+        },
+        "logGroupName": {
+          "type": "string"
+        },
+        "logStreamName": {
+          "type": "string"
+        },
         "loginUrl": {
+          "type": "string"
+        },
+        "machine": {
+          "type": "string"
+        },
+        "memory": {
           "type": "string"
         },
         "name": {
@@ -781,6 +1036,9 @@
         "nodeSelector": {
           "type": "string"
         },
+        "oldVersion": {
+          "type": "boolean"
+        },
         "organizationId": {
           "type": "string"
         },
@@ -788,6 +1046,9 @@
           "type": "string"
         },
         "port": {
+          "type": "string"
+        },
+        "prestart": {
           "type": "string"
         },
         "privateKey": {
@@ -799,6 +1060,18 @@
         "protocol": {
           "type": "string"
         },
+        "proxysqlAdminPassword": {
+          "type": "string"
+        },
+        "proxysqlAdminPort": {
+          "type": "string"
+        },
+        "proxysqlAdminUsername": {
+          "type": "string"
+        },
+        "proxysqlHostgroupId": {
+          "type": "string"
+        },
         "publicKey": {
           "type": "string"
         },
@@ -806,6 +1079,9 @@
           "type": "string"
         },
         "regionName": {
+          "type": "string"
+        },
+        "resource": {
           "type": "string"
         },
         "role": {
@@ -817,19 +1093,31 @@
         "schema": {
           "type": "string"
         },
+        "script": {
+          "type": "string"
+        },
         "secretAccessKey": {
           "type": "string"
         },
         "secretId": {
           "type": "string"
         },
+        "serviceAccount": {
+          "type": "string"
+        },
         "serviceAccountName": {
+          "type": "string"
+        },
+        "serviceName": {
           "type": "string"
         },
         "sharedSecret": {
           "type": "string"
         },
         "sslMode": {
+          "type": "string"
+        },
+        "storage": {
           "type": "string"
         },
         "subSystemName": {
@@ -842,16 +1130,31 @@
           },
           "description": "Optional tags."
         },
+        "targets": {
+          "type": "string"
+        },
         "tenantId": {
+          "type": "string"
+        },
+        "tlsCaCert": {
           "type": "string"
         },
         "tlsCertFile": {
           "type": "string"
         },
+        "tlsEnabled": {
+          "type": "boolean"
+        },
         "tlsKeyFile": {
           "type": "string"
         },
         "tlsRootCert": {
+          "type": "string"
+        },
+        "tlsSkipVerify": {
+          "type": "boolean"
+        },
+        "token": {
           "type": "string"
         },
         "tokenId": {
@@ -873,6 +1176,9 @@
         "urls": {
           "type": "string"
         },
+        "useConnectServer": {
+          "type": "boolean"
+        },
         "useProxy": {
           "type": "boolean"
         },
@@ -882,7 +1188,13 @@
         "useTenant": {
           "type": "boolean"
         },
+        "useTls": {
+          "type": "boolean"
+        },
         "username": {
+          "type": "string"
+        },
+        "value": {
           "type": "string"
         },
         "version": {
@@ -901,21 +1213,246 @@
       "requiredInputs": [
         "type",
         "name"
+      ]
+    },
+    "adaptive:index:Schedule": {
+      "properties": {
+        "allDay": {
+          "type": "boolean",
+          "description": "Whether the schedule covers the whole day (start/end times are ignored)."
+        },
+        "description": {
+          "type": "string",
+          "description": "An optional description of the schedule."
+        },
+        "endDay": {
+          "type": "integer",
+          "description": "Day of month (1-31) the window closes, for monthly schedules."
+        },
+        "endHour": {
+          "type": "integer",
+          "description": "Hour (0-23) the window closes."
+        },
+        "endMinute": {
+          "type": "integer",
+          "description": "Minute (0-59) the window closes."
+        },
+        "endpoints": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          },
+          "description": "Names of endpoints the schedule applies to."
+        },
+        "expiresAt": {
+          "type": "string",
+          "description": "RFC3339 timestamp after which the schedule no longer applies."
+        },
+        "isActive": {
+          "type": "boolean",
+          "description": "Whether the schedule is active."
+        },
+        "maxAccessTime": {
+          "type": "integer",
+          "description": "Maximum access duration in minutes granted by an auto-approval."
+        },
+        "name": {
+          "type": "string",
+          "description": "Name of the schedule. Note: the Adaptive API upserts schedules by name, so creating a schedule whose name already exists adopts the existing schedule."
+        },
+        "operationType": {
+          "type": "string",
+          "description": "What the schedule does inside its window: autoapprove or autoreject.",
+          "default": "autoapprove"
+        },
+        "scheduleType": {
+          "type": "string",
+          "description": "The schedule pattern: weekdays, weekends, everyday, monthly, specific, or custom."
+        },
+        "specificDates": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          },
+          "description": "RFC3339 dates for a specific-dates schedule."
+        },
+        "startDay": {
+          "type": "integer",
+          "description": "Day of month (1-31) the window opens, for monthly schedules."
+        },
+        "startHour": {
+          "type": "integer",
+          "description": "Hour (0-23) the window opens."
+        },
+        "startMinute": {
+          "type": "integer",
+          "description": "Minute (0-59) the window opens."
+        },
+        "teams": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          },
+          "description": "Names of groups the schedule applies to."
+        },
+        "timezone": {
+          "type": "string",
+          "description": "IANA timezone for the schedule window. Empty inherits the workspace default."
+        },
+        "updatedAt": {
+          "type": "string",
+          "description": "Last time the schedule was modified."
+        },
+        "users": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          },
+          "description": "Emails of users the schedule applies to."
+        },
+        "weekdays": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          },
+          "description": "Weekday names for a custom schedule (e.g. monday, tuesday)."
+        }
+      },
+      "required": [
+        "name",
+        "scheduleType"
+      ],
+      "inputProperties": {
+        "allDay": {
+          "type": "boolean",
+          "description": "Whether the schedule covers the whole day (start/end times are ignored)."
+        },
+        "description": {
+          "type": "string",
+          "description": "An optional description of the schedule."
+        },
+        "endDay": {
+          "type": "integer",
+          "description": "Day of month (1-31) the window closes, for monthly schedules."
+        },
+        "endHour": {
+          "type": "integer",
+          "description": "Hour (0-23) the window closes."
+        },
+        "endMinute": {
+          "type": "integer",
+          "description": "Minute (0-59) the window closes."
+        },
+        "endpoints": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          },
+          "description": "Names of endpoints the schedule applies to."
+        },
+        "expiresAt": {
+          "type": "string",
+          "description": "RFC3339 timestamp after which the schedule no longer applies."
+        },
+        "isActive": {
+          "type": "boolean",
+          "description": "Whether the schedule is active."
+        },
+        "maxAccessTime": {
+          "type": "integer",
+          "description": "Maximum access duration in minutes granted by an auto-approval."
+        },
+        "name": {
+          "type": "string",
+          "description": "Name of the schedule. Note: the Adaptive API upserts schedules by name, so creating a schedule whose name already exists adopts the existing schedule."
+        },
+        "operationType": {
+          "type": "string",
+          "description": "What the schedule does inside its window: autoapprove or autoreject.",
+          "default": "autoapprove"
+        },
+        "scheduleType": {
+          "type": "string",
+          "description": "The schedule pattern: weekdays, weekends, everyday, monthly, specific, or custom."
+        },
+        "specificDates": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          },
+          "description": "RFC3339 dates for a specific-dates schedule."
+        },
+        "startDay": {
+          "type": "integer",
+          "description": "Day of month (1-31) the window opens, for monthly schedules."
+        },
+        "startHour": {
+          "type": "integer",
+          "description": "Hour (0-23) the window opens."
+        },
+        "startMinute": {
+          "type": "integer",
+          "description": "Minute (0-59) the window opens."
+        },
+        "teams": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          },
+          "description": "Names of groups the schedule applies to."
+        },
+        "timezone": {
+          "type": "string",
+          "description": "IANA timezone for the schedule window. Empty inherits the workspace default."
+        },
+        "users": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          },
+          "description": "Emails of users the schedule applies to."
+        },
+        "weekdays": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          },
+          "description": "Weekday names for a custom schedule (e.g. monday, tuesday)."
+        }
+      },
+      "requiredInputs": [
+        "name",
+        "scheduleType"
       ]
     },
     "adaptive:index:Script": {
       "properties": {
         "command": {
           "type": "string",
-          "description": "The command the script runs."
+          "description": "The command the script runs. Write-only: the Adaptive API never returns script bodies, so drift in the command cannot be detected and `pulumi import` leaves it empty."
+        },
+        "description": {
+          "type": "string",
+          "description": "An optional description of the script."
         },
         "endpoint": {
           "type": "string",
           "description": "The endpoint the script is attached to. Cannot be changed after creation."
         },
+        "isAutoGen": {
+          "type": "boolean",
+          "description": "Whether the script was auto-generated by Adaptive."
+        },
         "name": {
           "type": "string",
           "description": "The name of the script."
+        },
+        "parameterDescriptions": {
+          "type": "object",
+          "additionalProperties": {
+            "type": "string"
+          },
+          "description": "Descriptions for the script's parameters, keyed by parameter name."
         }
       },
       "required": [
@@ -926,7 +1463,11 @@
       "inputProperties": {
         "command": {
           "type": "string",
-          "description": "The command the script runs."
+          "description": "The command the script runs. Write-only: the Adaptive API never returns script bodies, so drift in the command cannot be detected and `pulumi import` leaves it empty."
+        },
+        "description": {
+          "type": "string",
+          "description": "An optional description of the script."
         },
         "endpoint": {
           "type": "string",
@@ -935,6 +1476,13 @@
         "name": {
           "type": "string",
           "description": "The name of the script."
+        },
+        "parameterDescriptions": {
+          "type": "object",
+          "additionalProperties": {
+            "type": "string"
+          },
+          "description": "Descriptions for the script's parameters, keyed by parameter name."
         }
       },
       "requiredInputs": [

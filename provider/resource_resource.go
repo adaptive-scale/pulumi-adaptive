@@ -3,7 +3,9 @@ package adaptive
 import (
 	"context"
 	"fmt"
+	"strings"
 
+	p "github.com/pulumi/pulumi-go-provider"
 	"github.com/pulumi/pulumi-go-provider/infer"
 	"gopkg.in/yaml.v2"
 )
@@ -68,11 +70,11 @@ type ResourceArgs struct {
 	UseTenant       *bool   `pulumi:"useTenant,optional"`
 
 	// GCP / Google / OAuth identity
-	ProjectID    *string `pulumi:"projectId,optional"`
-	KeyFile      *string `pulumi:"keyFile,optional"`
-	Domain       *string `pulumi:"domain,optional"`
-	ClientID     *string `pulumi:"clientId,optional"`
-	LoginURL     *string `pulumi:"loginUrl,optional"`
+	ProjectID *string `pulumi:"projectId,optional"`
+	KeyFile   *string `pulumi:"keyFile,optional"`
+	Domain    *string `pulumi:"domain,optional"`
+	ClientID  *string `pulumi:"clientId,optional"`
+	LoginURL  *string `pulumi:"loginUrl,optional"`
 
 	// Snowflake
 	Warehouse  *string `pulumi:"warehouse,optional"`
@@ -115,6 +117,61 @@ type ResourceArgs struct {
 	DatabaseUsername   *string `pulumi:"databaseUsername,optional"`
 	DatabasePassword   *string `pulumi:"databasePassword,optional"`
 	WebhookURL         *string `pulumi:"webhookUrl,optional"`
+
+	// TLS toggles (redis, elasticache, documentdb secrets manager, mongodb36)
+	TLSEnabled    *bool   `pulumi:"tlsEnabled,optional"`
+	TLSSkipVerify *bool   `pulumi:"tlsSkipVerify,optional"`
+	UseTLS        *bool   `pulumi:"useTls,optional"`
+	TLSCACert     *string `pulumi:"tlsCaCert,optional"`
+	ClientCert    *string `pulumi:"clientCert,optional"`
+	ClientKey     *string `pulumi:"clientKey,optional"`
+
+	// LDAP (ldap, rdpldap)
+	LdapHostname           *string `pulumi:"ldapHostname,optional"`
+	LdapPort               *string `pulumi:"ldapPort,optional"`
+	LdapEncryptionMethod   *string `pulumi:"ldapEncryptionMethod,optional"`
+	LdapSearchBindDN       *string `pulumi:"ldapSearchBindDn,optional"`
+	LdapSearchBindPassword *string `pulumi:"ldapSearchBindPassword,optional"`
+	LdapUserNameAttribute  *string `pulumi:"ldapUserNameAttribute,optional"`
+	LdapUserBaseDN         *string `pulumi:"ldapUserBaseDn,optional"`
+
+	// ProxySQL admin interface
+	OldVersion            *bool   `pulumi:"oldVersion,optional"`
+	ProxysqlAdminPort     *string `pulumi:"proxysqlAdminPort,optional"`
+	ProxysqlAdminUsername *string `pulumi:"proxysqlAdminUsername,optional"`
+	ProxysqlAdminPassword *string `pulumi:"proxysqlAdminPassword,optional"`
+	ProxysqlHostgroupID   *string `pulumi:"proxysqlHostgroupId,optional"`
+
+	// Chrome automation
+	AutomationMode *string `pulumi:"automationMode,optional"`
+	Fields         *string `pulumi:"fields,optional"`
+	Script         *string `pulumi:"script,optional"`
+	Prestart       *string `pulumi:"prestart,optional"`
+
+	// Remote desktop sizing (adaptiveremotedesktop)
+	CPU     *string `pulumi:"cpu,optional"`
+	Memory  *string `pulumi:"memory,optional"`
+	Storage *string `pulumi:"storage,optional"`
+
+	// Remaining per-integration fields
+	ServiceAccount      *string `pulumi:"serviceAccount,optional"`
+	UseConnectServer    *bool   `pulumi:"useConnectServer,optional"`
+	ConnectServerURL    *string `pulumi:"connectServerUrl,optional"`
+	Targets             *string `pulumi:"targets,optional"`
+	Value               *string `pulumi:"value,optional"`
+	LogGroupName        *string `pulumi:"logGroupName,optional"`
+	LogStreamName       *string `pulumi:"logStreamName,optional"`
+	AccessControlMethod *string `pulumi:"accessControlMethod,optional"`
+	AccessControlGroup  *string `pulumi:"accessControlGroup,optional"`
+	CredentialJSON      *string `pulumi:"credentialJson,optional"`
+	Resource            *string `pulumi:"resource,optional"`
+	APISecret           *string `pulumi:"apiSecret,optional"`
+	Machine             *string `pulumi:"machine,optional"`
+	Token               *string `pulumi:"token,optional"`
+	ClientConfiguration *string `pulumi:"clientConfiguration,optional"`
+	ClientCertificate   *string `pulumi:"clientCertificate,optional"`
+	ServiceName         *string `pulumi:"serviceName,optional"`
+	IsRedisLabs         *bool   `pulumi:"isRedisLabs,optional"`
 }
 
 type ResourceState struct {
@@ -172,6 +229,50 @@ func (*Resource) Update(ctx context.Context, req infer.UpdateRequest[ResourceArg
 	}
 	_, err = c.UpdateResource(ctx, req.ID, effType, yamlBytes, req.Inputs.Tags, sv(req.Inputs.DefaultCluster))
 	return out, err
+}
+
+func (*Resource) Read(ctx context.Context, req infer.ReadRequest[ResourceArgs, ResourceState]) (infer.ReadResponse[ResourceArgs, ResourceState], error) {
+	c, err := clientFromConfig(ctx)
+	if err != nil {
+		return infer.ReadResponse[ResourceArgs, ResourceState]{}, err
+	}
+	r, err := c.ReadResource(ctx, req.ID)
+	if err != nil {
+		return infer.ReadResponse[ResourceArgs, ResourceState]{}, err
+	}
+	if r == nil {
+		// Deleted out-of-band: an empty response drops the resource from state.
+		return infer.ReadResponse[ResourceArgs, ResourceState]{}, nil
+	}
+
+	// On import there are no prior inputs to reconcile against, so everything is
+	// taken from the server. On refresh we start from what the program wrote and
+	// overwrite only what the server actually reports, which is what keeps the
+	// credentials it withholds in state.
+	isImport := req.Inputs.Name == "" && req.Inputs.Type == ""
+
+	inputs := req.Inputs
+	if isImport {
+		inputs = ResourceArgs{}
+	}
+	inputs.Name = r.Name
+	inputs.Type = providerType(r.IntegrationType)
+	inputs.Tags = setList(inputs.Tags, r.UserTags)
+	inputs.DefaultCluster = strOpt(inputs.DefaultCluster, r.DefaultCluster, isImport)
+	applyIntegrationConfig(&inputs, r.IntegrationType, r.Configuration)
+
+	if isImport && len(r.RedactedKeys) > 0 {
+		p.GetLogger(ctx).Warningf(
+			"resource %q was imported without its credentials: the server withholds %s. "+
+				"Set the matching arguments in your program, or the next update will clear them.",
+			r.Name, strings.Join(r.RedactedKeys, ", "))
+	}
+
+	return infer.ReadResponse[ResourceArgs, ResourceState]{
+		ID:     req.ID,
+		Inputs: inputs,
+		State:  ResourceState{ResourceArgs: inputs},
+	}, nil
 }
 
 func (*Resource) Delete(ctx context.Context, req infer.DeleteRequest[ResourceState]) (infer.DeleteResponse, error) {

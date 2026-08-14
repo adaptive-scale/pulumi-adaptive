@@ -4,8 +4,8 @@ import (
 	"context"
 	"fmt"
 
+	p "github.com/pulumi/pulumi-go-provider"
 	"github.com/pulumi/pulumi-go-provider/infer"
-	"gopkg.in/yaml.v2"
 )
 
 // ===========================================================================
@@ -31,10 +31,22 @@ type EndpointArgs struct {
 	CPU              *string  `pulumi:"cpu,optional"`
 	ScriptOnlyAccess *bool    `pulumi:"scriptOnlyAccess,optional"`
 	Tags             []string `pulumi:"tags,optional"`
+
+	DisableOutputCapture *bool   `pulumi:"disableOutputCapture,optional"`
+	DisableDataStudio    *bool   `pulumi:"disableDataStudio,optional"`
+	DisableWebCli        *bool   `pulumi:"disableWebCli,optional"`
+	JitMode              *string `pulumi:"jitMode,optional"`
+	AutoApproval         *bool   `pulumi:"autoApproval,optional"`
+	JitMultiApprover     *bool   `pulumi:"jitMultiApprover,optional"`
+	JitTotalApprovers    *int    `pulumi:"jitTotalApprovers,optional"`
 }
 
 type EndpointState struct {
 	EndpointArgs
+	Status       string `pulumi:"status,optional"`
+	Exposed      bool   `pulumi:"exposed,optional"`
+	ExposeType   string `pulumi:"exposeType,optional"`
+	ExposeStatus string `pulumi:"exposeStatus,optional"`
 }
 
 func (e *EndpointArgs) Annotate(a infer.Annotator) {
@@ -47,6 +59,22 @@ func (e *EndpointArgs) Annotate(a infer.Annotator) {
 	a.Describe(&e.IsJitEnabled, "Whether Just-In-Time access approval is enabled.")
 	a.Describe(&e.JitApprovers, "Emails of users who can approve Just-In-Time access requests.")
 	a.Describe(&e.ScriptOnlyAccess, "Whether the endpoint is only accessible via script.")
+	a.Describe(&e.DisableOutputCapture, "Do not retain terminal output for this endpoint. "+
+		"The effective value is OR'd with the workspace-level setting: an endpoint cannot re-enable "+
+		"capture that the workspace disabled.")
+	a.Describe(&e.DisableDataStudio, "Hide Data Studio for this endpoint (cli endpoints only).")
+	a.Describe(&e.DisableWebCli, "Hide 'Connect via Web CLI' for this endpoint (cli endpoints only).")
+	a.Describe(&e.JitMode, "Which access paths require Just-In-Time approval: session, script, or both.")
+	a.Describe(&e.AutoApproval, "Automatically approve Just-In-Time access requests.")
+	a.Describe(&e.JitMultiApprover, "Require multiple approvers for Just-In-Time access requests.")
+	a.Describe(&e.JitTotalApprovers, "Number of approvals required when multi-approver is enabled.")
+}
+
+func (e *EndpointState) Annotate(a infer.Annotator) {
+	a.Describe(&e.Status, "Current lifecycle status of the endpoint.")
+	a.Describe(&e.Exposed, "Whether the endpoint is exposed as a service.")
+	a.Describe(&e.ExposeType, "How the endpoint is exposed (e.g. LoadBalancer).")
+	a.Describe(&e.ExposeStatus, "Provisioning status of the service exposure.")
 }
 
 func getSessionType(t string) (string, bool) {
@@ -84,7 +112,26 @@ func (a EndpointArgs) toSessionRequest() (CreateSessionRequest, error) {
 		Groups:            a.Groups,
 		IdleTimeout:       sv(a.IdleTimeout),
 		ScriptOnlyAccess:  bv(a.ScriptOnlyAccess),
+
+		DisableOutputCapture: bv(a.DisableOutputCapture),
+		DisableDataStudio:    bv(a.DisableDataStudio),
+		DisableWebCLI:        bv(a.DisableWebCli),
+		JITMode:              sv(a.JitMode),
+		AutoApproval:         a.AutoApproval,
+		JITMultiApprover:     a.JitMultiApprover,
+		JITTotalApprovers:    a.JitTotalApprovers,
 	}, nil
+}
+
+// fillEndpointOutputs copies the server-computed output fields onto the state.
+func fillEndpointOutputs(s *EndpointState, r *SessionReadResponse) {
+	if r == nil {
+		return
+	}
+	s.Status = r.Status
+	s.Exposed = r.Exposed
+	s.ExposeType = r.ExposeType
+	s.ExposeStatus = r.ExposeStatus
 }
 
 func (*Endpoint) Create(ctx context.Context, req infer.CreateRequest[EndpointArgs]) (infer.CreateResponse[EndpointState], error) {
@@ -105,11 +152,21 @@ func (*Endpoint) Create(ctx context.Context, req infer.CreateRequest[EndpointArg
 		return out, err
 	}
 	out.ID = resp.ID
+	// Best-effort: surface the server-computed outputs right away.
+	if r, rerr := c.ReadSession(ctx, resp.ID); rerr == nil {
+		fillEndpointOutputs(&out.Output, r)
+	}
 	return out, nil
 }
 
 func (*Endpoint) Update(ctx context.Context, req infer.UpdateRequest[EndpointArgs, EndpointState]) (infer.UpdateResponse[EndpointState], error) {
-	out := infer.UpdateResponse[EndpointState]{Output: EndpointState{EndpointArgs: req.Inputs}}
+	out := infer.UpdateResponse[EndpointState]{Output: EndpointState{
+		EndpointArgs: req.Inputs,
+		Status:       req.State.Status,
+		Exposed:      req.State.Exposed,
+		ExposeType:   req.State.ExposeType,
+		ExposeStatus: req.State.ExposeStatus,
+	}}
 	if req.DryRun {
 		return out, nil
 	}
@@ -124,7 +181,31 @@ func (*Endpoint) Update(ctx context.Context, req infer.UpdateRequest[EndpointArg
 	if _, err := c.UpdateSession(ctx, req.ID, sreq); err != nil {
 		return out, err
 	}
+	// Best-effort refresh of the server-computed outputs.
+	if r, rerr := c.ReadSession(ctx, req.ID); rerr == nil && r != nil {
+		fillEndpointOutputs(&out.Output, r)
+	}
 	return out, nil
+}
+
+func (*Endpoint) Read(ctx context.Context, req infer.ReadRequest[EndpointArgs, EndpointState]) (infer.ReadResponse[EndpointArgs, EndpointState], error) {
+	c, err := clientFromConfig(ctx)
+	if err != nil {
+		return infer.ReadResponse[EndpointArgs, EndpointState]{}, err
+	}
+	r, err := c.ReadSession(ctx, req.ID)
+	if err != nil {
+		return infer.ReadResponse[EndpointArgs, EndpointState]{}, err
+	}
+	if r == nil {
+		// Deleted out-of-band: an empty response drops the resource from state.
+		return infer.ReadResponse[EndpointArgs, EndpointState]{}, nil
+	}
+	isImport := req.Inputs.Name == ""
+	inputs := applyEndpointRead(req.Inputs, r, isImport)
+	state := EndpointState{EndpointArgs: inputs}
+	fillEndpointOutputs(&state, r)
+	return infer.ReadResponse[EndpointArgs, EndpointState]{ID: req.ID, Inputs: inputs, State: state}, nil
 }
 
 func (*Endpoint) Delete(ctx context.Context, req infer.DeleteRequest[EndpointState]) (infer.DeleteResponse, error) {
@@ -150,6 +231,11 @@ type AuthorizationArgs struct {
 
 type AuthorizationState struct {
 	AuthorizationArgs
+	Status string `pulumi:"status,optional"`
+}
+
+func (a *AuthorizationState) Annotate(an infer.Annotator) {
+	an.Describe(&a.Status, "Current lifecycle status of the authorization.")
 }
 
 func (a *AuthorizationArgs) Annotate(an infer.Annotator) {
@@ -192,6 +278,27 @@ func (*Authorization) Update(ctx context.Context, req infer.UpdateRequest[Author
 	return out, err
 }
 
+func (*Authorization) Read(ctx context.Context, req infer.ReadRequest[AuthorizationArgs, AuthorizationState]) (infer.ReadResponse[AuthorizationArgs, AuthorizationState], error) {
+	c, err := clientFromConfig(ctx)
+	if err != nil {
+		return infer.ReadResponse[AuthorizationArgs, AuthorizationState]{}, err
+	}
+	r, err := c.ReadAuthorization(ctx, req.ID)
+	if err != nil {
+		return infer.ReadResponse[AuthorizationArgs, AuthorizationState]{}, err
+	}
+	if r == nil {
+		return infer.ReadResponse[AuthorizationArgs, AuthorizationState]{}, nil
+	}
+	isImport := req.Inputs.Name == ""
+	inputs := applyAuthorizationRead(req.Inputs, r, isImport)
+	return infer.ReadResponse[AuthorizationArgs, AuthorizationState]{
+		ID:     req.ID,
+		Inputs: inputs,
+		State:  AuthorizationState{AuthorizationArgs: inputs, Status: r.Status},
+	}, nil
+}
+
 func (*Authorization) Delete(ctx context.Context, req infer.DeleteRequest[AuthorizationState]) (infer.DeleteResponse, error) {
 	c, err := clientFromConfig(ctx)
 	if err != nil {
@@ -207,9 +314,10 @@ func (*Authorization) Delete(ctx context.Context, req infer.DeleteRequest[Author
 type Group struct{}
 
 type GroupArgs struct {
-	Name      string   `pulumi:"name"`
-	Members   []string `pulumi:"members,optional"`
-	Endpoints []string `pulumi:"endpoints,optional"`
+	Name           string   `pulumi:"name"`
+	Members        []string `pulumi:"members,optional"`
+	Endpoints      []string `pulumi:"endpoints,optional"`
+	SlackChannelID *string  `pulumi:"slackChannelId,optional"`
 }
 
 type GroupState struct {
@@ -220,6 +328,7 @@ func (g *GroupArgs) Annotate(a infer.Annotator) {
 	a.Describe(&g.Name, "Name of the group. Must be unique.")
 	a.Describe(&g.Members, "Emails of users to add to the group.")
 	a.Describe(&g.Endpoints, "Names of endpoints to add to this group.")
+	a.Describe(&g.SlackChannelID, "Slack channel ID associated with this group.")
 }
 
 func (*Group) Create(ctx context.Context, req infer.CreateRequest[GroupArgs]) (infer.CreateResponse[GroupState], error) {
@@ -236,6 +345,12 @@ func (*Group) Create(ctx context.Context, req infer.CreateRequest[GroupArgs]) (i
 		return out, err
 	}
 	out.ID = resp.ID
+	// The create route does not accept a Slack channel; set it via update.
+	if sv(req.Inputs.SlackChannelID) != "" {
+		if err := c.UpdateTeam(ctx, resp.ID, req.Inputs.Name, req.Inputs.Members, req.Inputs.Endpoints, sv(req.Inputs.SlackChannelID)); err != nil {
+			return out, fmt.Errorf("group %s created but setting slackChannelId failed: %w", req.Inputs.Name, err)
+		}
+	}
 	return out, nil
 }
 
@@ -248,7 +363,28 @@ func (*Group) Update(ctx context.Context, req infer.UpdateRequest[GroupArgs, Gro
 	if err != nil {
 		return out, err
 	}
-	return out, c.UpdateTeam(ctx, req.ID, req.Inputs.Name, req.Inputs.Members, req.Inputs.Endpoints)
+	return out, c.UpdateTeam(ctx, req.ID, req.Inputs.Name, req.Inputs.Members, req.Inputs.Endpoints, sv(req.Inputs.SlackChannelID))
+}
+
+func (*Group) Read(ctx context.Context, req infer.ReadRequest[GroupArgs, GroupState]) (infer.ReadResponse[GroupArgs, GroupState], error) {
+	c, err := clientFromConfig(ctx)
+	if err != nil {
+		return infer.ReadResponse[GroupArgs, GroupState]{}, err
+	}
+	r, err := c.ReadTeam(ctx, req.ID)
+	if err != nil {
+		return infer.ReadResponse[GroupArgs, GroupState]{}, err
+	}
+	if r == nil {
+		return infer.ReadResponse[GroupArgs, GroupState]{}, nil
+	}
+	isImport := req.Inputs.Name == ""
+	inputs := applyTeamRead(req.Inputs, r, isImport)
+	return infer.ReadResponse[GroupArgs, GroupState]{
+		ID:     req.ID,
+		Inputs: inputs,
+		State:  GroupState{GroupArgs: inputs},
+	}, nil
 }
 
 func (*Group) Delete(ctx context.Context, req infer.DeleteRequest[GroupState]) (infer.DeleteResponse, error) {
@@ -266,19 +402,39 @@ func (*Group) Delete(ctx context.Context, req infer.DeleteRequest[GroupState]) (
 type Script struct{}
 
 type ScriptArgs struct {
-	Name     string `pulumi:"name"`
-	Command  string `pulumi:"command"`
-	Endpoint string `pulumi:"endpoint"`
+	Name                  string            `pulumi:"name"`
+	Command               string            `pulumi:"command"`
+	Endpoint              string            `pulumi:"endpoint"`
+	Description           *string           `pulumi:"description,optional"`
+	ParameterDescriptions map[string]string `pulumi:"parameterDescriptions,optional"`
 }
 
 type ScriptState struct {
 	ScriptArgs
+	IsAutoGen bool `pulumi:"isAutoGen,optional"`
 }
 
 func (s *ScriptArgs) Annotate(a infer.Annotator) {
 	a.Describe(&s.Name, "The name of the script.")
-	a.Describe(&s.Command, "The command the script runs.")
+	a.Describe(&s.Command, "The command the script runs. Write-only: the Adaptive API never returns "+
+		"script bodies, so drift in the command cannot be detected and `pulumi import` leaves it empty.")
 	a.Describe(&s.Endpoint, "The endpoint the script is attached to. Cannot be changed after creation.")
+	a.Describe(&s.Description, "An optional description of the script.")
+	a.Describe(&s.ParameterDescriptions, "Descriptions for the script's parameters, keyed by parameter name.")
+}
+
+func (s *ScriptState) Annotate(a infer.Annotator) {
+	a.Describe(&s.IsAutoGen, "Whether the script was auto-generated by Adaptive.")
+}
+
+func (a ScriptArgs) toScriptRequest() ScriptRequest {
+	return ScriptRequest{
+		Name:                  a.Name,
+		Command:               a.Command,
+		Endpoint:              a.Endpoint,
+		Description:           sv(a.Description),
+		ParameterDescriptions: a.ParameterDescriptions,
+	}
 }
 
 func (*Script) Create(ctx context.Context, req infer.CreateRequest[ScriptArgs]) (infer.CreateResponse[ScriptState], error) {
@@ -290,7 +446,7 @@ func (*Script) Create(ctx context.Context, req infer.CreateRequest[ScriptArgs]) 
 	if err != nil {
 		return out, err
 	}
-	resp, err := c.CreateScript(ctx, req.Inputs.Name, req.Inputs.Command, req.Inputs.Endpoint)
+	resp, err := c.CreateScript(ctx, req.Inputs.toScriptRequest())
 	if err != nil {
 		return out, err
 	}
@@ -299,7 +455,7 @@ func (*Script) Create(ctx context.Context, req infer.CreateRequest[ScriptArgs]) 
 }
 
 func (*Script) Update(ctx context.Context, req infer.UpdateRequest[ScriptArgs, ScriptState]) (infer.UpdateResponse[ScriptState], error) {
-	out := infer.UpdateResponse[ScriptState]{Output: ScriptState{ScriptArgs: req.Inputs}}
+	out := infer.UpdateResponse[ScriptState]{Output: ScriptState{ScriptArgs: req.Inputs, IsAutoGen: req.State.IsAutoGen}}
 	if req.DryRun {
 		return out, nil
 	}
@@ -311,7 +467,32 @@ func (*Script) Update(ctx context.Context, req infer.UpdateRequest[ScriptArgs, S
 	if err != nil {
 		return out, err
 	}
-	return out, c.UpdateScript(ctx, req.ID, req.Inputs.Name, req.Inputs.Command, req.Inputs.Endpoint)
+	return out, c.UpdateScript(ctx, req.ID, req.Inputs.toScriptRequest())
+}
+
+func (*Script) Read(ctx context.Context, req infer.ReadRequest[ScriptArgs, ScriptState]) (infer.ReadResponse[ScriptArgs, ScriptState], error) {
+	c, err := clientFromConfig(ctx)
+	if err != nil {
+		return infer.ReadResponse[ScriptArgs, ScriptState]{}, err
+	}
+	r, err := c.ReadScript(ctx, req.ID)
+	if err != nil {
+		return infer.ReadResponse[ScriptArgs, ScriptState]{}, err
+	}
+	if r == nil {
+		return infer.ReadResponse[ScriptArgs, ScriptState]{}, nil
+	}
+	isImport := req.Inputs.Name == ""
+	inputs := applyScriptRead(req.Inputs, r, isImport)
+	if isImport {
+		p.GetLogger(ctx).Warning("the Adaptive API does not return script bodies; " +
+			"set `command` in your program before the first `pulumi up` (the first update will rewrite it)")
+	}
+	return infer.ReadResponse[ScriptArgs, ScriptState]{
+		ID:     req.ID,
+		Inputs: inputs,
+		State:  ScriptState{ScriptArgs: inputs, IsAutoGen: r.IsAutoGen},
+	}, nil
 }
 
 func (*Script) Delete(ctx context.Context, req infer.DeleteRequest[ScriptState]) (infer.DeleteResponse, error) {
@@ -320,75 +501,4 @@ func (*Script) Delete(ctx context.Context, req infer.DeleteRequest[ScriptState])
 		return infer.DeleteResponse{}, err
 	}
 	return infer.DeleteResponse{}, c.DeleteScript(ctx, req.ID, req.State.Name)
-}
-
-// ===========================================================================
-// MSTeamsWorkflow  (adaptive:index:MsTeamsWorkflow)
-// ===========================================================================
-
-type MSTeamsWorkflow struct{}
-
-type MSTeamsWorkflowArgs struct {
-	Name       string `pulumi:"name"`
-	WebhookURL string `pulumi:"webhookUrl"`
-}
-
-type MSTeamsWorkflowState struct {
-	MSTeamsWorkflowArgs
-}
-
-type msTeamsWorkflowConfig struct {
-	Name       string `yaml:"name"`
-	WebhookURL string `yaml:"webhookURL"`
-}
-
-func (m *MSTeamsWorkflowArgs) Annotate(a infer.Annotator) {
-	a.Describe(&m.Name, "Name of the MS Teams workflow integration.")
-	a.Describe(&m.WebhookURL, "The webhook URL for the MS Teams workflow.")
-}
-
-func (*MSTeamsWorkflow) Create(ctx context.Context, req infer.CreateRequest[MSTeamsWorkflowArgs]) (infer.CreateResponse[MSTeamsWorkflowState], error) {
-	out := infer.CreateResponse[MSTeamsWorkflowState]{Output: MSTeamsWorkflowState{MSTeamsWorkflowArgs: req.Inputs}}
-	if req.DryRun {
-		return out, nil
-	}
-	c, err := clientFromConfig(ctx)
-	if err != nil {
-		return out, err
-	}
-	cfg, err := yaml.Marshal(msTeamsWorkflowConfig{Name: req.Inputs.Name, WebhookURL: req.Inputs.WebhookURL})
-	if err != nil {
-		return out, err
-	}
-	resp, err := c.CreateResource(ctx, req.Inputs.Name, "msteams_workflow", cfg, []string{}, "")
-	if err != nil {
-		return out, err
-	}
-	out.ID = resp.ID
-	return out, nil
-}
-
-func (*MSTeamsWorkflow) Update(ctx context.Context, req infer.UpdateRequest[MSTeamsWorkflowArgs, MSTeamsWorkflowState]) (infer.UpdateResponse[MSTeamsWorkflowState], error) {
-	out := infer.UpdateResponse[MSTeamsWorkflowState]{Output: MSTeamsWorkflowState{MSTeamsWorkflowArgs: req.Inputs}}
-	if req.DryRun {
-		return out, nil
-	}
-	c, err := clientFromConfig(ctx)
-	if err != nil {
-		return out, err
-	}
-	cfg, err := yaml.Marshal(msTeamsWorkflowConfig{Name: req.Inputs.Name, WebhookURL: req.Inputs.WebhookURL})
-	if err != nil {
-		return out, err
-	}
-	_, err = c.UpdateResource(ctx, req.ID, "msteams_workflow", cfg, []string{}, "")
-	return out, err
-}
-
-func (*MSTeamsWorkflow) Delete(ctx context.Context, req infer.DeleteRequest[MSTeamsWorkflowState]) (infer.DeleteResponse, error) {
-	c, err := clientFromConfig(ctx)
-	if err != nil {
-		return infer.DeleteResponse{}, err
-	}
-	return infer.DeleteResponse{}, c.DeleteResource(ctx, req.ID, req.State.Name)
 }

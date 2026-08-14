@@ -10,6 +10,9 @@ import (
 
 	"github.com/pulumi/pulumi/sdk/v3/go/auto"
 	"github.com/pulumi/pulumi/sdk/v3/go/auto/optdestroy"
+	"github.com/pulumi/pulumi/sdk/v3/go/auto/optimport"
+	"github.com/pulumi/pulumi/sdk/v3/go/auto/optpreview"
+	"github.com/pulumi/pulumi/sdk/v3/go/auto/optrefresh"
 	"github.com/pulumi/pulumi/sdk/v3/go/auto/optup"
 	"github.com/pulumi/pulumi/sdk/v3/go/common/workspace"
 	"github.com/pulumi/pulumi/sdk/v3/go/pulumi"
@@ -24,6 +27,14 @@ const projectName = "adaptive-integration"
 //
 // Requires the `pulumi-resource-adaptive` plugin on PATH (run `make install`).
 func Deploy(t *testing.T, cfg Config, stackName string, program pulumi.RunFunc) auto.OutputMap {
+	t.Helper()
+	outs, _ := DeployStack(t, cfg, stackName, program)
+	return outs
+}
+
+// DeployStack is Deploy but also returns the stack, for tests that go on to
+// refresh, import into, or re-up the same stack.
+func DeployStack(t *testing.T, cfg Config, stackName string, program pulumi.RunFunc) (auto.OutputMap, *auto.Stack) {
 	t.Helper()
 
 	if _, err := exec.LookPath("pulumi-resource-adaptive"); err != nil {
@@ -61,7 +72,63 @@ func Deploy(t *testing.T, cfg Config, stackName string, program pulumi.RunFunc) 
 	if err != nil {
 		t.Fatalf("pulumi up for stack %q: %v", stackName, err)
 	}
-	return res.Outputs
+	return res.Outputs, &stack
+}
+
+// Refresh runs `pulumi refresh` on the stack and returns the per-op resource
+// change counts (e.g. {"same": 2, "delete": 1}).
+func Refresh(t *testing.T, stack *auto.Stack) map[string]int {
+	t.Helper()
+	res, err := stack.Refresh(context.Background(), optrefresh.ProgressStreams(&logWriter{t}))
+	if err != nil {
+		t.Fatalf("pulumi refresh: %v", err)
+	}
+	if res.Summary.ResourceChanges == nil {
+		return map[string]int{}
+	}
+	return *res.Summary.ResourceChanges
+}
+
+// AssertRefreshClean refreshes the stack and fails if any resource changed:
+// every operation reported must be "same". This is the perpetual-diff
+// regression check.
+func AssertRefreshClean(t *testing.T, stack *auto.Stack) {
+	t.Helper()
+	changes := Refresh(t, stack)
+	for op, n := range changes {
+		if op != "same" && n > 0 {
+			t.Errorf("refresh not clean: %d %q operations (all changes: %v)", n, op, changes)
+		}
+	}
+}
+
+// ImportResource imports an existing Adaptive object into the stack by ID and
+// returns the generated program text. typ is the Pulumi type token, e.g.
+// "adaptive:index:Endpoint".
+func ImportResource(t *testing.T, stack *auto.Stack, typ, name, id string) string {
+	t.Helper()
+	res, err := stack.ImportResources(context.Background(),
+		optimport.Resources([]*optimport.ImportResource{{Type: typ, Name: name, ID: id}}),
+		optimport.ProgressStreams(&logWriter{t}),
+	)
+	if err != nil {
+		t.Fatalf("pulumi import %s %s %s: %v", typ, name, id, err)
+	}
+	return res.GeneratedCode
+}
+
+// Preview returns the per-op change counts a `pulumi preview` would apply.
+func Preview(t *testing.T, stack *auto.Stack) map[string]int {
+	t.Helper()
+	res, err := stack.Preview(context.Background(), optpreview.ProgressStreams(&logWriter{t}))
+	if err != nil {
+		t.Fatalf("pulumi preview: %v", err)
+	}
+	out := make(map[string]int, len(res.ChangeSummary))
+	for op, n := range res.ChangeSummary {
+		out[string(op)] = n
+	}
+	return out
 }
 
 // StringOutput extracts a required string stack output.

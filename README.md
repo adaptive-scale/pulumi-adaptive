@@ -18,12 +18,18 @@ Terraform or the Terraform bridge.
 
 | Pulumi resource | Description |
 |---|---|
-| `adaptive.Resource` | A connection to an external service (database, cloud, Kubernetes, …). The `type` field selects the integration; ~50 are supported. |
-| `adaptive.Endpoint` | A secure, time-limited access point to a resource (TTL, JIT approval, users/groups). |
+| `adaptive.Resource` | A connection to an external service (database, cloud, Kubernetes, …). The `type` field selects the integration; every integration type the Adaptive platform registers (~82) is supported. |
+| `adaptive.Endpoint` | A secure, time-limited access point to a resource (TTL, JIT approval and modes, users/groups, web-access toggles, output capture). |
 | `adaptive.Authorization` | A permission policy for a resource type. |
-| `adaptive.Group` | A bundle of users and endpoints. |
-| `adaptive.Script` | A command attached to an endpoint. |
-| `adaptive.MSTeamsWorkflow` | An MS Teams workflow webhook integration. |
+| `adaptive.Group` | A bundle of users and endpoints, optionally linked to a Slack channel. |
+| `adaptive.Script` | A command attached to an endpoint, with optional description and parameter docs. |
+| `adaptive.Schedule` | An auto-approval (or auto-reject) schedule window applied to users, groups, and endpoints. |
+
+Notification/webhook integrations (e.g. MS Teams workflows) are managed through
+`adaptive.Resource` with the matching `type` (e.g. `msteams_workflow` + `webhookUrl`).
+
+All resources support `pulumi refresh` (drift detection, including out-of-band
+deletion) and `pulumi import` (see [Importing existing objects](#importing-existing-objects)).
 
 ## Installation
 
@@ -92,6 +98,38 @@ pulumi up
 > **Authorization permissions:** for SQL resource types (postgres, mysql,
 > sqlserver, …) and kubernetes, `permissions` must be structured YAML — a bare
 > value like `"SELECT"` is rejected by the API. See `examples/go/main.go`.
+
+## Importing existing objects
+
+Every resource type imports by its Adaptive object ID:
+
+```bash
+pulumi import adaptive:index:Resource     my-db      <resource-id>
+pulumi import adaptive:index:Endpoint     my-access  <endpoint-id>
+pulumi import adaptive:index:Authorization my-auth   <authorization-id>
+pulumi import adaptive:index:Group        my-group   <group-id>
+pulumi import adaptive:index:Script       my-script  <script-id>
+pulumi import adaptive:index:Schedule     my-window  <schedule-id>
+```
+
+Caveats — some values are write-only in the Adaptive API and cannot be
+recovered on import:
+
+- **Script `command`**: script bodies are never returned by the API. After
+  importing a script, set `command` in your program; the first `pulumi up`
+  rewrites it (refresh never touches it).
+- **Resource secrets**: secret configuration values (passwords, keys, tokens)
+  are stripped from API reads. The import warns with the exact list of
+  redacted fields to fill in. On refresh, secrets already in state are kept.
+- **Webhook URLs** (e.g. `msteams_workflow` resources): redacted like other secrets.
+- **Schedules are upserted by name**: creating a schedule whose name already
+  exists on the backend adopts the existing schedule instead of failing.
+
+Refresh behavior: optional inputs you never set are not overwritten with
+server-computed defaults (memory/cpu/cluster/idle timeout), so refresh stays
+clean; out-of-band deletion drops the resource from state; against Adaptive
+servers older than the accompanying backend change, refreshing a deleted
+endpoint/authorization fails loudly instead of pruning it.
 
 ## Development
 

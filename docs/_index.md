@@ -20,7 +20,7 @@ and other infrastructure. This provider manages that surface declaratively:
 - `adaptive.Authorization` — a permission policy for a resource type.
 - `adaptive.Group` — a bundle of users and endpoints.
 - `adaptive.Script` — a command attached to an endpoint.
-- `adaptive.MSTeamsWorkflow` — an MS Teams workflow webhook integration.
+- `adaptive.Schedule` — an auto-approval schedule window for users, groups, and endpoints.
 
 ## Example
 

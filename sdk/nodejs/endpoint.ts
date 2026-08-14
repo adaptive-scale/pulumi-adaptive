@@ -35,8 +35,36 @@ export class Endpoint extends pulumi.CustomResource {
      * The authorization (by name) to apply to this endpoint.
      */
     declare public readonly authorization: pulumi.Output<string | undefined>;
+    /**
+     * Automatically approve Just-In-Time access requests.
+     */
+    declare public readonly autoApproval: pulumi.Output<boolean | undefined>;
     declare public readonly cluster: pulumi.Output<string | undefined>;
     declare public readonly cpu: pulumi.Output<string | undefined>;
+    /**
+     * Hide Data Studio for this endpoint (cli endpoints only).
+     */
+    declare public readonly disableDataStudio: pulumi.Output<boolean | undefined>;
+    /**
+     * Do not retain terminal output for this endpoint. The effective value is OR'd with the workspace-level setting: an endpoint cannot re-enable capture that the workspace disabled.
+     */
+    declare public readonly disableOutputCapture: pulumi.Output<boolean | undefined>;
+    /**
+     * Hide 'Connect via Web CLI' for this endpoint (cli endpoints only).
+     */
+    declare public readonly disableWebCli: pulumi.Output<boolean | undefined>;
+    /**
+     * Provisioning status of the service exposure.
+     */
+    declare public /*out*/ readonly exposeStatus: pulumi.Output<string | undefined>;
+    /**
+     * How the endpoint is exposed (e.g. LoadBalancer).
+     */
+    declare public /*out*/ readonly exposeType: pulumi.Output<string | undefined>;
+    /**
+     * Whether the endpoint is exposed as a service.
+     */
+    declare public /*out*/ readonly exposed: pulumi.Output<boolean | undefined>;
     declare public readonly groups: pulumi.Output<string[] | undefined>;
     declare public readonly idleTimeout: pulumi.Output<string | undefined>;
     /**
@@ -47,6 +75,18 @@ export class Endpoint extends pulumi.CustomResource {
      * Emails of users who can approve Just-In-Time access requests.
      */
     declare public readonly jitApprovers: pulumi.Output<string[] | undefined>;
+    /**
+     * Which access paths require Just-In-Time approval: session, script, or both.
+     */
+    declare public readonly jitMode: pulumi.Output<string | undefined>;
+    /**
+     * Require multiple approvers for Just-In-Time access requests.
+     */
+    declare public readonly jitMultiApprover: pulumi.Output<boolean | undefined>;
+    /**
+     * Number of approvals required when multi-approver is enabled.
+     */
+    declare public readonly jitTotalApprovers: pulumi.Output<number | undefined>;
     declare public readonly memory: pulumi.Output<string | undefined>;
     /**
      * The name of the endpoint to create.
@@ -61,6 +101,10 @@ export class Endpoint extends pulumi.CustomResource {
      * Whether the endpoint is only accessible via script.
      */
     declare public readonly scriptOnlyAccess: pulumi.Output<boolean | undefined>;
+    /**
+     * Current lifecycle status of the endpoint.
+     */
+    declare public /*out*/ readonly status: pulumi.Output<string | undefined>;
     declare public readonly tags: pulumi.Output<string[] | undefined>;
     /**
      * Time-to-live for the endpoint, e.g. 8h, 7d, 90d.
@@ -90,12 +134,19 @@ export class Endpoint extends pulumi.CustomResource {
                 throw new Error("Missing required property 'resource'");
             }
             resourceInputs["authorization"] = args?.authorization;
+            resourceInputs["autoApproval"] = args?.autoApproval;
             resourceInputs["cluster"] = args?.cluster;
             resourceInputs["cpu"] = args?.cpu;
+            resourceInputs["disableDataStudio"] = args?.disableDataStudio;
+            resourceInputs["disableOutputCapture"] = args?.disableOutputCapture;
+            resourceInputs["disableWebCli"] = args?.disableWebCli;
             resourceInputs["groups"] = args?.groups;
             resourceInputs["idleTimeout"] = args?.idleTimeout;
             resourceInputs["isJitEnabled"] = args?.isJitEnabled;
             resourceInputs["jitApprovers"] = args?.jitApprovers;
+            resourceInputs["jitMode"] = args?.jitMode;
+            resourceInputs["jitMultiApprover"] = args?.jitMultiApprover;
+            resourceInputs["jitTotalApprovers"] = args?.jitTotalApprovers;
             resourceInputs["memory"] = args?.memory;
             resourceInputs["name"] = args?.name;
             resourceInputs["pauseTimeout"] = args?.pauseTimeout;
@@ -105,19 +156,34 @@ export class Endpoint extends pulumi.CustomResource {
             resourceInputs["ttl"] = args?.ttl;
             resourceInputs["type"] = (args?.type) ?? "direct";
             resourceInputs["users"] = args?.users;
+            resourceInputs["exposeStatus"] = undefined /*out*/;
+            resourceInputs["exposeType"] = undefined /*out*/;
+            resourceInputs["exposed"] = undefined /*out*/;
+            resourceInputs["status"] = undefined /*out*/;
         } else {
             resourceInputs["authorization"] = undefined /*out*/;
+            resourceInputs["autoApproval"] = undefined /*out*/;
             resourceInputs["cluster"] = undefined /*out*/;
             resourceInputs["cpu"] = undefined /*out*/;
+            resourceInputs["disableDataStudio"] = undefined /*out*/;
+            resourceInputs["disableOutputCapture"] = undefined /*out*/;
+            resourceInputs["disableWebCli"] = undefined /*out*/;
+            resourceInputs["exposeStatus"] = undefined /*out*/;
+            resourceInputs["exposeType"] = undefined /*out*/;
+            resourceInputs["exposed"] = undefined /*out*/;
             resourceInputs["groups"] = undefined /*out*/;
             resourceInputs["idleTimeout"] = undefined /*out*/;
             resourceInputs["isJitEnabled"] = undefined /*out*/;
             resourceInputs["jitApprovers"] = undefined /*out*/;
+            resourceInputs["jitMode"] = undefined /*out*/;
+            resourceInputs["jitMultiApprover"] = undefined /*out*/;
+            resourceInputs["jitTotalApprovers"] = undefined /*out*/;
             resourceInputs["memory"] = undefined /*out*/;
             resourceInputs["name"] = undefined /*out*/;
             resourceInputs["pauseTimeout"] = undefined /*out*/;
             resourceInputs["resource"] = undefined /*out*/;
             resourceInputs["scriptOnlyAccess"] = undefined /*out*/;
+            resourceInputs["status"] = undefined /*out*/;
             resourceInputs["tags"] = undefined /*out*/;
             resourceInputs["ttl"] = undefined /*out*/;
             resourceInputs["type"] = undefined /*out*/;
@@ -136,8 +202,24 @@ export interface EndpointArgs {
      * The authorization (by name) to apply to this endpoint.
      */
     authorization?: pulumi.Input<string>;
+    /**
+     * Automatically approve Just-In-Time access requests.
+     */
+    autoApproval?: pulumi.Input<boolean>;
     cluster?: pulumi.Input<string>;
     cpu?: pulumi.Input<string>;
+    /**
+     * Hide Data Studio for this endpoint (cli endpoints only).
+     */
+    disableDataStudio?: pulumi.Input<boolean>;
+    /**
+     * Do not retain terminal output for this endpoint. The effective value is OR'd with the workspace-level setting: an endpoint cannot re-enable capture that the workspace disabled.
+     */
+    disableOutputCapture?: pulumi.Input<boolean>;
+    /**
+     * Hide 'Connect via Web CLI' for this endpoint (cli endpoints only).
+     */
+    disableWebCli?: pulumi.Input<boolean>;
     groups?: pulumi.Input<pulumi.Input<string>[]>;
     idleTimeout?: pulumi.Input<string>;
     /**
@@ -148,6 +230,18 @@ export interface EndpointArgs {
      * Emails of users who can approve Just-In-Time access requests.
      */
     jitApprovers?: pulumi.Input<pulumi.Input<string>[]>;
+    /**
+     * Which access paths require Just-In-Time approval: session, script, or both.
+     */
+    jitMode?: pulumi.Input<string>;
+    /**
+     * Require multiple approvers for Just-In-Time access requests.
+     */
+    jitMultiApprover?: pulumi.Input<boolean>;
+    /**
+     * Number of approvals required when multi-approver is enabled.
+     */
+    jitTotalApprovers?: pulumi.Input<number>;
     memory?: pulumi.Input<string>;
     /**
      * The name of the endpoint to create.

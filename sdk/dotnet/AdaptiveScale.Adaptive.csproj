@@ -9,7 +9,7 @@
     <PackageProjectUrl>https://adaptive.live</PackageProjectUrl>
     <RepositoryUrl>https://github.com/adaptive-scale/pulumi-adaptive</RepositoryUrl>
     <PackageIcon>logo.png</PackageIcon>
-    <Version>0.1.0</Version>
+    <Version>0.2.0</Version>
 
     <TargetFramework>net6.0</TargetFramework>
     <Nullable>enable</Nullable>
