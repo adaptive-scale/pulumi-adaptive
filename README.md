@@ -94,6 +94,12 @@ or set the environment variables:
 | `serviceToken` | `ADAPTIVE_SVC_TOKEN` | falls back to `~/.adaptive/token` |
 | `workspaceUrl` | `ADAPTIVE_URL` | `https://app.adaptive.live` |
 
+Non-empty environment variables take precedence at provider runtime. This is
+important for `pulumi refresh`: Pulumi normally reuses the provider settings
+saved in stack state, while the runtime override ensures a local refresh uses
+the local Adaptive workspace and credentials without requiring `--run-program`.
+Unset the variables to use values set with `pulumi config`.
+
 ## Usage
 
 ```typescript

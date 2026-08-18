@@ -146,6 +146,61 @@ func TestApplyIntegrationConfigRedaction(t *testing.T) {
 	}
 }
 
+func TestRefreshIntegrationConfigClearsMissingKubernetesFields(t *testing.T) {
+	prior := ResourceArgs{
+		Type:         "kubernetes",
+		Name:         "eks-prod",
+		ApiServer:    strp("https://old.example.com"),
+		Namespace:    strp("removed-remotely"),
+		Tolerations:  strp("old-toleration"),
+		Annotations:  strp("old-annotation"),
+		NodeSelector: strp("old-selector"),
+		NodeAffinity: strp("old-affinity"),
+		ClusterToken: strp("write-only-token"),
+		ClusterCert:  strp("write-only-cert"),
+	}
+	live := map[string]any{"apiserver": "https://new.example.com"}
+
+	cfg, err := refreshIntegrationConfig(
+		prior,
+		live,
+		[]string{"token", "cacrt"},
+		map[string]string{"token": "digest-1", "cacrt": "digest-2"},
+	)
+	if err != nil {
+		t.Fatal(err)
+	}
+	applyIntegrationConfig(&prior, "kubernetes", cfg)
+
+	if sv(prior.ApiServer) != "https://new.example.com" {
+		t.Errorf("apiServer drift was not refreshed: %q", sv(prior.ApiServer))
+	}
+	if prior.Namespace != nil || prior.Tolerations != nil || prior.Annotations != nil ||
+		prior.NodeSelector != nil || prior.NodeAffinity != nil {
+		t.Errorf("removed fields survived refresh: %+v", prior)
+	}
+	if sv(prior.ClusterToken) != "write-only-token" || sv(prior.ClusterCert) != "write-only-cert" {
+		t.Errorf("redacted credentials were not preserved: token=%q cert=%q",
+			sv(prior.ClusterToken), sv(prior.ClusterCert))
+	}
+}
+
+func TestRefreshIntegrationConfigClearsMissingBooleanField(t *testing.T) {
+	prior := ResourceArgs{
+		Type:     "fortinet_ngfw",
+		Name:     "firewall",
+		UseProxy: boolp(true),
+	}
+	cfg, err := refreshIntegrationConfig(prior, map[string]any{}, nil, nil)
+	if err != nil {
+		t.Fatal(err)
+	}
+	applyIntegrationConfig(&prior, "fortinet_ngfw", cfg)
+	if prior.UseProxy == nil || *prior.UseProxy {
+		t.Errorf("removed useProxy should refresh to false, got %v", prior.UseProxy)
+	}
+}
+
 // TestWireTypeMapping pins the two wire-name rewrites and their inverses.
 func TestWireTypeMapping(t *testing.T) {
 	cases := map[string]string{"services": "servicelist", "zerotier": "zero_tier", "postgres": "postgres"}
