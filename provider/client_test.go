@@ -66,11 +66,19 @@ func TestResolveToken(t *testing.T) {
 			t.Fatalf("got (%q,%q,%v)", tok, url, err)
 		}
 	})
-	t.Run("explicit config beats env vars", func(t *testing.T) {
+	t.Run("runtime env overrides saved provider config", func(t *testing.T) {
 		t.Setenv("ADAPTIVE_SVC_TOKEN", "env-token")
 		t.Setenv("ADAPTIVE_URL", "http://env-host:8080")
 		tok, url, err := resolveToken("explicit-token", "http://explicit:9090")
-		if err != nil || tok != "explicit-token" || url != "http://explicit:9090" {
+		if err != nil || tok != "env-token" || url != "http://env-host:8080" {
+			t.Fatalf("got (%q,%q,%v)", tok, url, err)
+		}
+	})
+	t.Run("runtime URL overrides URL embedded in token", func(t *testing.T) {
+		t.Setenv("ADAPTIVE_SVC_TOKEN", `{"token":"env-token","url":"http://embedded:8080"}`)
+		t.Setenv("ADAPTIVE_URL", "http://env-host:8080")
+		tok, url, err := resolveToken("explicit-token", "http://explicit:9090")
+		if err != nil || tok != "env-token" || url != "http://env-host:8080" {
 			t.Fatalf("got (%q,%q,%v)", tok, url, err)
 		}
 	})

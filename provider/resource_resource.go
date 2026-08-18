@@ -298,6 +298,12 @@ func (*Resource) Read(ctx context.Context, req infer.ReadRequest[ResourceArgs, R
 			}
 		}
 	}
+	if !isImport {
+		cfg, err = refreshIntegrationConfig(req.Inputs, cfg, r.RedactedKeys, r.RedactedDigests)
+		if err != nil {
+			return infer.ReadResponse[ResourceArgs, ResourceState]{}, err
+		}
+	}
 	applyIntegrationConfig(&inputs, r.IntegrationType, cfg)
 
 	if isImport && len(r.RedactedKeys) > 0 {
@@ -312,6 +318,66 @@ func (*Resource) Read(ctx context.Context, req infer.ReadRequest[ResourceArgs, R
 		Inputs: inputs,
 		State:  ResourceState{ResourceArgs: inputs, RedactedDigests: r.RedactedDigests},
 	}, nil
+}
+
+// refreshIntegrationConfig makes omitted live keys observable as removals.
+// applyIntegrationConfig deliberately ignores absent keys because credentials
+// are withheld by the server. For keys the prior program actually sent, we can
+// distinguish those cases: a key named by redactedKeys/digests is write-only and
+// must be preserved; any other missing key was removed remotely and is supplied
+// as its zero value so the reverse mapping clears it from refreshed state.
+func refreshIntegrationConfig(
+	prior ResourceArgs,
+	live map[string]any,
+	redactedKeys []string,
+	redactedDigests map[string]string,
+) (map[string]any, error) {
+	cfg := make(map[string]any, len(live))
+	for key, value := range live {
+		cfg[key] = value
+	}
+
+	protected := make(map[string]bool, len(redactedKeys)+len(redactedDigests))
+	for _, key := range redactedKeys {
+		protected[topLevelConfigKey(key)] = true
+	}
+	for key := range redactedDigests {
+		protected[topLevelConfigKey(key)] = true
+	}
+
+	declaredObj, _, err := buildIntegrationConfig(prior)
+	if err != nil {
+		return nil, err
+	}
+	encoded, err := yaml.Marshal(declaredObj)
+	if err != nil {
+		return nil, fmt.Errorf("could not marshal prior resource configuration for refresh: %w", err)
+	}
+	var declared map[string]any
+	if err := yaml.Unmarshal(encoded, &declared); err != nil {
+		return nil, fmt.Errorf("could not decode prior resource configuration for refresh: %w", err)
+	}
+
+	for key, priorValue := range declared {
+		if _, reported := cfg[key]; reported || protected[key] {
+			continue
+		}
+		// Boolean reverse mappings require an explicit false to clear true;
+		// string and host-list mappings treat nil as an explicit empty value.
+		if _, ok := priorValue.(bool); ok {
+			cfg[key] = false
+		} else {
+			cfg[key] = nil
+		}
+	}
+	return cfg, nil
+}
+
+func topLevelConfigKey(path string) string {
+	if i := strings.IndexAny(path, ".["); i >= 0 {
+		return path[:i]
+	}
+	return path
 }
 
 // changedDigestKeys returns the keys whose fingerprint differs between the

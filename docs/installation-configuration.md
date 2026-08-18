@@ -61,3 +61,9 @@ Environment variables work as an alternative to `pulumi config`:
 export ADAPTIVE_SVC_TOKEN=<your-service-token>
 export ADAPTIVE_URL=https://app.adaptive.live
 ```
+
+Non-empty environment variables take precedence at provider runtime. As a
+result, `pulumi refresh` uses the Adaptive workspace and credentials from the
+current environment even when the stack state was last written in CI; the
+`--run-program` flag is not required. Unset the variables to use values stored
+with `pulumi config`.

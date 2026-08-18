@@ -21,6 +21,11 @@ type Client struct {
 	serviceToken string
 	workspaceURL string
 	httpClient   *http.Client
+
+	// Endpoint deletion may be asynchronous on some Adaptive deployments.
+	// These values are fields so tests can exercise polling without sleeping.
+	deletePollInterval time.Duration
+	deleteTimeout      time.Duration
 }
 
 const defaultAdaptiveURL = "https://app.adaptive.live/api/v1"
@@ -34,9 +39,11 @@ func NewClient(serviceToken, workspaceURL string) *Client {
 		workspaceURL = fmt.Sprintf("%s/api/v1", strings.TrimRight(workspaceURL, "/"))
 	}
 	return &Client{
-		serviceToken: serviceToken,
-		workspaceURL: workspaceURL,
-		httpClient:   &http.Client{},
+		serviceToken:       serviceToken,
+		workspaceURL:       workspaceURL,
+		httpClient:         &http.Client{},
+		deletePollInterval: 2 * time.Second,
+		deleteTimeout:      30 * time.Second,
 	}
 }
 
@@ -45,7 +52,11 @@ func (c *Client) teamAPI() string          { return c.workspaceURL + "/terraform
 func (c *Client) scriptAPI() string        { return c.workspaceURL + "/terraform/script" }
 func (c *Client) resourceAPI() string      { return c.workspaceURL + "/terraform/resource" }
 func (c *Client) sessionAPI() string       { return c.workspaceURL + "/terraform/session" }
-func (c *Client) scheduleAPI() string      { return c.workspaceURL + "/terraform/schedule" }
+func (c *Client) sessionForceDeleteAPI() string {
+	return c.workspaceURL + "/sessions/force-delete"
+}
+
+func (c *Client) scheduleAPI() string { return c.workspaceURL + "/terraform/schedule" }
 func (c *Client) dataProtectionAPI() string {
 	return c.workspaceURL + "/terraform/dataprotection"
 }
@@ -427,25 +438,34 @@ func (c *Client) UpdateSession(ctx context.Context, sessionID string, req Create
 }
 
 // DeleteSession fully reaps an endpoint's session so the resource it points at
-// can be deleted afterwards. This is a synchronous two-step sequence:
+// can be deleted afterwards. The normal sequence is:
 //
-//  1. POST /session/delete/:id terminates the session (status -> terminated). On
+//  1. POST /session/delete/:id starts termination. On
 //     its own this does NOT remove the sessions row — a terminated row has no
 //     delete_at and is never picked up by the deferred reaper, so it (and its
 //     integration_id association) would linger indefinitely and keep the parent
 //     resource undeletable.
-//  2. POST /session/forcedelete/:id hard-deletes the row and its child rows in a
-//     single committed transaction. Its precondition is the terminal status that
-//     step 1 establishes.
+//  2. Poll until the session reaches a status accepted by force-delete. This is
+//     necessary on deployments where termination completes asynchronously.
+//  3. POST /session/forcedelete/:id hard-deletes the row and its child rows in a
+//     committed transaction.
 //
-// Once step 2 returns, the row is gone (single primary DB, read-after-write
+// Once step 3 returns, the row is gone (single primary DB, read-after-write
 // consistent), so a following DeleteResource passes the "no associated endpoint"
 // guard without waiting on the 7-day deferred-deletion cool-off.
+//
+// Older deployments can leave a session in "terminating" indefinitely. After a
+// bounded wait, fall back to the admin force-delete route used by the console and
+// wait for the asynchronously deleted row to disappear.
 func (c *Client) DeleteSession(ctx context.Context, sessionID string) error {
 	// Step 1: terminate (precondition for force delete).
 	resp, err := c.do(ctx, mustReq("POST", fmt.Sprintf("%s/delete/%s", c.sessionAPI(), sessionID), nil))
 	if err != nil {
 		return err
+	}
+	if resp.StatusCode == http.StatusNotFound {
+		resp.Body.Close()
+		return nil
 	}
 	if resp.StatusCode != http.StatusOK {
 		msg := readBody(resp)
@@ -454,16 +474,116 @@ func (c *Client) DeleteSession(ctx context.Context, sessionID string) error {
 	}
 	resp.Body.Close()
 
-	// Step 2: force delete (synchronously removes the row + resource association).
+	// Step 2: wait for asynchronous termination. If the row is already gone,
+	// deletion is complete and there is nothing left to force-delete.
+	gone, err := c.waitForSessionTerminal(ctx, sessionID)
+	if err != nil {
+		if errors.Is(err, errSessionTerminationTimeout) {
+			return c.forceDeleteStuckSession(ctx, sessionID)
+		}
+		return err
+	}
+	if gone {
+		return nil
+	}
+
+	// Step 3: force delete (synchronously removes the row + resource association).
 	resp, err = c.do(ctx, mustReq("POST", fmt.Sprintf("%s/forcedelete/%s", c.sessionAPI(), sessionID), nil))
 	if err != nil {
 		return err
 	}
-	defer resp.Body.Close()
-	if resp.StatusCode != http.StatusOK {
-		return fmt.Errorf("error force-deleting session %s: %s", sessionID, readBody(resp))
+	if resp.StatusCode == http.StatusNotFound {
+		resp.Body.Close()
+		return nil
 	}
+	if resp.StatusCode != http.StatusOK {
+		msg := readBody(resp)
+		resp.Body.Close()
+		if strings.Contains(strings.ToLower(msg), "not terminated") {
+			return c.forceDeleteStuckSession(ctx, sessionID)
+		}
+		return fmt.Errorf("error force-deleting session %s: %s", sessionID, msg)
+	}
+	resp.Body.Close()
 	return nil
+}
+
+var errSessionTerminationTimeout = errors.New("timed out waiting for session termination")
+
+// waitForSessionTerminal returns true when the row disappeared while waiting.
+func (c *Client) waitForSessionTerminal(ctx context.Context, sessionID string) (bool, error) {
+	timer := time.NewTimer(c.deleteTimeout)
+	defer timer.Stop()
+
+	for {
+		session, err := c.ReadSession(ctx, sessionID)
+		if err != nil {
+			return false, fmt.Errorf("checking termination of session %s: %w", sessionID, err)
+		}
+		if session == nil {
+			return true, nil
+		}
+
+		switch strings.ToLower(session.Status) {
+		case "terminated", "failed", "failed-to-restart", "marked-for-deletion":
+			return false, nil
+		}
+
+		select {
+		case <-ctx.Done():
+			return false, ctx.Err()
+		case <-timer.C:
+			return false, fmt.Errorf("%w: session %s is still %q", errSessionTerminationTimeout, sessionID, session.Status)
+		case <-time.After(c.deletePollInterval):
+		}
+	}
+}
+
+// forceDeleteStuckSession uses the same unconditional force-delete operation as
+// the Adaptive console. That endpoint performs its work asynchronously, so do
+// not return until the Terraform read confirms that the row is gone.
+func (c *Client) forceDeleteStuckSession(ctx context.Context, sessionID string) error {
+	body, err := encode(struct {
+		SessionID string `json:"SessionID"`
+	}{SessionID: sessionID})
+	if err != nil {
+		return err
+	}
+
+	resp, err := c.do(ctx, mustReq("POST", c.sessionForceDeleteAPI(), body))
+	if err != nil {
+		return err
+	}
+	if resp.StatusCode == http.StatusNotFound {
+		resp.Body.Close()
+		return nil
+	}
+	if resp.StatusCode != http.StatusOK {
+		msg := readBody(resp)
+		resp.Body.Close()
+		return fmt.Errorf("error force-deleting stuck session %s: %s", sessionID, msg)
+	}
+	resp.Body.Close()
+
+	timer := time.NewTimer(c.deleteTimeout)
+	defer timer.Stop()
+	for {
+		session, err := c.ReadSession(ctx, sessionID)
+		if err != nil {
+			return fmt.Errorf("checking force deletion of session %s: %w", sessionID, err)
+		}
+		if session == nil {
+			return nil
+		}
+
+		select {
+		case <-ctx.Done():
+			return ctx.Err()
+		case <-timer.C:
+			return fmt.Errorf("timed out waiting for force deletion of session %s", sessionID)
+		case <-time.After(c.deletePollInterval):
+		}
+	}
 }
 
 // readTyped performs a GET against a /read/:id route and decodes the response.
@@ -480,7 +600,15 @@ func readTyped[T any](c *Client, ctx context.Context, url, what, id string) (*T,
 	}
 	// Session read historically responds 202 Accepted; every other type uses 200.
 	if resp.StatusCode != http.StatusOK && resp.StatusCode != http.StatusAccepted {
-		return nil, fmt.Errorf("error reading %s %s: %s", what, id, readBody(resp))
+		body := readBody(resp)
+		// Older Terraform read handlers reported a missing object as 500 with a
+		// "not found" message rather than 404. Preserve idempotent refresh/delete
+		// behavior while those deployments are upgraded.
+		if resp.StatusCode == http.StatusInternalServerError &&
+			strings.Contains(strings.ToLower(body), "not found") {
+			return nil, nil
+		}
+		return nil, fmt.Errorf("error reading %s %s: %s", what, id, body)
 	}
 	out := new(T)
 	if err := json.NewDecoder(resp.Body).Decode(out); err != nil {
@@ -896,23 +1024,23 @@ func readBody(resp *http.Response) string {
 	return strings.TrimSpace(string(b))
 }
 
-// resolveToken mirrors the Terraform provider's token resolution: an explicit
-// token (raw, or JSON in either the deployments-config or simple shape), then
-// the ADAPTIVE_SVC_TOKEN / ADAPTIVE_URL environment variables, then a fallback
-// to ~/.adaptive/token.
+// resolveToken mirrors the Terraform provider's token resolution: non-empty
+// ADAPTIVE_SVC_TOKEN / ADAPTIVE_URL runtime overrides, then provider config,
+// then a fallback to ~/.adaptive/token.
 //
 // The environment is consulted here — at connection time — and not only via
 // the provider's config defaults, because config defaults are applied when the
 // program runs (check phase). Operations that run purely from state, like a
-// plain `pulumi refresh` of a stack whose provider was registered without
-// config (e.g. by `pulumi import`), never go through that phase and would
-// otherwise silently ignore the environment.
+// plain `pulumi refresh` never go through that phase and would otherwise reuse
+// the provider inputs saved by the last CI update, even when the local process
+// has explicitly selected a different Adaptive deployment.
 func resolveToken(serviceToken, workspaceURL string) (string, string, error) {
-	if serviceToken == "" {
-		serviceToken = os.Getenv("ADAPTIVE_SVC_TOKEN")
+	if runtimeToken := os.Getenv("ADAPTIVE_SVC_TOKEN"); strings.TrimSpace(runtimeToken) != "" {
+		serviceToken = runtimeToken
 	}
-	if workspaceURL == "" {
-		workspaceURL = os.Getenv("ADAPTIVE_URL")
+	runtimeURL := strings.TrimSpace(os.Getenv("ADAPTIVE_URL"))
+	if runtimeURL != "" {
+		workspaceURL = runtimeURL
 	}
 	if serviceToken == "" {
 		home, err := os.UserHomeDir()
@@ -937,13 +1065,13 @@ func resolveToken(serviceToken, workspaceURL string) (string, string, error) {
 	if err := json.Unmarshal([]byte(serviceToken), &deployments); err == nil && len(deployments.Deployments) > 0 {
 		for _, d := range deployments.Deployments {
 			if d.Default {
-				return d.Token, d.URL, nil
+				return d.Token, preferredRuntimeURL(runtimeURL, d.URL), nil
 			}
 		}
 		// Exactly one deployment: unambiguous even without a default marker.
 		if len(deployments.Deployments) == 1 {
 			for _, d := range deployments.Deployments {
-				return d.Token, d.URL, nil
+				return d.Token, preferredRuntimeURL(runtimeURL, d.URL), nil
 			}
 		}
 		// Multiple deployments and no default used to silently pick one at
@@ -969,9 +1097,16 @@ func resolveToken(serviceToken, workspaceURL string) (string, string, error) {
 		URL   string `json:"url"`
 	}
 	if err := json.Unmarshal([]byte(serviceToken), &simple); err == nil && simple.Token != "" {
-		return simple.Token, simple.URL, nil
+		return simple.Token, preferredRuntimeURL(runtimeURL, simple.URL), nil
 	}
 
 	// raw string
 	return strings.TrimSpace(serviceToken), workspaceURL, nil
+}
+
+func preferredRuntimeURL(runtimeURL, tokenURL string) string {
+	if runtimeURL != "" {
+		return runtimeURL
+	}
+	return tokenURL
 }

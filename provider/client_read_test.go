@@ -80,6 +80,15 @@ func TestReadNotFoundIsNilNil(t *testing.T) {
 	}
 }
 
+func TestReadLegacyNotFoundIsNilNil(t *testing.T) {
+	c, _ := newTestClient(t, func(w http.ResponseWriter, r *http.Request) {
+		http.Error(w, "session not found", http.StatusInternalServerError)
+	})
+	if r, err := c.ReadSession(context.Background(), "x"); r != nil || err != nil {
+		t.Errorf("ReadSession legacy not-found: got (%v, %v), want (nil, nil)", r, err)
+	}
+}
+
 func TestReadServerErrorIsError(t *testing.T) {
 	c, _ := newTestClient(t, func(w http.ResponseWriter, r *http.Request) {
 		w.WriteHeader(http.StatusInternalServerError)
