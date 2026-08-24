@@ -140,10 +140,21 @@ func (*Schedule) Read(ctx context.Context, req infer.ReadRequest[ScheduleArgs, S
 	if err != nil {
 		return infer.ReadResponse[ScheduleArgs, ScheduleState]{}, err
 	}
+	isImport := req.Inputs.Name == ""
 	if r == nil {
+		if isImport {
+			return infer.ReadResponse[ScheduleArgs, ScheduleState]{}, notFoundOnImport("schedule", req.ID)
+		}
+		// Deleted out-of-band: an empty response drops the resource from state.
 		return infer.ReadResponse[ScheduleArgs, ScheduleState]{}, nil
 	}
-	isImport := req.Inputs.Name == ""
+	// A 200 carrying no identity is not a real record — a server that answers
+	// unknown ids with a zero-valued body would otherwise fabricate a resource
+	// out of nothing. Only enforced on import, where there is no prior state to
+	// lose.
+	if isImport && r.Name == "" {
+		return infer.ReadResponse[ScheduleArgs, ScheduleState]{}, notFoundOnImport("schedule", req.ID)
+	}
 	inputs := applyScheduleRead(req.Inputs, r, isImport)
 	return infer.ReadResponse[ScheduleArgs, ScheduleState]{
 		ID:     req.ID,

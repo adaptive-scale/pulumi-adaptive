@@ -1,5 +1,7 @@
 package adaptive
 
+import "fmt"
+
 // Helpers shared by the per-resource Read implementations.
 //
 // Refresh policy: an optional input the user never set stays unset even when
@@ -226,4 +228,21 @@ func strPtrOrNil(s string) *string {
 		return nil
 	}
 	return &s
+}
+
+// notFoundOnImport is the error a Read returns when the object named by an
+// import does not exist.
+//
+// Refresh and import learn "it's gone" from the same 404 but need opposite
+// signals. Refresh wants an empty ReadResponse: the engine reads a blank ID as
+// "delete from state". Import cannot use that — its only existence check is a
+// nil output map, and infer always encodes the zero-valued inputs/state it is
+// handed into a non-nil map, so an empty response is indistinguishable from a
+// successful read of an object whose every field happens to be empty. The
+// engine then falls back to the ID the user typed and writes those empty inputs
+// into state, leaving a diff on every later preview. An error is the only signal
+// that fails the import.
+func notFoundOnImport(kind, id string) error {
+	return fmt.Errorf("cannot import %s %q: no such %s in this workspace "+
+		"(check the id, and that the service token targets the right workspace)", kind, id, kind)
 }

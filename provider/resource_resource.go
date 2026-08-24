@@ -258,16 +258,26 @@ func (*Resource) Read(ctx context.Context, req infer.ReadRequest[ResourceArgs, R
 	if err != nil {
 		return infer.ReadResponse[ResourceArgs, ResourceState]{}, err
 	}
-	if r == nil {
-		// Deleted out-of-band: an empty response drops the resource from state.
-		return infer.ReadResponse[ResourceArgs, ResourceState]{}, nil
-	}
-
 	// On import there are no prior inputs to reconcile against, so everything is
 	// taken from the server. On refresh we start from what the program wrote and
 	// overwrite only what the server actually reports, which is what keeps the
 	// credentials it withholds in state.
 	isImport := req.Inputs.Name == "" && req.Inputs.Type == ""
+
+	if r == nil {
+		if isImport {
+			return infer.ReadResponse[ResourceArgs, ResourceState]{}, notFoundOnImport("resource", req.ID)
+		}
+		// Deleted out-of-band: an empty response drops the resource from state.
+		return infer.ReadResponse[ResourceArgs, ResourceState]{}, nil
+	}
+	// A 200 carrying no identity is not a real record — a server that answers
+	// unknown ids with a zero-valued body would otherwise fabricate a resource
+	// out of nothing. Only enforced on import, where there is no prior state to
+	// lose.
+	if isImport && r.Name == "" {
+		return infer.ReadResponse[ResourceArgs, ResourceState]{}, notFoundOnImport("resource", req.ID)
+	}
 
 	inputs := req.Inputs
 	if isImport {

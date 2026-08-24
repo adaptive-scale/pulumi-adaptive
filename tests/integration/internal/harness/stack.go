@@ -107,14 +107,25 @@ func AssertRefreshClean(t *testing.T, stack *auto.Stack) {
 // "adaptive:index:Endpoint".
 func ImportResource(t *testing.T, stack *auto.Stack, typ, name, id string) string {
 	t.Helper()
+	code, err := ImportResourceErr(t, stack, typ, name, id)
+	if err != nil {
+		t.Fatalf("pulumi import %s %s %s: %v", typ, name, id, err)
+	}
+	return code
+}
+
+// ImportResourceErr is ImportResource without the fatal: it hands the error
+// back so tests can assert that an import is *rejected*.
+func ImportResourceErr(t *testing.T, stack *auto.Stack, typ, name, id string) (string, error) {
+	t.Helper()
 	res, err := stack.ImportResources(context.Background(),
 		optimport.Resources([]*optimport.ImportResource{{Type: typ, Name: name, ID: id}}),
 		optimport.ProgressStreams(&logWriter{t}),
 	)
 	if err != nil {
-		t.Fatalf("pulumi import %s %s %s: %v", typ, name, id, err)
+		return "", err
 	}
-	return res.GeneratedCode
+	return res.GeneratedCode, nil
 }
 
 // Preview returns the per-op change counts a `pulumi preview` would apply.

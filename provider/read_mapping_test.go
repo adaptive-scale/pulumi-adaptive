@@ -166,12 +166,3 @@ func TestApplyScheduleReadNormalization(t *testing.T) {
 		t.Errorf("weekday drift missed: %v", got.Weekdays)
 	}
 }
-
-func TestReadDeletedSignalsEmptyResponse(t *testing.T) {
-	// applyXRead is only reached with a non-nil response; the Read methods
-	// return an empty ReadResponse on nil. This is covered indirectly via
-	// client 404 tests; here we just pin the sentinel used for import detection.
-	if (EndpointArgs{}).Name != "" {
-		t.Fatal("zero-value sentinel broken")
-	}
-}

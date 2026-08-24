@@ -466,6 +466,19 @@ func (c *Client) DeleteSession(ctx context.Context, sessionID string) error {
 	return nil
 }
 
+// identifiedRead is implemented by the read responses that carry the server's
+// own id for the record, so readTyped can check that a 200 actually describes
+// the object that was asked for.
+type identifiedRead interface{ readID() string }
+
+func (r *SessionReadResponse) readID() string        { return r.ID }
+func (r *ResourceReadResponse) readID() string       { return r.ID }
+func (r *AuthorizationReadResponse) readID() string  { return r.ID }
+func (r *TeamReadResponse) readID() string           { return r.ID }
+func (r *ScriptReadResponse) readID() string         { return r.ID }
+func (r *ScheduleReadResponse) readID() string       { return r.ID }
+func (r *DataProtectionReadResponse) readID() string { return r.ID }
+
 // readTyped performs a GET against a /read/:id route and decodes the response.
 // Not-found (404) is reported as (nil, nil) so callers can treat it as "the
 // resource no longer exists" rather than a fault.
@@ -485,6 +498,15 @@ func readTyped[T any](c *Client, ctx context.Context, url, what, id string) (*T,
 	out := new(T)
 	if err := json.NewDecoder(resp.Body).Decode(out); err != nil {
 		return nil, fmt.Errorf("failed to decode %s read response: %w", what, err)
+	}
+	// Fail loudly if the server hands back a different record than the one asked
+	// for. Deliberately silent when the id is absent: older servers omit it, and
+	// treating that as not-found would delete live resources from state on
+	// refresh.
+	if v, ok := any(out).(identifiedRead); ok {
+		if got := v.readID(); got != "" && got != id {
+			return nil, fmt.Errorf("read of %s %s returned %s instead", what, id, got)
+		}
 	}
 	return out, nil
 }

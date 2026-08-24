@@ -208,3 +208,29 @@ func TestImportEndpoint(t *testing.T) {
 	assert.NotEmpty(t, generated, "import should generate program code")
 	assert.Contains(t, generated, epName, "generated code should carry the endpoint name")
 }
+
+// TestImportUnknownIDFails pins that an import naming an id the workspace does
+// not have is rejected outright. It used to succeed: the provider signalled
+// not-found with an empty ReadResponse, which the engine only honours for
+// refresh, so the bogus id landed in state with empty inputs and every later
+// preview showed a diff.
+func TestImportUnknownIDFails(t *testing.T) {
+	cfg := harness.RequireConfig(t)
+	_, stack := harness.DeployStack(t, cfg, stackName("import-bad"), func(ctx *pulumi.Context) error {
+		return nil
+	})
+
+	for _, typ := range []string{"adaptive:index:Endpoint", "adaptive:index:Resource"} {
+		t.Run(typ, func(t *testing.T) {
+			_, err := harness.ImportResourceErr(t, stack, typ, "nope", uniqueName("not-a-real-id"))
+			require.Error(t, err, "import of an unknown id must fail")
+			assert.Contains(t, err.Error(), "cannot import",
+				"the failure should name the id and say it does not exist")
+		})
+	}
+
+	// Nothing may have been written to state by the failed imports: the program
+	// is empty, so anything that had landed there would show up as a delete.
+	assert.Zero(t, harness.Preview(t, stack)["delete"],
+		"a rejected import must leave state untouched")
+}
