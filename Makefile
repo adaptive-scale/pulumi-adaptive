@@ -4,7 +4,7 @@ GOBIN     := $(shell go env GOPATH)/bin
 LDFLAGS   := -X github.com/adaptive-scale/pulumi-adaptive/provider.Version=$(VERSION)
 
 .PHONY: help build gen gen_dotnet build_go build_nodejs build_python build_dotnet \
-	build_sdks install clean test test-integration
+	build_sdks install clean test test-integration print-version
 
 help:
 	@echo "Targets:"
@@ -19,7 +19,13 @@ help:
 	@echo "  install       Build the plugin onto your PATH ($(GOBIN)) for use by Pulumi"
 	@echo "  test          Run provider unit tests and compile the Go SDK"
 	@echo "  test-integration  Deploy real resources and verify via the Client API (needs creds + install)"
+	@echo "  print-version Print the build version, for scripts and install instructions"
 	@echo "  clean         Remove build artifacts"
+
+# The single source of the version, so install instructions and scripts never
+# hardcode a tag that can drift from what is actually built.
+print-version:
+	@echo $(VERSION)
 
 # Compile the provider plugin binary.
 build:

@@ -6,36 +6,56 @@ layout: package
 
 ## Installation
 
-The Adaptive provider is available as a package in all Pulumi languages:
+The plugin binary needs no installation: it is resolved from this repository's
+GitHub releases through the schema's `pluginDownloadURL`
+(`github://api.github.com/adaptive-scale/pulumi-adaptive`).
 
-- JavaScript/TypeScript: [`@adaptive-scale/pulumi-adaptive`](https://www.npmjs.com/package/@adaptive-scale/pulumi-adaptive)
-- Python: [`pulumi_adaptive`](https://pypi.org/project/pulumi-adaptive/)
-- Go: [`github.com/adaptive-scale/pulumi-adaptive/sdk/go/adaptive`](https://pkg.go.dev/github.com/adaptive-scale/pulumi-adaptive/sdk)
-- .NET: [`AdaptiveScale.Adaptive`](https://www.nuget.org/packages/AdaptiveScale.Adaptive)
+The language SDKs are **not published to any package registry** — there is no npm,
+PyPI, or NuGet package. Install them from the repository instead.
 
-### Node.js (JavaScript/TypeScript)
-
-```bash
-npm install @adaptive-scale/pulumi-adaptive
-```
-
-### Python
+Where a command needs a version, take it from the build rather than typing one, so
+it cannot drift from what is actually released:
 
 ```bash
-pip install pulumi-adaptive
+VERSION=$(make -s print-version)
 ```
 
 ### Go
 
+Go resolves the version itself, from the `sdk/vX.Y.Z` tag the release publishes:
+
 ```bash
-go get github.com/adaptive-scale/pulumi-adaptive/sdk
+go get github.com/adaptive-scale/pulumi-adaptive/sdk@latest
+```
+
+### Python
+
+From the `sdk/python` subdirectory of a release tag:
+
+```bash
+pip install "pulumi_adaptive @ git+https://github.com/adaptive-scale/pulumi-adaptive.git@v$VERSION#subdirectory=sdk/python"
+```
+
+### Node.js (JavaScript/TypeScript)
+
+No published package, so build the SDK and install it from the local path:
+
+```bash
+make build_nodejs
+npm install /path/to/pulumi-adaptive/sdk/nodejs/bin
 ```
 
 ### .NET
 
-```bash
-dotnet add package AdaptiveScale.Adaptive
-```
+Likewise — `make build_dotnet` writes a `.nupkg` under `sdk/dotnet/bin`, which can
+be added as a local NuGet source.
+
+### Developing against an unreleased provider
+
+`make install` builds the plugin into `$(go env GOPATH)/bin` at the Makefile's
+version. Pulumi prefers an ambient plugin on `PATH` over a downloaded one and
+prints a warning naming the path it used — if that warning is absent, you are
+running a downloaded build rather than yours.
 
 ## Configuration
 

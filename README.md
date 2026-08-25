@@ -68,16 +68,34 @@ deletion) and `pulumi import` (see [Importing existing objects](#importing-exist
 
 ## Installation
 
-| Language | Package |
-|---|---|
-| TypeScript/JavaScript | `npm install @adaptive-scale/pulumi-adaptive` |
-| Python | `pip install pulumi-adaptive` |
-| Go | `go get github.com/adaptive-scale/pulumi-adaptive/sdk` |
-| .NET | `dotnet add package AdaptiveScale.Adaptive` |
-
 The plugin binary is downloaded automatically from this repo's GitHub releases
 (the schema's `pluginDownloadURL` points at
-`github://api.github.com/adaptive-scale/pulumi-adaptive`).
+`github://api.github.com/adaptive-scale/pulumi-adaptive`), so nothing needs
+installing for the provider itself.
+
+**No SDK is published to a package registry** — not npm, PyPI, or NuGet. Install
+from this repository:
+
+```bash
+# Go — the sdk/vX.Y.Z tag is what Go modules resolve
+go get github.com/adaptive-scale/pulumi-adaptive/sdk@latest
+
+# Python — from the sdk/python subdirectory of a release tag
+VERSION=$(make -s print-version)
+pip install "pulumi_adaptive @ git+https://github.com/adaptive-scale/pulumi-adaptive.git@v$VERSION#subdirectory=sdk/python"
+```
+
+Node.js and .NET have no published package, so build them from source and install
+from the local path:
+
+```bash
+make build_nodejs   # -> sdk/nodejs/bin, then: npm install <path-to>/sdk/nodejs/bin
+make build_dotnet   # -> a .nupkg under sdk/dotnet/bin, usable as a local NuGet source
+```
+
+For local development of the provider itself, `make install` puts the plugin on
+your `PATH` at the version in the Makefile; Pulumi prefers it over a downloaded
+one and says so in a warning.
 
 ## Configuration
 
@@ -98,17 +116,10 @@ export ADAPTIVE_URL="https://your-workspace"   # optional
 writes, in either the `{token,url}` or `{deployments:{...}}` shape; a
 multi-deployment config without a `default` is refused rather than guessed at.
 
-The provider takes **no Pulumi config**, deliberately. Pulumi persists provider
-config on the provider resource in the stack, so `adaptive:serviceToken` used to
-put the token in state — and being secret, it made the stack unreadable without
-its passphrase or KMS key. Two consequences: credentials never appear in state,
-and one process targets one workspace (there is no per-stack override, and no
-`Provider` type to construct explicitly).
-
-Upgrading from a version that had config: nothing breaks and no resource is
-replaced, but run `pulumi config rm adaptive:serviceToken` — the key is now
-ignored rather than rejected, and a stale secret left in `Pulumi.<stack>.yaml` is
-exactly what this change is meant to end.
+The provider takes no Pulumi config: the environment is the only way in, so
+credentials never reach stack state. One process therefore targets one workspace.
+See [Installation & configuration](docs/installation-configuration.md) for the
+reasoning and for upgrading from a version that had config.
 
 ## Usage
 
@@ -287,12 +298,13 @@ make install    # builds pulumi-resource-adaptive into $(go env GOPATH)/bin
 Push a `vX.Y.Z` tag. The release workflow then:
 
 1. builds the plugin binaries for every OS/arch with GoReleaser and attaches
-   them to a GitHub release (`pulumi-resource-adaptive-vX.Y.Z-<os>-<arch>.tar.gz`),
-2. regenerates the SDKs at the release version and publishes them to npm,
-   PyPI, and NuGet via `pulumi/pulumi-package-publisher`,
-3. tags `sdk/vX.Y.Z` so the Go SDK resolves.
+   them to a GitHub release (`pulumi-resource-adaptive-vX.Y.Z-<os>-<arch>.tar.gz`) —
+   this is what `pluginDownloadURL` resolves against,
+2. regenerates the SDKs at the release version and uploads them as workflow
+   artifacts,
+3. tags `sdk/vX.Y.Z` so `go get` resolves the Go SDK.
 
-It needs the `NPM_TOKEN`, `PYPI_API_TOKEN`, and `NUGET_PUBLISH_KEY` repo secrets.
+No SDK is published to a package registry, so no publishing secrets are needed.
 
 ## Status
 
