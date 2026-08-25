@@ -19,14 +19,6 @@ export class Provider extends pulumi.ProviderResource {
         return obj['__pulumiType'] === "pulumi:providers:" + Provider.__pulumiType;
     }
 
-    /**
-     * Service account token for authenticating with the Adaptive service. If not provided, the provider reads the token from the default adaptive-cli location (~/.adaptive/token).
-     */
-    declare public readonly serviceToken: pulumi.Output<string | undefined>;
-    /**
-     * The Adaptive workspace URL. Defaults to https://app.adaptive.live.
-     */
-    declare public readonly workspaceUrl: pulumi.Output<string | undefined>;
 
     /**
      * Create a Provider resource with the given unique name, arguments, and options.
@@ -39,12 +31,8 @@ export class Provider extends pulumi.ProviderResource {
         let resourceInputs: pulumi.Inputs = {};
         opts = opts || {};
         {
-            resourceInputs["serviceToken"] = (args?.serviceToken ? pulumi.secret(args.serviceToken) : undefined) ?? (utilities.getEnv("ADAPTIVE_SVC_TOKEN") || "");
-            resourceInputs["workspaceUrl"] = (args?.workspaceUrl) ?? (utilities.getEnv("ADAPTIVE_URL") || "https://app.adaptive.live");
         }
         opts = pulumi.mergeOptions(utilities.resourceOptsDefaults(), opts);
-        const secretOpts = { additionalSecretOutputs: ["serviceToken"] };
-        opts = pulumi.mergeOptions(opts, secretOpts);
         super(Provider.__pulumiType, name, resourceInputs, opts);
     }
 }
@@ -53,12 +41,4 @@ export class Provider extends pulumi.ProviderResource {
  * The set of arguments for constructing a Provider resource.
  */
 export interface ProviderArgs {
-    /**
-     * Service account token for authenticating with the Adaptive service. If not provided, the provider reads the token from the default adaptive-cli location (~/.adaptive/token).
-     */
-    serviceToken?: pulumi.Input<string>;
-    /**
-     * The Adaptive workspace URL. Defaults to https://app.adaptive.live.
-     */
-    workspaceUrl?: pulumi.Input<string>;
 }

@@ -55,6 +55,12 @@ namespace AdaptiveScale.Adaptive
         [Output("applicationName")]
         public Output<string?> ApplicationName { get; private set; } = null!;
 
+        /// <summary>
+        /// Opaque server fingerprints of the write-only secret fields as of the last write by this provider, used to detect out-of-band secret changes on refresh. Not comparable across resources or workspaces.
+        /// </summary>
+        [Output("appliedDigests")]
+        public Output<ImmutableDictionary<string, string>?> AppliedDigests { get; private set; } = null!;
+
         [Output("arn")]
         public Output<string?> Arn { get; private set; } = null!;
 
@@ -255,12 +261,6 @@ namespace AdaptiveScale.Adaptive
 
         [Output("publicKey")]
         public Output<string?> PublicKey { get; private set; } = null!;
-
-        /// <summary>
-        /// Opaque server fingerprints of the write-only secret fields, used to detect out-of-band secret changes on refresh. Not comparable across resources or workspaces.
-        /// </summary>
-        [Output("redactedDigests")]
-        public Output<ImmutableDictionary<string, string>?> RedactedDigests { get; private set; } = null!;
 
         [Output("region")]
         public Output<string?> Region { get; private set; } = null!;

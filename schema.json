@@ -43,31 +43,7 @@
       "respectSchemaVersion": true
     }
   },
-  "config": {
-    "variables": {
-      "serviceToken": {
-        "type": "string",
-        "description": "Service account token for authenticating with the Adaptive service. If not provided, the provider reads the token from the default adaptive-cli location (~/.adaptive/token).",
-        "default": "",
-        "defaultInfo": {
-          "environment": [
-            "ADAPTIVE_SVC_TOKEN"
-          ]
-        },
-        "secret": true
-      },
-      "workspaceUrl": {
-        "type": "string",
-        "description": "The Adaptive workspace URL. Defaults to https://app.adaptive.live.",
-        "default": "https://app.adaptive.live",
-        "defaultInfo": {
-          "environment": [
-            "ADAPTIVE_URL"
-          ]
-        }
-      }
-    }
-  },
+  "config": {},
   "types": {
     "adaptive:index:DataProtectionColumnMask": {
       "properties": {
@@ -125,54 +101,7 @@
       ]
     }
   },
-  "provider": {
-    "properties": {
-      "serviceToken": {
-        "type": "string",
-        "description": "Service account token for authenticating with the Adaptive service. If not provided, the provider reads the token from the default adaptive-cli location (~/.adaptive/token).",
-        "default": "",
-        "defaultInfo": {
-          "environment": [
-            "ADAPTIVE_SVC_TOKEN"
-          ]
-        },
-        "secret": true
-      },
-      "workspaceUrl": {
-        "type": "string",
-        "description": "The Adaptive workspace URL. Defaults to https://app.adaptive.live.",
-        "default": "https://app.adaptive.live",
-        "defaultInfo": {
-          "environment": [
-            "ADAPTIVE_URL"
-          ]
-        }
-      }
-    },
-    "inputProperties": {
-      "serviceToken": {
-        "type": "string",
-        "description": "Service account token for authenticating with the Adaptive service. If not provided, the provider reads the token from the default adaptive-cli location (~/.adaptive/token).",
-        "default": "",
-        "defaultInfo": {
-          "environment": [
-            "ADAPTIVE_SVC_TOKEN"
-          ]
-        },
-        "secret": true
-      },
-      "workspaceUrl": {
-        "type": "string",
-        "description": "The Adaptive workspace URL. Defaults to https://app.adaptive.live.",
-        "default": "https://app.adaptive.live",
-        "defaultInfo": {
-          "environment": [
-            "ADAPTIVE_URL"
-          ]
-        }
-      }
-    }
-  },
+  "provider": {},
   "resources": {
     "adaptive:index:Authorization": {
       "properties": {

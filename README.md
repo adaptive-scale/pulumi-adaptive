@@ -81,18 +81,34 @@ The plugin binary is downloaded automatically from this repo's GitHub releases
 
 ## Configuration
 
-Generate a service account token in the Adaptive console, then either:
+Generate a service account token in the Adaptive console, then set it in the
+environment:
 
 ```bash
-pulumi config set adaptive:serviceToken --secret <your-service-token>
+export ADAPTIVE_SVC_TOKEN="your-service-token"
+export ADAPTIVE_URL="https://your-workspace"   # optional
 ```
 
-or set the environment variables:
+| Env var | Default |
+|---|---|
+| `ADAPTIVE_SVC_TOKEN` | falls back to `~/.adaptive/token` |
+| `ADAPTIVE_URL` | `https://app.adaptive.live` |
 
-| Setting | Env var | Default |
-|---|---|---|
-| `serviceToken` | `ADAPTIVE_SVC_TOKEN` | falls back to `~/.adaptive/token` |
-| `workspaceUrl` | `ADAPTIVE_URL` | `https://app.adaptive.live` |
+`ADAPTIVE_SVC_TOKEN` may hold a raw token or the JSON that `adaptive login`
+writes, in either the `{token,url}` or `{deployments:{...}}` shape; a
+multi-deployment config without a `default` is refused rather than guessed at.
+
+The provider takes **no Pulumi config**, deliberately. Pulumi persists provider
+config on the provider resource in the stack, so `adaptive:serviceToken` used to
+put the token in state — and being secret, it made the stack unreadable without
+its passphrase or KMS key. Two consequences: credentials never appear in state,
+and one process targets one workspace (there is no per-stack override, and no
+`Provider` type to construct explicitly).
+
+Upgrading from a version that had config: nothing breaks and no resource is
+replaced, but run `pulumi config rm adaptive:serviceToken` — the key is now
+ignored rather than rejected, and a stale secret left in `Pulumi.<stack>.yaml` is
+exactly what this change is meant to end.
 
 ## Usage
 

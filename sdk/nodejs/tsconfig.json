@@ -20,8 +20,6 @@
     },
     "files": [
         "authorization.ts",
-        "config/index.ts",
-        "config/vars.ts",
         "dataProtection.ts",
         "endpoint.ts",
         "group.ts",

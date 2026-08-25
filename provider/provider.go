@@ -15,26 +15,28 @@ import (
 // Version is the provider version, overridable at build time via -ldflags.
 var Version = "0.2.0"
 
-// Config holds provider-level configuration. Values fall back to the
-// ADAPTIVE_SVC_TOKEN and ADAPTIVE_URL environment variables, matching the
-// Terraform provider.
-type Config struct {
-	ServiceToken string `pulumi:"serviceToken,optional" provider:"secret"`
-	WorkspaceURL string `pulumi:"workspaceUrl,optional"`
-}
+// The provider declares no configuration. Credentials come from the environment
+// (ADAPTIVE_SVC_TOKEN, ADAPTIVE_URL) or from ~/.adaptive/token — see
+// resolveToken.
+//
+// They used to be provider config, which Pulumi persists on the provider
+// resource in the stack. That put the service token in state, and because it was
+// marked secret the stack could not be read or exported without the passphrase
+// or KMS key. It also meant rotating the token diffed the provider resource,
+// which the infer layer reported as a replacement (pulumi-go-provider#409) and
+// the engine cascaded into recreating every resource in the stack — this file
+// used to carry a DiffConfig wrapper whose only job was to downgrade those
+// replacement diff kinds. Declaring no config removes the cause rather than the
+// symptom.
+//
+// Two consequences worth knowing. One process targets one workspace: there is no
+// per-stack override, because there is no config to put it in. And no Provider
+// type is generated in the SDKs, so an explicit provider instance is not
+// something a program can construct.
 
-func (c *Config) Annotate(a infer.Annotator) {
-	a.Describe(&c.ServiceToken, "Service account token for authenticating with the Adaptive service. "+
-		"If not provided, the provider reads the token from the default adaptive-cli location (~/.adaptive/token).")
-	a.SetDefault(&c.ServiceToken, "", "ADAPTIVE_SVC_TOKEN")
-	a.Describe(&c.WorkspaceURL, "The Adaptive workspace URL. Defaults to https://app.adaptive.live.")
-	a.SetDefault(&c.WorkspaceURL, "https://app.adaptive.live", "ADAPTIVE_URL")
-}
-
-// clientFromConfig builds an Adaptive API client from provider configuration.
+// clientFromConfig builds an Adaptive API client from the ambient environment.
 func clientFromConfig(ctx context.Context) (*Client, error) {
-	cfg := infer.GetConfig[Config](ctx)
-	token, url, err := resolveToken(cfg.ServiceToken, cfg.WorkspaceURL)
+	token, url, err := resolveToken()
 	if err != nil {
 		return nil, err
 	}
@@ -43,38 +45,7 @@ func clientFromConfig(ctx context.Context) (*Client, error) {
 
 // Provider builds the inferred Pulumi provider.
 func Provider() (p.Provider, error) {
-	prov, err := buildProvider()
-	if err != nil {
-		return prov, err
-	}
-
-	// Provider configuration is credentials plus the workspace URL. Changing
-	// either must reconfigure the provider in place — never replace the
-	// resources it manages. The infer layer reports every config change as a
-	// replacement (pulumi-go-provider#409), which the engine cascades into a
-	// full delete/recreate of the whole stack whenever the service token
-	// rotates or the provider version recorded in state differs from the SDK.
-	inner := prov.DiffConfig
-	prov.DiffConfig = func(ctx context.Context, req p.DiffRequest) (p.DiffResponse, error) {
-		resp, err := inner(ctx, req)
-		if err != nil {
-			return resp, err
-		}
-		resp.DeleteBeforeReplace = false
-		for key, d := range resp.DetailedDiff {
-			switch d.Kind {
-			case p.AddReplace:
-				d.Kind = p.Add
-			case p.DeleteReplace:
-				d.Kind = p.Delete
-			case p.UpdateReplace:
-				d.Kind = p.Update
-			}
-			resp.DetailedDiff[key] = d
-		}
-		return resp, nil
-	}
-	return prov, nil
+	return buildProvider()
 }
 
 func buildProvider() (p.Provider, error) {
@@ -124,7 +95,6 @@ func buildProvider() (p.Provider, error) {
 		// which infer would otherwise expose as the "provider" module. Remap it to
 		// the conventional "index" module so users write adaptive.NewResource(...).
 		WithModuleMap(map[tokens.ModuleName]tokens.ModuleName{"provider": "index"}).
-		WithConfig(infer.Config(Config{})).
 		WithResources(
 			infer.Resource(&Resource{}),
 			infer.Resource(&Endpoint{}),

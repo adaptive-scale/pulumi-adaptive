@@ -48,12 +48,19 @@ var readCases = []struct {
 }
 
 // newReadServer runs the real provider in-process against an httptest stand-in
-// for the Adaptive API. serviceToken is set explicitly so resolveToken never
-// falls back to ~/.adaptive/token on the developer's machine.
+// for the Adaptive API.
+//
+// The credentials go through the environment because that is now the only way in
+// — the provider declares no config. Setting the token explicitly also keeps
+// resolveToken from falling back to ~/.adaptive/token on the developer's
+// machine, which would point these tests at a real workspace.
 func newReadServer(t *testing.T, handler http.HandlerFunc) integration.Server {
 	t.Helper()
 	api := httptest.NewServer(handler)
 	t.Cleanup(api.Close)
+
+	t.Setenv("ADAPTIVE_SVC_TOKEN", "test-token")
+	t.Setenv("ADAPTIVE_URL", api.URL)
 
 	prov, err := Provider()
 	if err != nil {
@@ -62,12 +69,6 @@ func newReadServer(t *testing.T, handler http.HandlerFunc) integration.Server {
 	srv, err := integration.NewServer(context.Background(), "adaptive",
 		semver.MustParse("0.2.0"), integration.WithProvider(prov))
 	if err != nil {
-		t.Fatal(err)
-	}
-	if err := srv.Configure(p.ConfigureRequest{Args: property.NewMap(map[string]property.Value{
-		"serviceToken": property.New("test-token"),
-		"workspaceUrl": property.New(api.URL),
-	})}); err != nil {
 		t.Fatal(err)
 	}
 	return srv

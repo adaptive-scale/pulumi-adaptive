@@ -918,24 +918,20 @@ func readBody(resp *http.Response) string {
 	return strings.TrimSpace(string(b))
 }
 
-// resolveToken mirrors the Terraform provider's token resolution: an explicit
-// token (raw, or JSON in either the deployments-config or simple shape), then
-// the ADAPTIVE_SVC_TOKEN / ADAPTIVE_URL environment variables, then a fallback
-// to ~/.adaptive/token.
+// resolveToken resolves credentials at connection time: the ADAPTIVE_SVC_TOKEN
+// and ADAPTIVE_URL environment variables, falling back to ~/.adaptive/token. The
+// token may be raw, or JSON in either the deployments-config or the simple
+// {token,url} shape.
 //
-// The environment is consulted here — at connection time — and not only via
-// the provider's config defaults, because config defaults are applied when the
-// program runs (check phase). Operations that run purely from state, like a
-// plain `pulumi refresh` of a stack whose provider was registered without
-// config (e.g. by `pulumi import`), never go through that phase and would
-// otherwise silently ignore the environment.
-func resolveToken(serviceToken, workspaceURL string) (string, string, error) {
-	if serviceToken == "" {
-		serviceToken = os.Getenv("ADAPTIVE_SVC_TOKEN")
-	}
-	if workspaceURL == "" {
-		workspaceURL = os.Getenv("ADAPTIVE_URL")
-	}
+// This is the only source. Credentials used to also be provider config, but
+// Pulumi persists provider config in the stack, which put the token in state —
+// see the note in provider.go. Reading the environment at connection time rather
+// than through config defaults also means operations that run purely from state,
+// like a plain `pulumi refresh`, pick it up: config defaults are applied during
+// the program's check phase, which those never reach.
+func resolveToken() (string, string, error) {
+	serviceToken := os.Getenv("ADAPTIVE_SVC_TOKEN")
+	workspaceURL := os.Getenv("ADAPTIVE_URL")
 	if serviceToken == "" {
 		home, err := os.UserHomeDir()
 		if err != nil {

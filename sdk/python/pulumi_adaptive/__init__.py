@@ -16,14 +16,6 @@ from .schedule import *
 from .script import *
 from ._inputs import *
 from . import outputs
-
-# Make subpackages available:
-if typing.TYPE_CHECKING:
-    import pulumi_adaptive.config as __config
-    config = __config
-else:
-    config = _utilities.lazy_import('pulumi_adaptive.config')
-
 _utilities.register(
     resource_modules="""
 [
