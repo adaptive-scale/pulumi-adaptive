@@ -159,19 +159,36 @@ db = adaptive.Resource("db",
 
 **Secret drift detection.** The Adaptive API never returns secret values, but
 it returns an opaque server-side fingerprint per secret field
-(`redactedDigests` on resources, `commandDigest` on scripts). The provider
-records these in state and compares them on `pulumi refresh`: when a secret was
-changed out-of-band (e.g. rotated in the UI), refresh clears that field in
-state and the next `pulumi up` re-applies your program's value — shown as
-`[secret]`, never in plaintext. Notes:
+(`appliedDigests` on resources, `commandDigest` on scripts). The provider
+records the fingerprints as of its last write and compares them on
+`pulumi refresh`, so a secret rotated out-of-band (e.g. in the UI) shows up in
+the next preview on the argument it belongs to — as `[secret]`, never in
+plaintext. The argument name is what carries the information.
+
+What the preview then does depends on your program, because the platform stores
+the configuration as a single blob and every update replaces it whole:
+
+- the argument is in your program — the update re-applies your value.
+- it is not — the update clears it, because your program is the source of truth
+  for the whole resource. That has always been what an update does to an
+  argument you do not set; it is now visible beforehand instead of happening
+  silently on whatever unrelated `up` ran first.
+
+A secret *added* out-of-band is reported the same way. Notes:
 
 - Requires an Adaptive backend with digest support; against older servers,
   refresh keeps the prior value silently (previous behavior).
+- Nothing is reported on the first refresh after an import or a provider
+  upgrade: with no recorded fingerprints there is no baseline, so they are
+  recorded and compared from the next refresh on.
 - Fingerprints are HMACs under a server-held key (`ADAPTIVE_SECRET_DIGEST_KEY`)
   — they cannot be reversed or brute-forced, and rotating that key causes one
   self-healing drift cycle.
 - `pulumi import` cannot recover secret values: set them in config, and the
   first `pulumi up` re-establishes them; drift detection is active from then on.
+- A secret nested inside a structured field (the `adaptive_rdp` target list) is
+  reported as a warning naming the field rather than as a preview diff — there
+  is no single argument to attach it to.
 
 ## Importing existing objects
 
