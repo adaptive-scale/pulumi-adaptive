@@ -45,6 +45,10 @@ export class Resource extends pulumi.CustomResource {
     declare public readonly appKey: pulumi.Output<string | undefined>;
     declare public readonly applicationId: pulumi.Output<string | undefined>;
     declare public readonly applicationName: pulumi.Output<string | undefined>;
+    /**
+     * Opaque server fingerprints of the write-only secret fields as of the last write by this provider, used to detect out-of-band secret changes on refresh. Not comparable across resources or workspaces.
+     */
+    declare public /*out*/ readonly appliedDigests: pulumi.Output<{[key: string]: string} | undefined>;
     declare public readonly arn: pulumi.Output<string | undefined>;
     declare public readonly automationMode: pulumi.Output<string | undefined>;
     declare public readonly awsArn: pulumi.Output<string | undefined>;
@@ -116,10 +120,6 @@ export class Resource extends pulumi.CustomResource {
     declare public readonly proxysqlAdminUsername: pulumi.Output<string | undefined>;
     declare public readonly proxysqlHostgroupId: pulumi.Output<string | undefined>;
     declare public readonly publicKey: pulumi.Output<string | undefined>;
-    /**
-     * Opaque server fingerprints of the write-only secret fields, used to detect out-of-band secret changes on refresh. Not comparable across resources or workspaces.
-     */
-    declare public /*out*/ readonly redactedDigests: pulumi.Output<{[key: string]: string} | undefined>;
     declare public readonly region: pulumi.Output<string | undefined>;
     declare public readonly regionName: pulumi.Output<string | undefined>;
     declare public readonly resource: pulumi.Output<string | undefined>;
@@ -309,7 +309,7 @@ export class Resource extends pulumi.CustomResource {
             resourceInputs["warehouse"] = args?.warehouse;
             resourceInputs["webhookUrl"] = args?.webhookUrl ? pulumi.secret(args.webhookUrl) : undefined;
             resourceInputs["webuiPort"] = args?.webuiPort;
-            resourceInputs["redactedDigests"] = undefined /*out*/;
+            resourceInputs["appliedDigests"] = undefined /*out*/;
         } else {
             resourceInputs["accessControlGroup"] = undefined /*out*/;
             resourceInputs["accessControlMethod"] = undefined /*out*/;
@@ -325,6 +325,7 @@ export class Resource extends pulumi.CustomResource {
             resourceInputs["appKey"] = undefined /*out*/;
             resourceInputs["applicationId"] = undefined /*out*/;
             resourceInputs["applicationName"] = undefined /*out*/;
+            resourceInputs["appliedDigests"] = undefined /*out*/;
             resourceInputs["arn"] = undefined /*out*/;
             resourceInputs["automationMode"] = undefined /*out*/;
             resourceInputs["awsArn"] = undefined /*out*/;
@@ -390,7 +391,6 @@ export class Resource extends pulumi.CustomResource {
             resourceInputs["proxysqlAdminUsername"] = undefined /*out*/;
             resourceInputs["proxysqlHostgroupId"] = undefined /*out*/;
             resourceInputs["publicKey"] = undefined /*out*/;
-            resourceInputs["redactedDigests"] = undefined /*out*/;
             resourceInputs["region"] = undefined /*out*/;
             resourceInputs["regionName"] = undefined /*out*/;
             resourceInputs["resource"] = undefined /*out*/;

@@ -29,6 +29,8 @@ type Resource struct {
 	AppKey              pulumi.StringPtrOutput `pulumi:"appKey"`
 	ApplicationId       pulumi.StringPtrOutput `pulumi:"applicationId"`
 	ApplicationName     pulumi.StringPtrOutput `pulumi:"applicationName"`
+	// Opaque server fingerprints of the write-only secret fields as of the last write by this provider, used to detect out-of-band secret changes on refresh. Not comparable across resources or workspaces.
+	AppliedDigests      pulumi.StringMapOutput `pulumi:"appliedDigests"`
 	Arn                 pulumi.StringPtrOutput `pulumi:"arn"`
 	AutomationMode      pulumi.StringPtrOutput `pulumi:"automationMode"`
 	AwsArn              pulumi.StringPtrOutput `pulumi:"awsArn"`
@@ -96,24 +98,22 @@ type Resource struct {
 	ProxysqlAdminUsername pulumi.StringPtrOutput `pulumi:"proxysqlAdminUsername"`
 	ProxysqlHostgroupId   pulumi.StringPtrOutput `pulumi:"proxysqlHostgroupId"`
 	PublicKey             pulumi.StringPtrOutput `pulumi:"publicKey"`
-	// Opaque server fingerprints of the write-only secret fields, used to detect out-of-band secret changes on refresh. Not comparable across resources or workspaces.
-	RedactedDigests    pulumi.StringMapOutput `pulumi:"redactedDigests"`
-	Region             pulumi.StringPtrOutput `pulumi:"region"`
-	RegionName         pulumi.StringPtrOutput `pulumi:"regionName"`
-	Resource           pulumi.StringPtrOutput `pulumi:"resource"`
-	Role               pulumi.StringPtrOutput `pulumi:"role"`
-	RootCert           pulumi.StringPtrOutput `pulumi:"rootCert"`
-	Schema             pulumi.StringPtrOutput `pulumi:"schema"`
-	Script             pulumi.StringPtrOutput `pulumi:"script"`
-	SecretAccessKey    pulumi.StringPtrOutput `pulumi:"secretAccessKey"`
-	SecretId           pulumi.StringPtrOutput `pulumi:"secretId"`
-	ServiceAccount     pulumi.StringPtrOutput `pulumi:"serviceAccount"`
-	ServiceAccountName pulumi.StringPtrOutput `pulumi:"serviceAccountName"`
-	ServiceName        pulumi.StringPtrOutput `pulumi:"serviceName"`
-	SharedSecret       pulumi.StringPtrOutput `pulumi:"sharedSecret"`
-	SslMode            pulumi.StringPtrOutput `pulumi:"sslMode"`
-	Storage            pulumi.StringPtrOutput `pulumi:"storage"`
-	SubSystemName      pulumi.StringPtrOutput `pulumi:"subSystemName"`
+	Region                pulumi.StringPtrOutput `pulumi:"region"`
+	RegionName            pulumi.StringPtrOutput `pulumi:"regionName"`
+	Resource              pulumi.StringPtrOutput `pulumi:"resource"`
+	Role                  pulumi.StringPtrOutput `pulumi:"role"`
+	RootCert              pulumi.StringPtrOutput `pulumi:"rootCert"`
+	Schema                pulumi.StringPtrOutput `pulumi:"schema"`
+	Script                pulumi.StringPtrOutput `pulumi:"script"`
+	SecretAccessKey       pulumi.StringPtrOutput `pulumi:"secretAccessKey"`
+	SecretId              pulumi.StringPtrOutput `pulumi:"secretId"`
+	ServiceAccount        pulumi.StringPtrOutput `pulumi:"serviceAccount"`
+	ServiceAccountName    pulumi.StringPtrOutput `pulumi:"serviceAccountName"`
+	ServiceName           pulumi.StringPtrOutput `pulumi:"serviceName"`
+	SharedSecret          pulumi.StringPtrOutput `pulumi:"sharedSecret"`
+	SslMode               pulumi.StringPtrOutput `pulumi:"sslMode"`
+	Storage               pulumi.StringPtrOutput `pulumi:"storage"`
+	SubSystemName         pulumi.StringPtrOutput `pulumi:"subSystemName"`
 	// Optional tags.
 	Tags          pulumi.StringArrayOutput `pulumi:"tags"`
 	Targets       pulumi.StringPtrOutput   `pulumi:"targets"`
@@ -715,6 +715,11 @@ func (o ResourceOutput) ApplicationName() pulumi.StringPtrOutput {
 	return o.ApplyT(func(v *Resource) pulumi.StringPtrOutput { return v.ApplicationName }).(pulumi.StringPtrOutput)
 }
 
+// Opaque server fingerprints of the write-only secret fields as of the last write by this provider, used to detect out-of-band secret changes on refresh. Not comparable across resources or workspaces.
+func (o ResourceOutput) AppliedDigests() pulumi.StringMapOutput {
+	return o.ApplyT(func(v *Resource) pulumi.StringMapOutput { return v.AppliedDigests }).(pulumi.StringMapOutput)
+}
+
 func (o ResourceOutput) Arn() pulumi.StringPtrOutput {
 	return o.ApplyT(func(v *Resource) pulumi.StringPtrOutput { return v.Arn }).(pulumi.StringPtrOutput)
 }
@@ -975,11 +980,6 @@ func (o ResourceOutput) ProxysqlHostgroupId() pulumi.StringPtrOutput {
 
 func (o ResourceOutput) PublicKey() pulumi.StringPtrOutput {
 	return o.ApplyT(func(v *Resource) pulumi.StringPtrOutput { return v.PublicKey }).(pulumi.StringPtrOutput)
-}
-
-// Opaque server fingerprints of the write-only secret fields, used to detect out-of-band secret changes on refresh. Not comparable across resources or workspaces.
-func (o ResourceOutput) RedactedDigests() pulumi.StringMapOutput {
-	return o.ApplyT(func(v *Resource) pulumi.StringMapOutput { return v.RedactedDigests }).(pulumi.StringMapOutput)
 }
 
 func (o ResourceOutput) Region() pulumi.StringPtrOutput {

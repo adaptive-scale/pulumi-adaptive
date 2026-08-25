@@ -609,6 +609,13 @@
         "applicationName": {
           "type": "string"
         },
+        "appliedDigests": {
+          "type": "object",
+          "additionalProperties": {
+            "type": "string"
+          },
+          "description": "Opaque server fingerprints of the write-only secret fields as of the last write by this provider, used to detect out-of-band secret changes on refresh. Not comparable across resources or workspaces."
+        },
         "arn": {
           "type": "string"
         },
@@ -824,13 +831,6 @@
         },
         "publicKey": {
           "type": "string"
-        },
-        "redactedDigests": {
-          "type": "object",
-          "additionalProperties": {
-            "type": "string"
-          },
-          "description": "Opaque server fingerprints of the write-only secret fields, used to detect out-of-band secret changes on refresh. Not comparable across resources or workspaces."
         },
         "region": {
           "type": "string"

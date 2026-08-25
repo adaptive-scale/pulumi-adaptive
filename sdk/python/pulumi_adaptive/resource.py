@@ -1923,7 +1923,7 @@ class Resource(pulumi.CustomResource):
             __props__.__dict__["warehouse"] = warehouse
             __props__.__dict__["webhook_url"] = None if webhook_url is None else pulumi.Output.secret(webhook_url)
             __props__.__dict__["webui_port"] = webui_port
-            __props__.__dict__["redacted_digests"] = None
+            __props__.__dict__["applied_digests"] = None
         secret_opts = pulumi.ResourceOptions(additional_secret_outputs=["apiClientSecret", "apiKey", "apiSecret", "apiToken", "appKey", "clientCert", "clientCertificate", "clientConfiguration", "clientKey", "clientSecret", "clientcert", "clusterToken", "credentialJson", "databasePassword", "ddApiKey", "key", "keyFile", "ldapSearchBindPassword", "password", "privateKey", "proxysqlAdminPassword", "secretAccessKey", "secretId", "sharedSecret", "targets", "tlsKeyFile", "token", "tokenId", "uri", "webhookUrl"])
         opts = pulumi.ResourceOptions.merge(opts, secret_opts)
         super(Resource, __self__).__init__(
@@ -1962,6 +1962,7 @@ class Resource(pulumi.CustomResource):
         __props__.__dict__["app_key"] = None
         __props__.__dict__["application_id"] = None
         __props__.__dict__["application_name"] = None
+        __props__.__dict__["applied_digests"] = None
         __props__.__dict__["arn"] = None
         __props__.__dict__["automation_mode"] = None
         __props__.__dict__["aws_arn"] = None
@@ -2027,7 +2028,6 @@ class Resource(pulumi.CustomResource):
         __props__.__dict__["proxysql_admin_username"] = None
         __props__.__dict__["proxysql_hostgroup_id"] = None
         __props__.__dict__["public_key"] = None
-        __props__.__dict__["redacted_digests"] = None
         __props__.__dict__["region"] = None
         __props__.__dict__["region_name"] = None
         __props__.__dict__["resource"] = None
@@ -2142,6 +2142,14 @@ class Resource(pulumi.CustomResource):
     @pulumi.getter(name="applicationName")
     def application_name(self) -> pulumi.Output[Optional[_builtins.str]]:
         return pulumi.get(self, "application_name")
+
+    @_builtins.property
+    @pulumi.getter(name="appliedDigests")
+    def applied_digests(self) -> pulumi.Output[Optional[Mapping[str, _builtins.str]]]:
+        """
+        Opaque server fingerprints of the write-only secret fields as of the last write by this provider, used to detect out-of-band secret changes on refresh. Not comparable across resources or workspaces.
+        """
+        return pulumi.get(self, "applied_digests")
 
     @_builtins.property
     @pulumi.getter
@@ -2473,14 +2481,6 @@ class Resource(pulumi.CustomResource):
     @pulumi.getter(name="publicKey")
     def public_key(self) -> pulumi.Output[Optional[_builtins.str]]:
         return pulumi.get(self, "public_key")
-
-    @_builtins.property
-    @pulumi.getter(name="redactedDigests")
-    def redacted_digests(self) -> pulumi.Output[Optional[Mapping[str, _builtins.str]]]:
-        """
-        Opaque server fingerprints of the write-only secret fields, used to detect out-of-band secret changes on refresh. Not comparable across resources or workspaces.
-        """
-        return pulumi.get(self, "redacted_digests")
 
     @_builtins.property
     @pulumi.getter
