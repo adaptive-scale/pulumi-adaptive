@@ -1,7 +1,7 @@
 {
   "name": "adaptive",
   "displayName": "Adaptive",
-  "version": "0.2.0",
+  "version": "0.3.0",
   "description": "A Pulumi provider for managing Adaptive (adaptive.live) infrastructure: resources, endpoints, authorizations, groups, and scripts.",
   "keywords": [
     "pulumi",

@@ -67,7 +67,7 @@ func newReadServer(t *testing.T, handler http.HandlerFunc) integration.Server {
 		t.Fatal(err)
 	}
 	srv, err := integration.NewServer(context.Background(), "adaptive",
-		semver.MustParse("0.2.0"), integration.WithProvider(prov))
+		semver.MustParse(Version), integration.WithProvider(prov))
 	if err != nil {
 		t.Fatal(err)
 	}

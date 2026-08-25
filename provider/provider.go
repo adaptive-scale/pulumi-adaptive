@@ -13,7 +13,7 @@ import (
 )
 
 // Version is the provider version, overridable at build time via -ldflags.
-var Version = "0.2.0"
+var Version = "0.3.0"
 
 // The provider declares no configuration. Credentials come from the environment
 // (ADAPTIVE_SVC_TOKEN, ADAPTIVE_URL) or from ~/.adaptive/token — see
