@@ -498,7 +498,8 @@
           "type": "string"
         },
         "accessKeyId": {
-          "type": "string"
+          "type": "string",
+          "secret": true
         },
         "annotations": {
           "type": "string"
@@ -585,7 +586,8 @@
           "secret": true
         },
         "clusterCert": {
-          "type": "string"
+          "type": "string",
+          "secret": true
         },
         "clusterToken": {
           "type": "string",
@@ -759,7 +761,8 @@
           "type": "string"
         },
         "publicKey": {
-          "type": "string"
+          "type": "string",
+          "secret": true
         },
         "region": {
           "type": "string"
@@ -774,7 +777,8 @@
           "type": "string"
         },
         "rootCert": {
-          "type": "string"
+          "type": "string",
+          "secret": true
         },
         "schema": {
           "type": "string"
@@ -830,7 +834,8 @@
           "type": "string"
         },
         "tlsCertFile": {
-          "type": "string"
+          "type": "string",
+          "secret": true
         },
         "tlsEnabled": {
           "type": "boolean"
@@ -840,7 +845,8 @@
           "secret": true
         },
         "tlsRootCert": {
-          "type": "string"
+          "type": "string",
+          "secret": true
         },
         "tlsSkipVerify": {
           "type": "boolean"
@@ -917,7 +923,8 @@
           "type": "string"
         },
         "accessKeyId": {
-          "type": "string"
+          "type": "string",
+          "secret": true
         },
         "annotations": {
           "type": "string"
@@ -997,7 +1004,8 @@
           "secret": true
         },
         "clusterCert": {
-          "type": "string"
+          "type": "string",
+          "secret": true
         },
         "clusterToken": {
           "type": "string",
@@ -1171,7 +1179,8 @@
           "type": "string"
         },
         "publicKey": {
-          "type": "string"
+          "type": "string",
+          "secret": true
         },
         "region": {
           "type": "string"
@@ -1186,7 +1195,8 @@
           "type": "string"
         },
         "rootCert": {
-          "type": "string"
+          "type": "string",
+          "secret": true
         },
         "schema": {
           "type": "string"
@@ -1242,7 +1252,8 @@
           "type": "string"
         },
         "tlsCertFile": {
-          "type": "string"
+          "type": "string",
+          "secret": true
         },
         "tlsEnabled": {
           "type": "boolean"
@@ -1252,7 +1263,8 @@
           "secret": true
         },
         "tlsRootCert": {
-          "type": "string"
+          "type": "string",
+          "secret": true
         },
         "tlsSkipVerify": {
           "type": "boolean"

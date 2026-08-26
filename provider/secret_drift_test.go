@@ -479,3 +479,50 @@ func TestResourceReadMigratesV1State(t *testing.T) {
 		t.Error("migrated state must not carry the old property forward")
 	}
 }
+
+// The server withholds more than passwords: configexport's key policy treats
+// cert, crt, accesskey and publickey material as secret too. Every such argument
+// has to be declared secret here as well, or the marker cannot be written to it
+// and the drift degrades to a warning — which is exactly what a `rootCert`
+// change on a postgres resource did:
+//
+//	warning: the secret behind rootCert changed outside this program, but it
+//	         maps to no single argument and so cannot be shown as a diff
+//
+// The message was wrong too: rootCert *does* map to an argument. It just was not
+// secret. Both halves are fixed; this pins the schema half.
+func TestServerWithheldArgumentsAreDeclaredSecret(t *testing.T) {
+	// Derived by cross-referencing every type's config keys against the server's
+	// classifier. Deliberately a concrete list rather than a copy of that
+	// classifier: a mirrored copy would rot silently, whereas a key the server
+	// starts withholding later shows up at runtime in the warning above.
+	cases := []struct{ integrationType, cfgKey, wantArg string }{
+		{"postgres", "rootCert", "tlsRootCert"},
+		{"cockroachdb", "rootCert", "tlsRootCert"},
+		{"proxysql", "rootCert", "rootCert"},
+		{"redis", "crtText", "tlsCertFile"},
+		{"kubernetes", "cacrt", "clusterCert"},
+		{"aws", "aws_access_key_id", "accessKeyId"},
+		{"mongodb_atlas", "public_key", "publicKey"},
+		// Already secret; here so the list reads as the whole policy.
+		{"postgres", "password", "password"},
+		{"postgres", "keyText", "tlsKeyFile"},
+		{"aws", "aws_secret_access_key", "secretAccessKey"},
+	}
+
+	for _, c := range cases {
+		t.Run(c.integrationType+"/"+c.cfgKey, func(t *testing.T) {
+			field, prop, ok := argForConfigKey(c.integrationType, c.cfgKey)
+			if !ok {
+				t.Fatalf("does not resolve to any argument")
+			}
+			if prop != c.wantArg {
+				t.Fatalf("resolves to %q, want %q", prop, c.wantArg)
+			}
+			if !argIsSecret(field) {
+				t.Errorf("argument %q is not declared secret, so a drifted %q can only be "+
+					"warned about, not shown as a diff", prop, c.cfgKey)
+			}
+		})
+	}
+}

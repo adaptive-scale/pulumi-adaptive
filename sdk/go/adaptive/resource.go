@@ -158,6 +158,9 @@ func NewResource(ctx *pulumi.Context,
 	if args.Type == nil {
 		return nil, errors.New("invalid value for required argument 'Type'")
 	}
+	if args.AccessKeyId != nil {
+		args.AccessKeyId = pulumi.ToSecret(args.AccessKeyId).(pulumi.StringPtrInput)
+	}
 	if args.ApiClientSecret != nil {
 		args.ApiClientSecret = pulumi.ToSecret(args.ApiClientSecret).(pulumi.StringPtrInput)
 	}
@@ -191,6 +194,9 @@ func NewResource(ctx *pulumi.Context,
 	if args.Clientcert != nil {
 		args.Clientcert = pulumi.ToSecret(args.Clientcert).(pulumi.StringPtrInput)
 	}
+	if args.ClusterCert != nil {
+		args.ClusterCert = pulumi.ToSecret(args.ClusterCert).(pulumi.StringPtrInput)
+	}
 	if args.ClusterToken != nil {
 		args.ClusterToken = pulumi.ToSecret(args.ClusterToken).(pulumi.StringPtrInput)
 	}
@@ -221,6 +227,12 @@ func NewResource(ctx *pulumi.Context,
 	if args.ProxysqlAdminPassword != nil {
 		args.ProxysqlAdminPassword = pulumi.ToSecret(args.ProxysqlAdminPassword).(pulumi.StringPtrInput)
 	}
+	if args.PublicKey != nil {
+		args.PublicKey = pulumi.ToSecret(args.PublicKey).(pulumi.StringPtrInput)
+	}
+	if args.RootCert != nil {
+		args.RootCert = pulumi.ToSecret(args.RootCert).(pulumi.StringPtrInput)
+	}
 	if args.SecretAccessKey != nil {
 		args.SecretAccessKey = pulumi.ToSecret(args.SecretAccessKey).(pulumi.StringPtrInput)
 	}
@@ -233,8 +245,14 @@ func NewResource(ctx *pulumi.Context,
 	if args.Targets != nil {
 		args.Targets = pulumi.ToSecret(args.Targets).(pulumi.StringPtrInput)
 	}
+	if args.TlsCertFile != nil {
+		args.TlsCertFile = pulumi.ToSecret(args.TlsCertFile).(pulumi.StringPtrInput)
+	}
 	if args.TlsKeyFile != nil {
 		args.TlsKeyFile = pulumi.ToSecret(args.TlsKeyFile).(pulumi.StringPtrInput)
+	}
+	if args.TlsRootCert != nil {
+		args.TlsRootCert = pulumi.ToSecret(args.TlsRootCert).(pulumi.StringPtrInput)
 	}
 	if args.Token != nil {
 		args.Token = pulumi.ToSecret(args.Token).(pulumi.StringPtrInput)
@@ -249,6 +267,7 @@ func NewResource(ctx *pulumi.Context,
 		args.WebhookUrl = pulumi.ToSecret(args.WebhookUrl).(pulumi.StringPtrInput)
 	}
 	secrets := pulumi.AdditionalSecretOutputs([]string{
+		"accessKeyId",
 		"apiClientSecret",
 		"apiKey",
 		"apiSecret",
@@ -260,6 +279,7 @@ func NewResource(ctx *pulumi.Context,
 		"clientKey",
 		"clientSecret",
 		"clientcert",
+		"clusterCert",
 		"clusterToken",
 		"credentialJson",
 		"databasePassword",
@@ -270,11 +290,15 @@ func NewResource(ctx *pulumi.Context,
 		"password",
 		"privateKey",
 		"proxysqlAdminPassword",
+		"publicKey",
+		"rootCert",
 		"secretAccessKey",
 		"secretId",
 		"sharedSecret",
 		"targets",
+		"tlsCertFile",
 		"tlsKeyFile",
+		"tlsRootCert",
 		"token",
 		"tokenId",
 		"uri",

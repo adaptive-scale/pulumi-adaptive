@@ -37,15 +37,15 @@ type ResourceArgs struct {
 	URL          *string `pulumi:"url,optional"`
 
 	// TLS / certs
-	RootCert    *string `pulumi:"rootCert,optional"`
-	TLSRootCert *string `pulumi:"tlsRootCert,optional"`
-	TLSCertFile *string `pulumi:"tlsCertFile,optional"`
+	RootCert    *string `pulumi:"rootCert,optional" provider:"secret"`
+	TLSRootCert *string `pulumi:"tlsRootCert,optional" provider:"secret"`
+	TLSCertFile *string `pulumi:"tlsCertFile,optional" provider:"secret"`
 	TLSKeyFile  *string `pulumi:"tlsKeyFile,optional" provider:"secret"`
 
 	// Kubernetes
 	ApiServer    *string `pulumi:"apiServer,optional"`
 	ClusterToken *string `pulumi:"clusterToken,optional" provider:"secret"`
-	ClusterCert  *string `pulumi:"clusterCert,optional"`
+	ClusterCert  *string `pulumi:"clusterCert,optional" provider:"secret"`
 	Namespace    *string `pulumi:"namespace,optional"`
 	Tolerations  *string `pulumi:"tolerations,optional"`
 	Annotations  *string `pulumi:"annotations,optional"`
@@ -54,7 +54,7 @@ type ResourceArgs struct {
 
 	// AWS
 	RegionName      *string `pulumi:"regionName,optional"`
-	AccessKeyID     *string `pulumi:"accessKeyId,optional"`
+	AccessKeyID     *string `pulumi:"accessKeyId,optional" provider:"secret"`
 	SecretAccessKey *string `pulumi:"secretAccessKey,optional" provider:"secret"`
 	Arn             *string `pulumi:"arn,optional"`
 	Region          *string `pulumi:"region,optional"`
@@ -90,7 +90,7 @@ type ResourceArgs struct {
 
 	// SSH
 	Key            *string `pulumi:"key,optional" provider:"secret"`
-	PublicKey      *string `pulumi:"publicKey,optional"`
+	PublicKey      *string `pulumi:"publicKey,optional" provider:"secret"`
 	OrganizationID *string `pulumi:"organizationId,optional"`
 
 	// Misc service fields
@@ -368,25 +368,42 @@ func (*Resource) Read(ctx context.Context, req infer.ReadRequest[ResourceArgs, R
 	// An empty recorded map (import, a resource predating this field, an older
 	// server) is seeded rather than reported: everything would look drifted.
 	if !isImport && len(r.RedactedDigests) > 0 && len(req.State.AppliedDigests) > 0 {
-		var unresolved []string
+		// Two different reasons a drifted key cannot be marked, kept apart
+		// because they mean different things to whoever reads the warning.
+		var unmapped []string  // names no single argument at all
+		var notSecret []string // names one, but the schema does not call it secret
 		for _, k := range driftedDigestKeys(req.State.AppliedDigests, r.RedactedDigests) {
-			field, _, ok := argForConfigKey(r.IntegrationType, k)
-			if !ok || !argIsSecret(field) {
-				unresolved = append(unresolved, k)
-				continue
+			field, prop, ok := argForConfigKey(r.IntegrationType, k)
+			switch {
+			case !ok:
+				unmapped = append(unmapped, k)
+			case !argIsSecret(field):
+				// Writing a fingerprint into an argument the schema shows in
+				// clear would render as the value turning into hex. The server
+				// withholding a key the provider does not treat as secret is a
+				// provider bug, so say so rather than blaming the shape of the
+				// key.
+				notSecret = append(notSecret, fmt.Sprintf("%s (argument %q)", k, prop))
+			default:
+				setArg(&inputs, field, r.RedactedDigests[k])
 			}
-			setArg(&inputs, field, r.RedactedDigests[k])
 		}
-		// Some keys name no single argument: the dotted and indexed paths the
-		// server emits for nested secrets, and the handful of config keys that
-		// mirror another (ssh writes the key material to both sshKey and
-		// password, and the read arm reconciles via sshKey). Reporting them by
-		// name keeps the drift visible rather than dropping it on the floor.
-		if len(unresolved) > 0 {
+		// The dotted and indexed paths the server emits for nested secrets, and
+		// the config keys that mirror another (ssh writes the key material to
+		// both sshKey and password, and the read arm reconciles via sshKey).
+		// Reporting them by name keeps the drift visible rather than dropping it.
+		if len(unmapped) > 0 {
 			p.GetLogger(ctx).Warningf(
 				"resource %q: the secret behind %s changed outside this program, but it maps "+
 					"to no single argument and so cannot be shown as a diff",
-				r.Name, strings.Join(unresolved, ", "))
+				r.Name, strings.Join(unmapped, ", "))
+		}
+		if len(notSecret) > 0 {
+			p.GetLogger(ctx).Warningf(
+				"resource %q: the secret behind %s changed outside this program, but that "+
+					"argument is not declared secret, so the change cannot be shown without "+
+					"printing a fingerprint in clear. This is a provider bug — please report it.",
+				r.Name, strings.Join(notSecret, ", "))
 		}
 	}
 
