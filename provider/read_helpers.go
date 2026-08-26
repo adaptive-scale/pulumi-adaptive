@@ -76,13 +76,31 @@ func sameSet(a, b []string) bool {
 	return true
 }
 
-// setList reconciles a set-valued input against the server value: when the
-// sets are equal the user's ordering is kept, otherwise the server value wins.
-func setList(prior, server []string) []string {
+// setList reconciles a set-valued input against the server value: when the sets
+// are equal the user's ordering is kept, otherwise the server value wins.
+//
+// An input the program left unset is the exception, and it is the same rule
+// strOpt and boolOpt already follow: the server populates several of these
+// itself — an endpoint's session users default to its creator — and writing that
+// back produces a diff on every preview that no apply can settle, because the
+// program will never contain the value. Import is the other exception: there
+// are no prior inputs to preserve, so the server view is the only one there is.
+//
+// The cost is that a list the program does not manage no longer reports
+// out-of-band membership changes. That is the trade this file's policy already
+// makes for every other optional input, and a silent diff nobody can resolve is
+// worse than a change nobody asked to track.
+func setList(prior, server []string, isImport bool) []string {
+	if isImport {
+		if len(server) == 0 {
+			return nil
+		}
+		return server
+	}
 	if sameSet(prior, server) {
 		return prior
 	}
-	if len(server) == 0 {
+	if len(prior) == 0 || len(server) == 0 {
 		return nil
 	}
 	return server
@@ -158,15 +176,15 @@ func applyEndpointRead(prior EndpointArgs, r *SessionReadResponse, isImport bool
 		a.IdleTimeout = strOpt(prior.IdleTimeout, r.IdleTimeout, isImport)
 	}
 
-	a.Users = setList(prior.Users, r.SessionUsers)
-	a.Groups = setList(prior.Groups, r.Groups)
+	a.Users = setList(prior.Users, r.SessionUsers, isImport)
+	a.Groups = setList(prior.Groups, r.Groups, isImport)
 	a.IsJitEnabled = boolOpt(prior.IsJitEnabled, r.IsJITEnabled, isImport)
-	a.JitApprovers = setList(prior.JitApprovers, r.AccessApprovers)
+	a.JitApprovers = setList(prior.JitApprovers, r.AccessApprovers, isImport)
 	a.PauseTimeout = strOpt(prior.PauseTimeout, r.PauseTimeout, isImport)
 	a.Memory = strOpt(prior.Memory, r.Memory, isImport)
 	a.CPU = strOpt(prior.CPU, r.CPU, isImport)
 	a.ScriptOnlyAccess = boolOpt(prior.ScriptOnlyAccess, r.ScriptOnlyAccess, isImport)
-	a.Tags = setList(prior.Tags, r.UserTags)
+	a.Tags = setList(prior.Tags, r.UserTags, isImport)
 	a.DisableOutputCapture = boolOpt(prior.DisableOutputCapture, r.DisableOutputCapture, isImport)
 	a.DisableDataStudio = boolOpt(prior.DisableDataStudio, r.DisableDataStudio, isImport)
 	a.DisableWebCli = boolOpt(prior.DisableWebCli, r.DisableWebCLI, isImport)
@@ -197,8 +215,8 @@ func applyTeamRead(prior GroupArgs, r *TeamReadResponse, isImport bool) GroupArg
 		a = GroupArgs{}
 	}
 	a.Name = r.Name
-	a.Members = setList(prior.Members, r.Members)
-	a.Endpoints = setList(prior.Endpoints, r.Endpoints)
+	a.Members = setList(prior.Members, r.Members, isImport)
+	a.Endpoints = setList(prior.Endpoints, r.Endpoints, isImport)
 	a.SlackChannelID = strOpt(prior.SlackChannelID, r.SlackChannelID, isImport)
 	return a
 }

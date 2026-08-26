@@ -331,7 +331,7 @@ func (*Resource) Read(ctx context.Context, req infer.ReadRequest[ResourceArgs, R
 	}
 	inputs.Name = r.Name
 	inputs.Type = providerType(r.IntegrationType)
-	inputs.Tags = setList(inputs.Tags, r.UserTags)
+	inputs.Tags = setList(inputs.Tags, r.UserTags, isImport)
 	inputs.DefaultCluster = strOpt(inputs.DefaultCluster, r.DefaultCluster, isImport)
 
 	applyIntegrationConfig(&inputs, r.IntegrationType, r.Configuration)

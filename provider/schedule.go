@@ -219,9 +219,9 @@ func applyScheduleRead(prior ScheduleArgs, r *ScheduleReadResponse, isImport boo
 		a.SpecificDates = r.SpecificDates
 	}
 
-	a.Users = setList(prior.Users, r.Users)
-	a.Teams = setList(prior.Teams, r.Teams)
-	a.Endpoints = setList(prior.Endpoints, r.Endpoints)
+	a.Users = setList(prior.Users, r.Users, isImport)
+	a.Teams = setList(prior.Teams, r.Teams, isImport)
+	a.Endpoints = setList(prior.Endpoints, r.Endpoints, isImport)
 
 	if !isImport && prior.ExpiresAt != nil && sameInstant(*prior.ExpiresAt, r.ExpiresAt) {
 		a.ExpiresAt = prior.ExpiresAt
