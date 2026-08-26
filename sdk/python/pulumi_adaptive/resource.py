@@ -1799,7 +1799,7 @@ class Resource(pulumi.CustomResource):
 
             __props__.__dict__["access_control_group"] = access_control_group
             __props__.__dict__["access_control_method"] = access_control_method
-            __props__.__dict__["access_key_id"] = access_key_id
+            __props__.__dict__["access_key_id"] = None if access_key_id is None else pulumi.Output.secret(access_key_id)
             __props__.__dict__["annotations"] = annotations
             __props__.__dict__["api_client_id"] = api_client_id
             __props__.__dict__["api_client_secret"] = None if api_client_secret is None else pulumi.Output.secret(api_client_secret)
@@ -1822,7 +1822,7 @@ class Resource(pulumi.CustomResource):
             __props__.__dict__["client_key"] = None if client_key is None else pulumi.Output.secret(client_key)
             __props__.__dict__["client_secret"] = None if client_secret is None else pulumi.Output.secret(client_secret)
             __props__.__dict__["clientcert"] = None if clientcert is None else pulumi.Output.secret(clientcert)
-            __props__.__dict__["cluster_cert"] = cluster_cert
+            __props__.__dict__["cluster_cert"] = None if cluster_cert is None else pulumi.Output.secret(cluster_cert)
             __props__.__dict__["cluster_token"] = None if cluster_token is None else pulumi.Output.secret(cluster_token)
             __props__.__dict__["connect_server_url"] = connect_server_url
             __props__.__dict__["cpu"] = cpu
@@ -1877,12 +1877,12 @@ class Resource(pulumi.CustomResource):
             __props__.__dict__["proxysql_admin_port"] = proxysql_admin_port
             __props__.__dict__["proxysql_admin_username"] = proxysql_admin_username
             __props__.__dict__["proxysql_hostgroup_id"] = proxysql_hostgroup_id
-            __props__.__dict__["public_key"] = public_key
+            __props__.__dict__["public_key"] = None if public_key is None else pulumi.Output.secret(public_key)
             __props__.__dict__["region"] = region
             __props__.__dict__["region_name"] = region_name
             __props__.__dict__["resource"] = resource
             __props__.__dict__["role"] = role
-            __props__.__dict__["root_cert"] = root_cert
+            __props__.__dict__["root_cert"] = None if root_cert is None else pulumi.Output.secret(root_cert)
             __props__.__dict__["schema"] = schema
             __props__.__dict__["script"] = script
             __props__.__dict__["secret_access_key"] = None if secret_access_key is None else pulumi.Output.secret(secret_access_key)
@@ -1898,10 +1898,10 @@ class Resource(pulumi.CustomResource):
             __props__.__dict__["targets"] = None if targets is None else pulumi.Output.secret(targets)
             __props__.__dict__["tenant_id"] = tenant_id
             __props__.__dict__["tls_ca_cert"] = tls_ca_cert
-            __props__.__dict__["tls_cert_file"] = tls_cert_file
+            __props__.__dict__["tls_cert_file"] = None if tls_cert_file is None else pulumi.Output.secret(tls_cert_file)
             __props__.__dict__["tls_enabled"] = tls_enabled
             __props__.__dict__["tls_key_file"] = None if tls_key_file is None else pulumi.Output.secret(tls_key_file)
-            __props__.__dict__["tls_root_cert"] = tls_root_cert
+            __props__.__dict__["tls_root_cert"] = None if tls_root_cert is None else pulumi.Output.secret(tls_root_cert)
             __props__.__dict__["tls_skip_verify"] = tls_skip_verify
             __props__.__dict__["token"] = None if token is None else pulumi.Output.secret(token)
             __props__.__dict__["token_id"] = None if token_id is None else pulumi.Output.secret(token_id)
@@ -1923,8 +1923,8 @@ class Resource(pulumi.CustomResource):
             __props__.__dict__["warehouse"] = warehouse
             __props__.__dict__["webhook_url"] = None if webhook_url is None else pulumi.Output.secret(webhook_url)
             __props__.__dict__["webui_port"] = webui_port
-            __props__.__dict__["redacted_digests"] = None
-        secret_opts = pulumi.ResourceOptions(additional_secret_outputs=["apiClientSecret", "apiKey", "apiSecret", "apiToken", "appKey", "clientCert", "clientCertificate", "clientConfiguration", "clientKey", "clientSecret", "clientcert", "clusterToken", "credentialJson", "databasePassword", "ddApiKey", "key", "keyFile", "ldapSearchBindPassword", "password", "privateKey", "proxysqlAdminPassword", "secretAccessKey", "secretId", "sharedSecret", "targets", "tlsKeyFile", "token", "tokenId", "uri", "webhookUrl"])
+            __props__.__dict__["applied_digests"] = None
+        secret_opts = pulumi.ResourceOptions(additional_secret_outputs=["accessKeyId", "apiClientSecret", "apiKey", "apiSecret", "apiToken", "appKey", "clientCert", "clientCertificate", "clientConfiguration", "clientKey", "clientSecret", "clientcert", "clusterCert", "clusterToken", "credentialJson", "databasePassword", "ddApiKey", "key", "keyFile", "ldapSearchBindPassword", "password", "privateKey", "proxysqlAdminPassword", "publicKey", "rootCert", "secretAccessKey", "secretId", "sharedSecret", "targets", "tlsCertFile", "tlsKeyFile", "tlsRootCert", "token", "tokenId", "uri", "webhookUrl"])
         opts = pulumi.ResourceOptions.merge(opts, secret_opts)
         super(Resource, __self__).__init__(
             'adaptive:index:Resource',
@@ -1962,6 +1962,7 @@ class Resource(pulumi.CustomResource):
         __props__.__dict__["app_key"] = None
         __props__.__dict__["application_id"] = None
         __props__.__dict__["application_name"] = None
+        __props__.__dict__["applied_digests"] = None
         __props__.__dict__["arn"] = None
         __props__.__dict__["automation_mode"] = None
         __props__.__dict__["aws_arn"] = None
@@ -2027,7 +2028,6 @@ class Resource(pulumi.CustomResource):
         __props__.__dict__["proxysql_admin_username"] = None
         __props__.__dict__["proxysql_hostgroup_id"] = None
         __props__.__dict__["public_key"] = None
-        __props__.__dict__["redacted_digests"] = None
         __props__.__dict__["region"] = None
         __props__.__dict__["region_name"] = None
         __props__.__dict__["resource"] = None
@@ -2142,6 +2142,14 @@ class Resource(pulumi.CustomResource):
     @pulumi.getter(name="applicationName")
     def application_name(self) -> pulumi.Output[Optional[_builtins.str]]:
         return pulumi.get(self, "application_name")
+
+    @_builtins.property
+    @pulumi.getter(name="appliedDigests")
+    def applied_digests(self) -> pulumi.Output[Optional[Mapping[str, _builtins.str]]]:
+        """
+        Opaque server fingerprints of the write-only secret fields as of the last write by this provider, used to detect out-of-band secret changes on refresh. Not comparable across resources or workspaces.
+        """
+        return pulumi.get(self, "applied_digests")
 
     @_builtins.property
     @pulumi.getter
@@ -2473,14 +2481,6 @@ class Resource(pulumi.CustomResource):
     @pulumi.getter(name="publicKey")
     def public_key(self) -> pulumi.Output[Optional[_builtins.str]]:
         return pulumi.get(self, "public_key")
-
-    @_builtins.property
-    @pulumi.getter(name="redactedDigests")
-    def redacted_digests(self) -> pulumi.Output[Optional[Mapping[str, _builtins.str]]]:
-        """
-        Opaque server fingerprints of the write-only secret fields, used to detect out-of-band secret changes on refresh. Not comparable across resources or workspaces.
-        """
-        return pulumi.get(self, "redacted_digests")
 
     @_builtins.property
     @pulumi.getter

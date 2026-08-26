@@ -37,15 +37,15 @@ type ResourceArgs struct {
 	URL          *string `pulumi:"url,optional"`
 
 	// TLS / certs
-	RootCert    *string `pulumi:"rootCert,optional"`
-	TLSRootCert *string `pulumi:"tlsRootCert,optional"`
-	TLSCertFile *string `pulumi:"tlsCertFile,optional"`
+	RootCert    *string `pulumi:"rootCert,optional" provider:"secret"`
+	TLSRootCert *string `pulumi:"tlsRootCert,optional" provider:"secret"`
+	TLSCertFile *string `pulumi:"tlsCertFile,optional" provider:"secret"`
 	TLSKeyFile  *string `pulumi:"tlsKeyFile,optional" provider:"secret"`
 
 	// Kubernetes
 	ApiServer    *string `pulumi:"apiServer,optional"`
 	ClusterToken *string `pulumi:"clusterToken,optional" provider:"secret"`
-	ClusterCert  *string `pulumi:"clusterCert,optional"`
+	ClusterCert  *string `pulumi:"clusterCert,optional" provider:"secret"`
 	Namespace    *string `pulumi:"namespace,optional"`
 	Tolerations  *string `pulumi:"tolerations,optional"`
 	Annotations  *string `pulumi:"annotations,optional"`
@@ -54,7 +54,7 @@ type ResourceArgs struct {
 
 	// AWS
 	RegionName      *string `pulumi:"regionName,optional"`
-	AccessKeyID     *string `pulumi:"accessKeyId,optional"`
+	AccessKeyID     *string `pulumi:"accessKeyId,optional" provider:"secret"`
 	SecretAccessKey *string `pulumi:"secretAccessKey,optional" provider:"secret"`
 	Arn             *string `pulumi:"arn,optional"`
 	Region          *string `pulumi:"region,optional"`
@@ -90,7 +90,7 @@ type ResourceArgs struct {
 
 	// SSH
 	Key            *string `pulumi:"key,optional" provider:"secret"`
-	PublicKey      *string `pulumi:"publicKey,optional"`
+	PublicKey      *string `pulumi:"publicKey,optional" provider:"secret"`
 	OrganizationID *string `pulumi:"organizationId,optional"`
 
 	// Misc service fields
@@ -177,7 +177,46 @@ type ResourceArgs struct {
 
 type ResourceState struct {
 	ResourceArgs
+	// AppliedDigests are the server's secret fingerprints as of our last
+	// successful write — deliberately NOT refreshed by Read. Refresh compares
+	// the live fingerprints against these; overwriting them on refresh (as the
+	// old redactedDigests field did) destroys the very evidence the comparison
+	// produced, which is why out-of-band secret changes never reached preview.
+	AppliedDigests map[string]string `pulumi:"appliedDigests,optional"`
+}
+
+// resourceStateV1 is the state shape written before appliedDigests replaced
+// redactedDigests. Old state carries a field the current struct does not have,
+// and infer refuses to decode an unrecognized property — without this migration
+// every stack created by an earlier provider fails to refresh with
+// "Unrecognized field 'redactedDigests'".
+type resourceStateV1 struct {
+	ResourceArgs
 	RedactedDigests map[string]string `pulumi:"redactedDigests,optional"`
+}
+
+// migrateResourceStateV1 carries the recorded fingerprints across the rename.
+//
+// The two fields do not mean quite the same thing — redactedDigests held what
+// the server reported at the last *read*, appliedDigests holds what it reported
+// after the last *write* — but adopting them is better than discarding them.
+// Dropping them would leave the baseline empty, which the seeding path treats as
+// "nothing recorded yet": correct, but it silently skips drift detection for one
+// refresh. Carrying them over means a secret changed since that last read is
+// reported immediately.
+func migrateResourceStateV1(ctx context.Context, v1 resourceStateV1) (infer.MigrationResult[ResourceState], error) {
+	return infer.MigrationResult[ResourceState]{
+		Result: &ResourceState{
+			ResourceArgs:   v1.ResourceArgs,
+			AppliedDigests: v1.RedactedDigests,
+		},
+	}, nil
+}
+
+func (*Resource) StateMigrations(context.Context) []infer.StateMigrationFunc[ResourceState] {
+	return []infer.StateMigrationFunc[ResourceState]{
+		infer.StateMigration(migrateResourceStateV1),
+	}
 }
 
 func (r *ResourceArgs) Annotate(a infer.Annotator) {
@@ -188,8 +227,9 @@ func (r *ResourceArgs) Annotate(a infer.Annotator) {
 }
 
 func (r *ResourceState) Annotate(a infer.Annotator) {
-	a.Describe(&r.RedactedDigests, "Opaque server fingerprints of the write-only secret fields, used to detect "+
-		"out-of-band secret changes on refresh. Not comparable across resources or workspaces.")
+	a.Describe(&r.AppliedDigests, "Opaque server fingerprints of the write-only secret fields as of the last "+
+		"write by this provider, used to detect out-of-band secret changes on refresh. Not comparable "+
+		"across resources or workspaces.")
 }
 
 func (*Resource) Create(ctx context.Context, req infer.CreateRequest[ResourceArgs]) (infer.CreateResponse[ResourceState], error) {
@@ -215,8 +255,11 @@ func (*Resource) Create(ctx context.Context, req infer.CreateRequest[ResourceArg
 	}
 	out.ID = resp.ID
 	// Best-effort: capture the server's secret fingerprints for drift detection.
+	// When this read fails the fingerprints stay unset, so the next refresh
+	// reports our own write as drift. It self-corrects on the next successful
+	// write and only ever over-reports, which is the safe direction.
 	if r, rerr := c.ReadResource(ctx, resp.ID); rerr == nil && r != nil {
-		out.Output.RedactedDigests = r.RedactedDigests
+		out.Output.AppliedDigests = r.RedactedDigests
 	}
 	return out, nil
 }
@@ -241,10 +284,13 @@ func (*Resource) Update(ctx context.Context, req infer.UpdateRequest[ResourceArg
 	if _, err := c.UpdateResource(ctx, req.ID, effType, yamlBytes, req.Inputs.Tags, sv(req.Inputs.DefaultCluster)); err != nil {
 		return out, err
 	}
-	// Best-effort: refresh the secret fingerprints after the write.
-	out.Output.RedactedDigests = req.State.RedactedDigests
+	// Best-effort: re-record the secret fingerprints after the write, so the
+	// drift this update just reconciled stops being reported. A failed read
+	// leaves the previous fingerprints in place and the next refresh re-reports
+	// the same drift — see the note in Create.
+	out.Output.AppliedDigests = req.State.AppliedDigests
 	if r, rerr := c.ReadResource(ctx, req.ID); rerr == nil && r != nil {
-		out.Output.RedactedDigests = r.RedactedDigests
+		out.Output.AppliedDigests = r.RedactedDigests
 	}
 	return out, nil
 }
@@ -258,16 +304,26 @@ func (*Resource) Read(ctx context.Context, req infer.ReadRequest[ResourceArgs, R
 	if err != nil {
 		return infer.ReadResponse[ResourceArgs, ResourceState]{}, err
 	}
-	if r == nil {
-		// Deleted out-of-band: an empty response drops the resource from state.
-		return infer.ReadResponse[ResourceArgs, ResourceState]{}, nil
-	}
-
 	// On import there are no prior inputs to reconcile against, so everything is
 	// taken from the server. On refresh we start from what the program wrote and
 	// overwrite only what the server actually reports, which is what keeps the
 	// credentials it withholds in state.
 	isImport := req.Inputs.Name == "" && req.Inputs.Type == ""
+
+	if r == nil {
+		if isImport {
+			return infer.ReadResponse[ResourceArgs, ResourceState]{}, notFoundOnImport("resource", req.ID)
+		}
+		// Deleted out-of-band: an empty response drops the resource from state.
+		return infer.ReadResponse[ResourceArgs, ResourceState]{}, nil
+	}
+	// A 200 carrying no identity is not a real record — a server that answers
+	// unknown ids with a zero-valued body would otherwise fabricate a resource
+	// out of nothing. Only enforced on import, where there is no prior state to
+	// lose.
+	if isImport && r.Name == "" {
+		return infer.ReadResponse[ResourceArgs, ResourceState]{}, notFoundOnImport("resource", req.ID)
+	}
 
 	inputs := req.Inputs
 	if isImport {
@@ -275,30 +331,81 @@ func (*Resource) Read(ctx context.Context, req infer.ReadRequest[ResourceArgs, R
 	}
 	inputs.Name = r.Name
 	inputs.Type = providerType(r.IntegrationType)
-	inputs.Tags = setList(inputs.Tags, r.UserTags)
+	inputs.Tags = setList(inputs.Tags, r.UserTags, isImport)
 	inputs.DefaultCluster = strOpt(inputs.DefaultCluster, r.DefaultCluster, isImport)
 
-	// Secret drift detection: the server withholds secret values but returns an
-	// opaque fingerprint per redacted key. A fingerprint that differs from the
-	// one recorded in state means the secret changed out-of-band — surface that
-	// by clearing the corresponding field (applyIntegrationConfig treats an
-	// empty value as "clear if previously set"), so the next preview shows the
-	// program's value being re-applied. Keys with no recorded fingerprint
-	// (import, first refresh after upgrade, old servers) are only recorded.
-	cfg := r.Configuration
-	if !isImport && len(r.RedactedDigests) > 0 && len(req.State.RedactedDigests) > 0 {
-		changed := changedDigestKeys(req.State.RedactedDigests, r.RedactedDigests)
-		if len(changed) > 0 {
-			cfg = make(map[string]any, len(r.Configuration)+len(changed))
-			for k, v := range r.Configuration {
-				cfg[k] = v
-			}
-			for _, k := range changed {
-				cfg[k] = ""
+	applyIntegrationConfig(&inputs, r.IntegrationType, r.Configuration)
+
+	// The applied fingerprints are recorded at write time and deliberately
+	// survive a refresh: they are the baseline the live fingerprints are
+	// compared against. The one exception is seeding — with nothing recorded
+	// there is no baseline, so adopt the current view and report nothing.
+	appliedDigests := req.State.AppliedDigests
+	if len(appliedDigests) == 0 {
+		appliedDigests = r.RedactedDigests
+	}
+
+	// Secret drift: the server withholds secret values but returns an opaque
+	// fingerprint per redacted key. A fingerprint that differs from the one
+	// recorded at our last write means the value changed out-of-band.
+	//
+	// The signal is the fingerprint written onto the argument it belongs to.
+	// Marking the argument rather than blanking it is what makes the drift
+	// reach preview at all: blanking only did anything when the program already
+	// set the field, so a secret the program does not manage drifted silently.
+	// The argument is secret-typed, so the marker renders as [secret] and no
+	// value is disclosed — the property name carries the information.
+	//
+	// What the marker produces:
+	//   - program sets the field  -> ~ password, and up re-applies its value
+	//   - program does not        -> - password, and up clears it server-side,
+	//                                because the program owns the whole config
+	//
+	// Nothing writes state inputs back to the server (Create and Update build
+	// from req.Inputs, the program's inputs), so a fingerprint sitting in a
+	// secret argument can never be applied as one.
+	//
+	// An empty recorded map (import, a resource predating this field, an older
+	// server) is seeded rather than reported: everything would look drifted.
+	if !isImport && len(r.RedactedDigests) > 0 && len(req.State.AppliedDigests) > 0 {
+		// Two different reasons a drifted key cannot be marked, kept apart
+		// because they mean different things to whoever reads the warning.
+		var unmapped []string  // names no single argument at all
+		var notSecret []string // names one, but the schema does not call it secret
+		for _, k := range driftedDigestKeys(req.State.AppliedDigests, r.RedactedDigests) {
+			field, prop, ok := argForConfigKey(r.IntegrationType, k)
+			switch {
+			case !ok:
+				unmapped = append(unmapped, k)
+			case !argIsSecret(field):
+				// Writing a fingerprint into an argument the schema shows in
+				// clear would render as the value turning into hex. The server
+				// withholding a key the provider does not treat as secret is a
+				// provider bug, so say so rather than blaming the shape of the
+				// key.
+				notSecret = append(notSecret, fmt.Sprintf("%s (argument %q)", k, prop))
+			default:
+				setArg(&inputs, field, r.RedactedDigests[k])
 			}
 		}
+		// The dotted and indexed paths the server emits for nested secrets, and
+		// the config keys that mirror another (ssh writes the key material to
+		// both sshKey and password, and the read arm reconciles via sshKey).
+		// Reporting them by name keeps the drift visible rather than dropping it.
+		if len(unmapped) > 0 {
+			p.GetLogger(ctx).Warningf(
+				"resource %q: the secret behind %s changed outside this program, but it maps "+
+					"to no single argument and so cannot be shown as a diff",
+				r.Name, strings.Join(unmapped, ", "))
+		}
+		if len(notSecret) > 0 {
+			p.GetLogger(ctx).Warningf(
+				"resource %q: the secret behind %s changed outside this program, but that "+
+					"argument is not declared secret, so the change cannot be shown without "+
+					"printing a fingerprint in clear. This is a provider bug — please report it.",
+				r.Name, strings.Join(notSecret, ", "))
+		}
 	}
-	applyIntegrationConfig(&inputs, r.IntegrationType, cfg)
 
 	if isImport && len(r.RedactedKeys) > 0 {
 		p.GetLogger(ctx).Warningf(
@@ -310,24 +417,32 @@ func (*Resource) Read(ctx context.Context, req infer.ReadRequest[ResourceArgs, R
 	return infer.ReadResponse[ResourceArgs, ResourceState]{
 		ID:     req.ID,
 		Inputs: inputs,
-		State:  ResourceState{ResourceArgs: inputs, RedactedDigests: r.RedactedDigests},
+		State:  ResourceState{ResourceArgs: inputs, AppliedDigests: appliedDigests},
 	}, nil
 }
 
-// changedDigestKeys returns the keys whose fingerprint differs between the
-// recorded and current digest maps. Keys present on only one side are not
-// drift: they appear when a secret field is added/removed by the program (the
-// regular config diff covers that) or when digests are recorded for the first
-// time.
-func changedDigestKeys(recorded, current map[string]string) []string {
-	var changed []string
+// driftedDigestKeys returns the keys whose fingerprint no longer matches the one
+// recorded at the last write — either because the value behind it changed, or
+// because the server now holds a secret where it recorded none.
+//
+// A key that only appeared since the last write used to be dismissed as "not
+// drift". It is drift: someone setting a password in the UI where there was
+// none is exactly the change an operator needs to see. The wholesale
+// empty-map guard at the call site is what keeps an import or a first refresh
+// after upgrade from reporting every key as new.
+//
+// Keys that disappeared are not reported: the secret is gone, there is nothing
+// to reconcile, and the ordinary config diff already covers a program removing
+// one.
+func driftedDigestKeys(applied, current map[string]string) []string {
+	var drifted []string
 	for k, cur := range current {
-		if prev, ok := recorded[k]; ok && prev != cur {
-			changed = append(changed, k)
+		if prev, ok := applied[k]; !ok || prev != cur {
+			drifted = append(drifted, k)
 		}
 	}
-	sort.Strings(changed)
-	return changed
+	sort.Strings(drifted)
+	return drifted
 }
 
 func (*Resource) Delete(ctx context.Context, req infer.DeleteRequest[ResourceState]) (infer.DeleteResponse, error) {

@@ -197,11 +197,21 @@ func (*Endpoint) Read(ctx context.Context, req infer.ReadRequest[EndpointArgs, E
 	if err != nil {
 		return infer.ReadResponse[EndpointArgs, EndpointState]{}, err
 	}
+	isImport := req.Inputs.Name == ""
 	if r == nil {
+		if isImport {
+			return infer.ReadResponse[EndpointArgs, EndpointState]{}, notFoundOnImport("endpoint", req.ID)
+		}
 		// Deleted out-of-band: an empty response drops the resource from state.
 		return infer.ReadResponse[EndpointArgs, EndpointState]{}, nil
 	}
-	isImport := req.Inputs.Name == ""
+	// A 200 carrying no identity is not a real record — a server that answers
+	// unknown ids with a zero-valued body would otherwise fabricate a resource
+	// out of nothing. Only enforced on import, where there is no prior state to
+	// lose.
+	if isImport && r.Name == "" {
+		return infer.ReadResponse[EndpointArgs, EndpointState]{}, notFoundOnImport("endpoint", req.ID)
+	}
 	inputs := applyEndpointRead(req.Inputs, r, isImport)
 	state := EndpointState{EndpointArgs: inputs}
 	fillEndpointOutputs(&state, r)
@@ -287,10 +297,21 @@ func (*Authorization) Read(ctx context.Context, req infer.ReadRequest[Authorizat
 	if err != nil {
 		return infer.ReadResponse[AuthorizationArgs, AuthorizationState]{}, err
 	}
+	isImport := req.Inputs.Name == ""
 	if r == nil {
+		if isImport {
+			return infer.ReadResponse[AuthorizationArgs, AuthorizationState]{}, notFoundOnImport("authorization", req.ID)
+		}
+		// Deleted out-of-band: an empty response drops the resource from state.
 		return infer.ReadResponse[AuthorizationArgs, AuthorizationState]{}, nil
 	}
-	isImport := req.Inputs.Name == ""
+	// A 200 carrying no identity is not a real record — a server that answers
+	// unknown ids with a zero-valued body would otherwise fabricate a resource
+	// out of nothing. Only enforced on import, where there is no prior state to
+	// lose.
+	if isImport && r.Name == "" {
+		return infer.ReadResponse[AuthorizationArgs, AuthorizationState]{}, notFoundOnImport("authorization", req.ID)
+	}
 	inputs := applyAuthorizationRead(req.Inputs, r, isImport)
 	return infer.ReadResponse[AuthorizationArgs, AuthorizationState]{
 		ID:     req.ID,
@@ -375,10 +396,21 @@ func (*Group) Read(ctx context.Context, req infer.ReadRequest[GroupArgs, GroupSt
 	if err != nil {
 		return infer.ReadResponse[GroupArgs, GroupState]{}, err
 	}
+	isImport := req.Inputs.Name == ""
 	if r == nil {
+		if isImport {
+			return infer.ReadResponse[GroupArgs, GroupState]{}, notFoundOnImport("group", req.ID)
+		}
+		// Deleted out-of-band: an empty response drops the resource from state.
 		return infer.ReadResponse[GroupArgs, GroupState]{}, nil
 	}
-	isImport := req.Inputs.Name == ""
+	// A 200 carrying no identity is not a real record — a server that answers
+	// unknown ids with a zero-valued body would otherwise fabricate a resource
+	// out of nothing. Only enforced on import, where there is no prior state to
+	// lose.
+	if isImport && r.Name == "" {
+		return infer.ReadResponse[GroupArgs, GroupState]{}, notFoundOnImport("group", req.ID)
+	}
 	inputs := applyTeamRead(req.Inputs, r, isImport)
 	return infer.ReadResponse[GroupArgs, GroupState]{
 		ID:     req.ID,
@@ -497,10 +529,21 @@ func (*Script) Read(ctx context.Context, req infer.ReadRequest[ScriptArgs, Scrip
 	if err != nil {
 		return infer.ReadResponse[ScriptArgs, ScriptState]{}, err
 	}
+	isImport := req.Inputs.Name == ""
 	if r == nil {
+		if isImport {
+			return infer.ReadResponse[ScriptArgs, ScriptState]{}, notFoundOnImport("script", req.ID)
+		}
+		// Deleted out-of-band: an empty response drops the resource from state.
 		return infer.ReadResponse[ScriptArgs, ScriptState]{}, nil
 	}
-	isImport := req.Inputs.Name == ""
+	// A 200 carrying no identity is not a real record — a server that answers
+	// unknown ids with a zero-valued body would otherwise fabricate a resource
+	// out of nothing. Only enforced on import, where there is no prior state to
+	// lose.
+	if isImport && r.Name == "" {
+		return infer.ReadResponse[ScriptArgs, ScriptState]{}, notFoundOnImport("script", req.ID)
+	}
 	inputs := applyScriptRead(req.Inputs, r, isImport)
 	// The script body is write-only, but the server returns an opaque
 	// fingerprint of it: a mismatch with the recorded one means the command

@@ -1,6 +1,8 @@
 package adaptive
 
 import (
+	"os"
+	"path/filepath"
 	"strings"
 	"testing"
 )
@@ -20,66 +22,82 @@ func TestNewClientURL(t *testing.T) {
 }
 
 func TestResolveToken(t *testing.T) {
+	// The token arrives through ADAPTIVE_SVC_TOKEN (or the token file) and may
+	// itself be JSON in either shape, so every case sets the environment — there
+	// is no explicit-argument path any more.
 	t.Run("raw string", func(t *testing.T) {
-		tok, url, err := resolveToken("rawtoken", "https://x")
+		t.Setenv("ADAPTIVE_SVC_TOKEN", "rawtoken")
+		t.Setenv("ADAPTIVE_URL", "https://x")
+		tok, url, err := resolveToken()
 		if err != nil || tok != "rawtoken" || url != "https://x" {
 			t.Fatalf("got (%q,%q,%v)", tok, url, err)
 		}
 	})
-	t.Run("simple json", func(t *testing.T) {
-		tok, url, err := resolveToken(`{"token":"t1","url":"u1"}`, "ignored")
+	t.Run("simple json carries its own url", func(t *testing.T) {
+		t.Setenv("ADAPTIVE_SVC_TOKEN", `{"token":"t1","url":"u1"}`)
+		t.Setenv("ADAPTIVE_URL", "")
+		tok, url, err := resolveToken()
 		if err != nil || tok != "t1" || url != "u1" {
 			t.Fatalf("got (%q,%q,%v)", tok, url, err)
 		}
 	})
 	t.Run("deployments json picks default", func(t *testing.T) {
-		in := `{"deployments":{"a":{"token":"ta","url":"ua","default":false},"b":{"token":"tb","url":"ub","default":true}}}`
-		tok, url, err := resolveToken(in, "ignored")
+		t.Setenv("ADAPTIVE_SVC_TOKEN",
+			`{"deployments":{"a":{"token":"ta","url":"ua","default":false},"b":{"token":"tb","url":"ub","default":true}}}`)
+		t.Setenv("ADAPTIVE_URL", "")
+		tok, url, err := resolveToken()
 		if err != nil || tok != "tb" || url != "ub" {
 			t.Fatalf("got (%q,%q,%v)", tok, url, err)
 		}
 	})
 	t.Run("single deployment needs no default marker", func(t *testing.T) {
-		in := `{"deployments":{"only":{"token":"t1","url":"u1"}}}`
-		tok, url, err := resolveToken(in, "ignored")
+		t.Setenv("ADAPTIVE_SVC_TOKEN", `{"deployments":{"only":{"token":"t1","url":"u1"}}}`)
+		t.Setenv("ADAPTIVE_URL", "")
+		tok, url, err := resolveToken()
 		if err != nil || tok != "t1" || url != "u1" {
 			t.Fatalf("got (%q,%q,%v)", tok, url, err)
 		}
 	})
 	t.Run("multiple deployments without default errors", func(t *testing.T) {
-		in := `{"deployments":{"demo":{"token":"td","url":"ud"},"staging":{"token":"ts","url":"us"}}}`
-		_, _, err := resolveToken(in, "ignored")
-		if err == nil {
+		// Picking one at map-iteration order would send credentials to whichever
+		// environment came up first, so this must refuse and name the choices.
+		t.Setenv("ADAPTIVE_SVC_TOKEN",
+			`{"deployments":{"demo":{"token":"td","url":"ud"},"staging":{"token":"ts","url":"us"}}}`)
+		t.Setenv("ADAPTIVE_URL", "")
+		if _, _, err := resolveToken(); err == nil {
 			t.Fatal("expected error for ambiguous deployments, got nil")
-		}
-		for _, want := range []string{"demo", "staging", "default"} {
-			if !strings.Contains(err.Error(), want) {
-				t.Errorf("error %q should mention %q", err, want)
+		} else {
+			for _, want := range []string{"demo", "staging", "default"} {
+				if !strings.Contains(err.Error(), want) {
+					t.Errorf("error %q should mention %q", err, want)
+				}
 			}
 		}
 	})
-	t.Run("env vars used when config is empty", func(t *testing.T) {
-		t.Setenv("ADAPTIVE_SVC_TOKEN", "env-token")
-		t.Setenv("ADAPTIVE_URL", "http://env-host:8080")
-		tok, url, err := resolveToken("", "")
-		if err != nil || tok != "env-token" || url != "http://env-host:8080" {
+	t.Run("falls back to the token file", func(t *testing.T) {
+		// One of only two ways to authenticate now that there is no config, so
+		// it is worth pinning rather than assuming.
+		home := t.TempDir()
+		if err := os.MkdirAll(filepath.Join(home, ".adaptive"), 0o755); err != nil {
+			t.Fatal(err)
+		}
+		if err := os.WriteFile(filepath.Join(home, ".adaptive", "token"), []byte("file-token"), 0o600); err != nil {
+			t.Fatal(err)
+		}
+		t.Setenv("HOME", home)
+		t.Setenv("ADAPTIVE_SVC_TOKEN", "")
+		t.Setenv("ADAPTIVE_URL", "https://from-env")
+
+		tok, url, err := resolveToken()
+		if err != nil || tok != "file-token" || url != "https://from-env" {
 			t.Fatalf("got (%q,%q,%v)", tok, url, err)
 		}
 	})
-	t.Run("explicit config beats env vars", func(t *testing.T) {
-		t.Setenv("ADAPTIVE_SVC_TOKEN", "env-token")
-		t.Setenv("ADAPTIVE_URL", "http://env-host:8080")
-		tok, url, err := resolveToken("explicit-token", "http://explicit:9090")
-		if err != nil || tok != "explicit-token" || url != "http://explicit:9090" {
-			t.Fatalf("got (%q,%q,%v)", tok, url, err)
-		}
-	})
-	t.Run("env token may itself be a deployments config", func(t *testing.T) {
-		t.Setenv("ADAPTIVE_SVC_TOKEN", `{"deployments":{"x":{"token":"tx","url":"ux","default":true}}}`)
-		t.Setenv("ADAPTIVE_URL", "")
-		tok, url, err := resolveToken("", "")
-		if err != nil || tok != "tx" || url != "ux" {
-			t.Fatalf("got (%q,%q,%v)", tok, url, err)
+	t.Run("no token anywhere is an error", func(t *testing.T) {
+		t.Setenv("HOME", t.TempDir())
+		t.Setenv("ADAPTIVE_SVC_TOKEN", "")
+		if _, _, err := resolveToken(); err == nil {
+			t.Fatal("expected an error when there is no token to be found")
 		}
 	})
 }

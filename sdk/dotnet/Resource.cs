@@ -55,6 +55,12 @@ namespace AdaptiveScale.Adaptive
         [Output("applicationName")]
         public Output<string?> ApplicationName { get; private set; } = null!;
 
+        /// <summary>
+        /// Opaque server fingerprints of the write-only secret fields as of the last write by this provider, used to detect out-of-band secret changes on refresh. Not comparable across resources or workspaces.
+        /// </summary>
+        [Output("appliedDigests")]
+        public Output<ImmutableDictionary<string, string>?> AppliedDigests { get; private set; } = null!;
+
         [Output("arn")]
         public Output<string?> Arn { get; private set; } = null!;
 
@@ -256,12 +262,6 @@ namespace AdaptiveScale.Adaptive
         [Output("publicKey")]
         public Output<string?> PublicKey { get; private set; } = null!;
 
-        /// <summary>
-        /// Opaque server fingerprints of the write-only secret fields, used to detect out-of-band secret changes on refresh. Not comparable across resources or workspaces.
-        /// </summary>
-        [Output("redactedDigests")]
-        public Output<ImmutableDictionary<string, string>?> RedactedDigests { get; private set; } = null!;
-
         [Output("region")]
         public Output<string?> Region { get; private set; } = null!;
 
@@ -423,6 +423,7 @@ namespace AdaptiveScale.Adaptive
                 PluginDownloadURL = "github://api.github.com/adaptive-scale/pulumi-adaptive",
                 AdditionalSecretOutputs =
                 {
+                    "accessKeyId",
                     "apiClientSecret",
                     "apiKey",
                     "apiSecret",
@@ -434,6 +435,7 @@ namespace AdaptiveScale.Adaptive
                     "clientKey",
                     "clientSecret",
                     "clientcert",
+                    "clusterCert",
                     "clusterToken",
                     "credentialJson",
                     "databasePassword",
@@ -444,11 +446,15 @@ namespace AdaptiveScale.Adaptive
                     "password",
                     "privateKey",
                     "proxysqlAdminPassword",
+                    "publicKey",
+                    "rootCert",
                     "secretAccessKey",
                     "secretId",
                     "sharedSecret",
                     "targets",
+                    "tlsCertFile",
                     "tlsKeyFile",
+                    "tlsRootCert",
                     "token",
                     "tokenId",
                     "uri",
@@ -483,7 +489,16 @@ namespace AdaptiveScale.Adaptive
         public Input<string>? AccessControlMethod { get; set; }
 
         [Input("accessKeyId")]
-        public Input<string>? AccessKeyId { get; set; }
+        private Input<string>? _accessKeyId;
+        public Input<string>? AccessKeyId
+        {
+            get => _accessKeyId;
+            set
+            {
+                var emptySecret = Output.CreateSecret(0);
+                _accessKeyId = Output.Tuple<Input<string>?, int>(value, emptySecret).Apply(t => t.Item1);
+            }
+        }
 
         [Input("annotations")]
         public Input<string>? Annotations { get; set; }
@@ -651,7 +666,16 @@ namespace AdaptiveScale.Adaptive
         }
 
         [Input("clusterCert")]
-        public Input<string>? ClusterCert { get; set; }
+        private Input<string>? _clusterCert;
+        public Input<string>? ClusterCert
+        {
+            get => _clusterCert;
+            set
+            {
+                var emptySecret = Output.CreateSecret(0);
+                _clusterCert = Output.Tuple<Input<string>?, int>(value, emptySecret).Apply(t => t.Item1);
+            }
+        }
 
         [Input("clusterToken")]
         private Input<string>? _clusterToken;
@@ -911,7 +935,16 @@ namespace AdaptiveScale.Adaptive
         public Input<string>? ProxysqlHostgroupId { get; set; }
 
         [Input("publicKey")]
-        public Input<string>? PublicKey { get; set; }
+        private Input<string>? _publicKey;
+        public Input<string>? PublicKey
+        {
+            get => _publicKey;
+            set
+            {
+                var emptySecret = Output.CreateSecret(0);
+                _publicKey = Output.Tuple<Input<string>?, int>(value, emptySecret).Apply(t => t.Item1);
+            }
+        }
 
         [Input("region")]
         public Input<string>? Region { get; set; }
@@ -926,7 +959,16 @@ namespace AdaptiveScale.Adaptive
         public Input<string>? Role { get; set; }
 
         [Input("rootCert")]
-        public Input<string>? RootCert { get; set; }
+        private Input<string>? _rootCert;
+        public Input<string>? RootCert
+        {
+            get => _rootCert;
+            set
+            {
+                var emptySecret = Output.CreateSecret(0);
+                _rootCert = Output.Tuple<Input<string>?, int>(value, emptySecret).Apply(t => t.Item1);
+            }
+        }
 
         [Input("schema")]
         public Input<string>? Schema { get; set; }
@@ -1019,7 +1061,16 @@ namespace AdaptiveScale.Adaptive
         public Input<string>? TlsCaCert { get; set; }
 
         [Input("tlsCertFile")]
-        public Input<string>? TlsCertFile { get; set; }
+        private Input<string>? _tlsCertFile;
+        public Input<string>? TlsCertFile
+        {
+            get => _tlsCertFile;
+            set
+            {
+                var emptySecret = Output.CreateSecret(0);
+                _tlsCertFile = Output.Tuple<Input<string>?, int>(value, emptySecret).Apply(t => t.Item1);
+            }
+        }
 
         [Input("tlsEnabled")]
         public Input<bool>? TlsEnabled { get; set; }
@@ -1037,7 +1088,16 @@ namespace AdaptiveScale.Adaptive
         }
 
         [Input("tlsRootCert")]
-        public Input<string>? TlsRootCert { get; set; }
+        private Input<string>? _tlsRootCert;
+        public Input<string>? TlsRootCert
+        {
+            get => _tlsRootCert;
+            set
+            {
+                var emptySecret = Output.CreateSecret(0);
+                _tlsRootCert = Output.Tuple<Input<string>?, int>(value, emptySecret).Apply(t => t.Item1);
+            }
+        }
 
         [Input("tlsSkipVerify")]
         public Input<bool>? TlsSkipVerify { get; set; }

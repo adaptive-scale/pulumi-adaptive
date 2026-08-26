@@ -18,47 +18,11 @@ __all__ = ['ProviderArgs', 'Provider']
 
 @pulumi.input_type
 class ProviderArgs:
-    def __init__(__self__, *,
-                 service_token: Optional[pulumi.Input[_builtins.str]] = None,
-                 workspace_url: Optional[pulumi.Input[_builtins.str]] = None):
+    def __init__(__self__):
         """
         The set of arguments for constructing a Provider resource.
-
-        :param pulumi.Input[_builtins.str] service_token: Service account token for authenticating with the Adaptive service. If not provided, the provider reads the token from the default adaptive-cli location (~/.adaptive/token).
-        :param pulumi.Input[_builtins.str] workspace_url: The Adaptive workspace URL. Defaults to https://app.adaptive.live.
         """
-        if service_token is None:
-            service_token = (_utilities.get_env('ADAPTIVE_SVC_TOKEN') or '')
-        if service_token is not None:
-            pulumi.set(__self__, "service_token", service_token)
-        if workspace_url is None:
-            workspace_url = (_utilities.get_env('ADAPTIVE_URL') or 'https://app.adaptive.live')
-        if workspace_url is not None:
-            pulumi.set(__self__, "workspace_url", workspace_url)
-
-    @_builtins.property
-    @pulumi.getter(name="serviceToken")
-    def service_token(self) -> Optional[pulumi.Input[_builtins.str]]:
-        """
-        Service account token for authenticating with the Adaptive service. If not provided, the provider reads the token from the default adaptive-cli location (~/.adaptive/token).
-        """
-        return pulumi.get(self, "service_token")
-
-    @service_token.setter
-    def service_token(self, value: Optional[pulumi.Input[_builtins.str]]):
-        pulumi.set(self, "service_token", value)
-
-    @_builtins.property
-    @pulumi.getter(name="workspaceUrl")
-    def workspace_url(self) -> Optional[pulumi.Input[_builtins.str]]:
-        """
-        The Adaptive workspace URL. Defaults to https://app.adaptive.live.
-        """
-        return pulumi.get(self, "workspace_url")
-
-    @workspace_url.setter
-    def workspace_url(self, value: Optional[pulumi.Input[_builtins.str]]):
-        pulumi.set(self, "workspace_url", value)
+        pass
 
 
 @pulumi.type_token("pulumi:providers:adaptive")
@@ -67,16 +31,12 @@ class Provider(pulumi.ProviderResource):
     def __init__(__self__,
                  resource_name: str,
                  opts: Optional[pulumi.ResourceOptions] = None,
-                 service_token: Optional[pulumi.Input[_builtins.str]] = None,
-                 workspace_url: Optional[pulumi.Input[_builtins.str]] = None,
                  __props__=None):
         """
         Create a Adaptive resource with the given unique name, props, and options.
 
         :param str resource_name: The name of the resource.
         :param pulumi.ResourceOptions opts: Options for the resource.
-        :param pulumi.Input[_builtins.str] service_token: Service account token for authenticating with the Adaptive service. If not provided, the provider reads the token from the default adaptive-cli location (~/.adaptive/token).
-        :param pulumi.Input[_builtins.str] workspace_url: The Adaptive workspace URL. Defaults to https://app.adaptive.live.
         """
         ...
     @overload
@@ -102,8 +62,6 @@ class Provider(pulumi.ProviderResource):
     def _internal_init(__self__,
                  resource_name: str,
                  opts: Optional[pulumi.ResourceOptions] = None,
-                 service_token: Optional[pulumi.Input[_builtins.str]] = None,
-                 workspace_url: Optional[pulumi.Input[_builtins.str]] = None,
                  __props__=None):
         opts = pulumi.ResourceOptions.merge(_utilities.get_resource_opts_defaults(), opts)
         if not isinstance(opts, pulumi.ResourceOptions):
@@ -113,33 +71,9 @@ class Provider(pulumi.ProviderResource):
                 raise TypeError('__props__ is only valid when passed in combination with a valid opts.id to get an existing resource')
             __props__ = ProviderArgs.__new__(ProviderArgs)
 
-            if service_token is None:
-                service_token = (_utilities.get_env('ADAPTIVE_SVC_TOKEN') or '')
-            __props__.__dict__["service_token"] = None if service_token is None else pulumi.Output.secret(service_token)
-            if workspace_url is None:
-                workspace_url = (_utilities.get_env('ADAPTIVE_URL') or 'https://app.adaptive.live')
-            __props__.__dict__["workspace_url"] = workspace_url
-        secret_opts = pulumi.ResourceOptions(additional_secret_outputs=["serviceToken"])
-        opts = pulumi.ResourceOptions.merge(opts, secret_opts)
         super(Provider, __self__).__init__(
             'adaptive',
             resource_name,
             __props__,
             opts)
-
-    @_builtins.property
-    @pulumi.getter(name="serviceToken")
-    def service_token(self) -> pulumi.Output[Optional[_builtins.str]]:
-        """
-        Service account token for authenticating with the Adaptive service. If not provided, the provider reads the token from the default adaptive-cli location (~/.adaptive/token).
-        """
-        return pulumi.get(self, "service_token")
-
-    @_builtins.property
-    @pulumi.getter(name="workspaceUrl")
-    def workspace_url(self) -> pulumi.Output[Optional[_builtins.str]]:
-        """
-        The Adaptive workspace URL. Defaults to https://app.adaptive.live.
-        """
-        return pulumi.get(self, "workspace_url")
 

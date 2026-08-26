@@ -29,6 +29,8 @@ type Resource struct {
 	AppKey              pulumi.StringPtrOutput `pulumi:"appKey"`
 	ApplicationId       pulumi.StringPtrOutput `pulumi:"applicationId"`
 	ApplicationName     pulumi.StringPtrOutput `pulumi:"applicationName"`
+	// Opaque server fingerprints of the write-only secret fields as of the last write by this provider, used to detect out-of-band secret changes on refresh. Not comparable across resources or workspaces.
+	AppliedDigests      pulumi.StringMapOutput `pulumi:"appliedDigests"`
 	Arn                 pulumi.StringPtrOutput `pulumi:"arn"`
 	AutomationMode      pulumi.StringPtrOutput `pulumi:"automationMode"`
 	AwsArn              pulumi.StringPtrOutput `pulumi:"awsArn"`
@@ -96,24 +98,22 @@ type Resource struct {
 	ProxysqlAdminUsername pulumi.StringPtrOutput `pulumi:"proxysqlAdminUsername"`
 	ProxysqlHostgroupId   pulumi.StringPtrOutput `pulumi:"proxysqlHostgroupId"`
 	PublicKey             pulumi.StringPtrOutput `pulumi:"publicKey"`
-	// Opaque server fingerprints of the write-only secret fields, used to detect out-of-band secret changes on refresh. Not comparable across resources or workspaces.
-	RedactedDigests    pulumi.StringMapOutput `pulumi:"redactedDigests"`
-	Region             pulumi.StringPtrOutput `pulumi:"region"`
-	RegionName         pulumi.StringPtrOutput `pulumi:"regionName"`
-	Resource           pulumi.StringPtrOutput `pulumi:"resource"`
-	Role               pulumi.StringPtrOutput `pulumi:"role"`
-	RootCert           pulumi.StringPtrOutput `pulumi:"rootCert"`
-	Schema             pulumi.StringPtrOutput `pulumi:"schema"`
-	Script             pulumi.StringPtrOutput `pulumi:"script"`
-	SecretAccessKey    pulumi.StringPtrOutput `pulumi:"secretAccessKey"`
-	SecretId           pulumi.StringPtrOutput `pulumi:"secretId"`
-	ServiceAccount     pulumi.StringPtrOutput `pulumi:"serviceAccount"`
-	ServiceAccountName pulumi.StringPtrOutput `pulumi:"serviceAccountName"`
-	ServiceName        pulumi.StringPtrOutput `pulumi:"serviceName"`
-	SharedSecret       pulumi.StringPtrOutput `pulumi:"sharedSecret"`
-	SslMode            pulumi.StringPtrOutput `pulumi:"sslMode"`
-	Storage            pulumi.StringPtrOutput `pulumi:"storage"`
-	SubSystemName      pulumi.StringPtrOutput `pulumi:"subSystemName"`
+	Region                pulumi.StringPtrOutput `pulumi:"region"`
+	RegionName            pulumi.StringPtrOutput `pulumi:"regionName"`
+	Resource              pulumi.StringPtrOutput `pulumi:"resource"`
+	Role                  pulumi.StringPtrOutput `pulumi:"role"`
+	RootCert              pulumi.StringPtrOutput `pulumi:"rootCert"`
+	Schema                pulumi.StringPtrOutput `pulumi:"schema"`
+	Script                pulumi.StringPtrOutput `pulumi:"script"`
+	SecretAccessKey       pulumi.StringPtrOutput `pulumi:"secretAccessKey"`
+	SecretId              pulumi.StringPtrOutput `pulumi:"secretId"`
+	ServiceAccount        pulumi.StringPtrOutput `pulumi:"serviceAccount"`
+	ServiceAccountName    pulumi.StringPtrOutput `pulumi:"serviceAccountName"`
+	ServiceName           pulumi.StringPtrOutput `pulumi:"serviceName"`
+	SharedSecret          pulumi.StringPtrOutput `pulumi:"sharedSecret"`
+	SslMode               pulumi.StringPtrOutput `pulumi:"sslMode"`
+	Storage               pulumi.StringPtrOutput `pulumi:"storage"`
+	SubSystemName         pulumi.StringPtrOutput `pulumi:"subSystemName"`
 	// Optional tags.
 	Tags          pulumi.StringArrayOutput `pulumi:"tags"`
 	Targets       pulumi.StringPtrOutput   `pulumi:"targets"`
@@ -158,6 +158,9 @@ func NewResource(ctx *pulumi.Context,
 	if args.Type == nil {
 		return nil, errors.New("invalid value for required argument 'Type'")
 	}
+	if args.AccessKeyId != nil {
+		args.AccessKeyId = pulumi.ToSecret(args.AccessKeyId).(pulumi.StringPtrInput)
+	}
 	if args.ApiClientSecret != nil {
 		args.ApiClientSecret = pulumi.ToSecret(args.ApiClientSecret).(pulumi.StringPtrInput)
 	}
@@ -191,6 +194,9 @@ func NewResource(ctx *pulumi.Context,
 	if args.Clientcert != nil {
 		args.Clientcert = pulumi.ToSecret(args.Clientcert).(pulumi.StringPtrInput)
 	}
+	if args.ClusterCert != nil {
+		args.ClusterCert = pulumi.ToSecret(args.ClusterCert).(pulumi.StringPtrInput)
+	}
 	if args.ClusterToken != nil {
 		args.ClusterToken = pulumi.ToSecret(args.ClusterToken).(pulumi.StringPtrInput)
 	}
@@ -221,6 +227,12 @@ func NewResource(ctx *pulumi.Context,
 	if args.ProxysqlAdminPassword != nil {
 		args.ProxysqlAdminPassword = pulumi.ToSecret(args.ProxysqlAdminPassword).(pulumi.StringPtrInput)
 	}
+	if args.PublicKey != nil {
+		args.PublicKey = pulumi.ToSecret(args.PublicKey).(pulumi.StringPtrInput)
+	}
+	if args.RootCert != nil {
+		args.RootCert = pulumi.ToSecret(args.RootCert).(pulumi.StringPtrInput)
+	}
 	if args.SecretAccessKey != nil {
 		args.SecretAccessKey = pulumi.ToSecret(args.SecretAccessKey).(pulumi.StringPtrInput)
 	}
@@ -233,8 +245,14 @@ func NewResource(ctx *pulumi.Context,
 	if args.Targets != nil {
 		args.Targets = pulumi.ToSecret(args.Targets).(pulumi.StringPtrInput)
 	}
+	if args.TlsCertFile != nil {
+		args.TlsCertFile = pulumi.ToSecret(args.TlsCertFile).(pulumi.StringPtrInput)
+	}
 	if args.TlsKeyFile != nil {
 		args.TlsKeyFile = pulumi.ToSecret(args.TlsKeyFile).(pulumi.StringPtrInput)
+	}
+	if args.TlsRootCert != nil {
+		args.TlsRootCert = pulumi.ToSecret(args.TlsRootCert).(pulumi.StringPtrInput)
 	}
 	if args.Token != nil {
 		args.Token = pulumi.ToSecret(args.Token).(pulumi.StringPtrInput)
@@ -249,6 +267,7 @@ func NewResource(ctx *pulumi.Context,
 		args.WebhookUrl = pulumi.ToSecret(args.WebhookUrl).(pulumi.StringPtrInput)
 	}
 	secrets := pulumi.AdditionalSecretOutputs([]string{
+		"accessKeyId",
 		"apiClientSecret",
 		"apiKey",
 		"apiSecret",
@@ -260,6 +279,7 @@ func NewResource(ctx *pulumi.Context,
 		"clientKey",
 		"clientSecret",
 		"clientcert",
+		"clusterCert",
 		"clusterToken",
 		"credentialJson",
 		"databasePassword",
@@ -270,11 +290,15 @@ func NewResource(ctx *pulumi.Context,
 		"password",
 		"privateKey",
 		"proxysqlAdminPassword",
+		"publicKey",
+		"rootCert",
 		"secretAccessKey",
 		"secretId",
 		"sharedSecret",
 		"targets",
+		"tlsCertFile",
 		"tlsKeyFile",
+		"tlsRootCert",
 		"token",
 		"tokenId",
 		"uri",
@@ -715,6 +739,11 @@ func (o ResourceOutput) ApplicationName() pulumi.StringPtrOutput {
 	return o.ApplyT(func(v *Resource) pulumi.StringPtrOutput { return v.ApplicationName }).(pulumi.StringPtrOutput)
 }
 
+// Opaque server fingerprints of the write-only secret fields as of the last write by this provider, used to detect out-of-band secret changes on refresh. Not comparable across resources or workspaces.
+func (o ResourceOutput) AppliedDigests() pulumi.StringMapOutput {
+	return o.ApplyT(func(v *Resource) pulumi.StringMapOutput { return v.AppliedDigests }).(pulumi.StringMapOutput)
+}
+
 func (o ResourceOutput) Arn() pulumi.StringPtrOutput {
 	return o.ApplyT(func(v *Resource) pulumi.StringPtrOutput { return v.Arn }).(pulumi.StringPtrOutput)
 }
@@ -975,11 +1004,6 @@ func (o ResourceOutput) ProxysqlHostgroupId() pulumi.StringPtrOutput {
 
 func (o ResourceOutput) PublicKey() pulumi.StringPtrOutput {
 	return o.ApplyT(func(v *Resource) pulumi.StringPtrOutput { return v.PublicKey }).(pulumi.StringPtrOutput)
-}
-
-// Opaque server fingerprints of the write-only secret fields, used to detect out-of-band secret changes on refresh. Not comparable across resources or workspaces.
-func (o ResourceOutput) RedactedDigests() pulumi.StringMapOutput {
-	return o.ApplyT(func(v *Resource) pulumi.StringMapOutput { return v.RedactedDigests }).(pulumi.StringMapOutput)
 }
 
 func (o ResourceOutput) Region() pulumi.StringPtrOutput {

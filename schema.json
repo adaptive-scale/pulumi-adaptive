@@ -1,7 +1,7 @@
 {
   "name": "adaptive",
   "displayName": "Adaptive",
-  "version": "0.2.0",
+  "version": "0.3.0",
   "description": "A Pulumi provider for managing Adaptive (adaptive.live) infrastructure: resources, endpoints, authorizations, groups, and scripts.",
   "keywords": [
     "pulumi",
@@ -43,31 +43,7 @@
       "respectSchemaVersion": true
     }
   },
-  "config": {
-    "variables": {
-      "serviceToken": {
-        "type": "string",
-        "description": "Service account token for authenticating with the Adaptive service. If not provided, the provider reads the token from the default adaptive-cli location (~/.adaptive/token).",
-        "default": "",
-        "defaultInfo": {
-          "environment": [
-            "ADAPTIVE_SVC_TOKEN"
-          ]
-        },
-        "secret": true
-      },
-      "workspaceUrl": {
-        "type": "string",
-        "description": "The Adaptive workspace URL. Defaults to https://app.adaptive.live.",
-        "default": "https://app.adaptive.live",
-        "defaultInfo": {
-          "environment": [
-            "ADAPTIVE_URL"
-          ]
-        }
-      }
-    }
-  },
+  "config": {},
   "types": {
     "adaptive:index:DataProtectionColumnMask": {
       "properties": {
@@ -125,54 +101,7 @@
       ]
     }
   },
-  "provider": {
-    "properties": {
-      "serviceToken": {
-        "type": "string",
-        "description": "Service account token for authenticating with the Adaptive service. If not provided, the provider reads the token from the default adaptive-cli location (~/.adaptive/token).",
-        "default": "",
-        "defaultInfo": {
-          "environment": [
-            "ADAPTIVE_SVC_TOKEN"
-          ]
-        },
-        "secret": true
-      },
-      "workspaceUrl": {
-        "type": "string",
-        "description": "The Adaptive workspace URL. Defaults to https://app.adaptive.live.",
-        "default": "https://app.adaptive.live",
-        "defaultInfo": {
-          "environment": [
-            "ADAPTIVE_URL"
-          ]
-        }
-      }
-    },
-    "inputProperties": {
-      "serviceToken": {
-        "type": "string",
-        "description": "Service account token for authenticating with the Adaptive service. If not provided, the provider reads the token from the default adaptive-cli location (~/.adaptive/token).",
-        "default": "",
-        "defaultInfo": {
-          "environment": [
-            "ADAPTIVE_SVC_TOKEN"
-          ]
-        },
-        "secret": true
-      },
-      "workspaceUrl": {
-        "type": "string",
-        "description": "The Adaptive workspace URL. Defaults to https://app.adaptive.live.",
-        "default": "https://app.adaptive.live",
-        "defaultInfo": {
-          "environment": [
-            "ADAPTIVE_URL"
-          ]
-        }
-      }
-    }
-  },
+  "provider": {},
   "resources": {
     "adaptive:index:Authorization": {
       "properties": {
@@ -569,7 +498,8 @@
           "type": "string"
         },
         "accessKeyId": {
-          "type": "string"
+          "type": "string",
+          "secret": true
         },
         "annotations": {
           "type": "string"
@@ -608,6 +538,13 @@
         },
         "applicationName": {
           "type": "string"
+        },
+        "appliedDigests": {
+          "type": "object",
+          "additionalProperties": {
+            "type": "string"
+          },
+          "description": "Opaque server fingerprints of the write-only secret fields as of the last write by this provider, used to detect out-of-band secret changes on refresh. Not comparable across resources or workspaces."
         },
         "arn": {
           "type": "string"
@@ -649,7 +586,8 @@
           "secret": true
         },
         "clusterCert": {
-          "type": "string"
+          "type": "string",
+          "secret": true
         },
         "clusterToken": {
           "type": "string",
@@ -823,14 +761,8 @@
           "type": "string"
         },
         "publicKey": {
-          "type": "string"
-        },
-        "redactedDigests": {
-          "type": "object",
-          "additionalProperties": {
-            "type": "string"
-          },
-          "description": "Opaque server fingerprints of the write-only secret fields, used to detect out-of-band secret changes on refresh. Not comparable across resources or workspaces."
+          "type": "string",
+          "secret": true
         },
         "region": {
           "type": "string"
@@ -845,7 +777,8 @@
           "type": "string"
         },
         "rootCert": {
-          "type": "string"
+          "type": "string",
+          "secret": true
         },
         "schema": {
           "type": "string"
@@ -901,7 +834,8 @@
           "type": "string"
         },
         "tlsCertFile": {
-          "type": "string"
+          "type": "string",
+          "secret": true
         },
         "tlsEnabled": {
           "type": "boolean"
@@ -911,7 +845,8 @@
           "secret": true
         },
         "tlsRootCert": {
-          "type": "string"
+          "type": "string",
+          "secret": true
         },
         "tlsSkipVerify": {
           "type": "boolean"
@@ -988,7 +923,8 @@
           "type": "string"
         },
         "accessKeyId": {
-          "type": "string"
+          "type": "string",
+          "secret": true
         },
         "annotations": {
           "type": "string"
@@ -1068,7 +1004,8 @@
           "secret": true
         },
         "clusterCert": {
-          "type": "string"
+          "type": "string",
+          "secret": true
         },
         "clusterToken": {
           "type": "string",
@@ -1242,7 +1179,8 @@
           "type": "string"
         },
         "publicKey": {
-          "type": "string"
+          "type": "string",
+          "secret": true
         },
         "region": {
           "type": "string"
@@ -1257,7 +1195,8 @@
           "type": "string"
         },
         "rootCert": {
-          "type": "string"
+          "type": "string",
+          "secret": true
         },
         "schema": {
           "type": "string"
@@ -1313,7 +1252,8 @@
           "type": "string"
         },
         "tlsCertFile": {
-          "type": "string"
+          "type": "string",
+          "secret": true
         },
         "tlsEnabled": {
           "type": "boolean"
@@ -1323,7 +1263,8 @@
           "secret": true
         },
         "tlsRootCert": {
-          "type": "string"
+          "type": "string",
+          "secret": true
         },
         "tlsSkipVerify": {
           "type": "boolean"

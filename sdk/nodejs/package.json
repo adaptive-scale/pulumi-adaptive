@@ -1,6 +1,6 @@
 {
     "name": "@adaptive-scale/pulumi-adaptive",
-    "version": "0.2.0",
+    "version": "0.3.0",
     "keywords": [
         "pulumi",
         "adaptive",
@@ -25,7 +25,7 @@
     "pulumi": {
         "resource": true,
         "name": "adaptive",
-        "version": "0.2.0",
+        "version": "0.3.0",
         "server": "github://api.github.com/adaptive-scale/pulumi-adaptive"
     }
 }

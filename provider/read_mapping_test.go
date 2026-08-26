@@ -113,9 +113,47 @@ func TestApplyTeamRead(t *testing.T) {
 	got := applyTeamRead(prior, &TeamReadResponse{
 		Name: "g2", Members: []string{"a@x.co"}, Endpoints: []string{"ep"}, SlackChannelID: "C2",
 	}, false)
-	if got.Name != "g2" || sv(got.SlackChannelID) != "C2" ||
-		!reflect.DeepEqual(got.Endpoints, []string{"ep"}) {
+	if got.Name != "g2" || sv(got.SlackChannelID) != "C2" {
 		t.Errorf("team mapping wrong: %+v", got)
+	}
+	// endpoints was unset in the program, so a server-side value is NOT adopted.
+	// This case used to assert the opposite, which is the bug: the program will
+	// never contain that value, so writing it into state produces a diff on
+	// every preview that no apply can settle.
+	if got.Endpoints != nil {
+		t.Errorf("server endpoints adopted into an unset input: %v", got.Endpoints)
+	}
+
+	// A list the program does set still reports real drift.
+	managed := GroupArgs{Name: "g", Endpoints: []string{"ep-a"}}
+	got = applyTeamRead(managed, &TeamReadResponse{
+		Name: "g", Endpoints: []string{"ep-a", "ep-b"},
+	}, false)
+	if !reflect.DeepEqual(got.Endpoints, []string{"ep-a", "ep-b"}) {
+		t.Errorf("drift on a managed list should be adopted, got %v", got.Endpoints)
+	}
+
+	// On import there are no prior inputs, so the server view is all there is.
+	got = applyTeamRead(GroupArgs{}, &TeamReadResponse{
+		Name: "g", Endpoints: []string{"ep"}, Members: []string{"a@x.co"},
+	}, true)
+	if !reflect.DeepEqual(got.Endpoints, []string{"ep"}) || !reflect.DeepEqual(got.Members, []string{"a@x.co"}) {
+		t.Errorf("import should take the server lists, got %+v", got)
+	}
+}
+
+// The regression test for the perpetual diff this policy exists to prevent: the
+// platform seeds an endpoint's session users with its creator, so a program that
+// never set `users` would otherwise adopt that on the first refresh and show an
+// unresolvable update on every preview afterwards.
+func TestApplyEndpointReadDoesNotAdoptServerSeededUsers(t *testing.T) {
+	got := applyEndpointRead(EndpointArgs{Name: "ep", Resource: "db"},
+		&SessionReadResponse{
+			Name: "ep", Resource: "db", SessionType: "cli",
+			SessionUsers: []string{"creator@x.co"},
+		}, false)
+	if got.Users != nil {
+		t.Errorf("server-seeded users adopted into an unset input: %v", got.Users)
 	}
 }
 
@@ -164,14 +202,5 @@ func TestApplyScheduleReadNormalization(t *testing.T) {
 	}, false)
 	if !reflect.DeepEqual(got.Weekdays, []string{"friday"}) {
 		t.Errorf("weekday drift missed: %v", got.Weekdays)
-	}
-}
-
-func TestReadDeletedSignalsEmptyResponse(t *testing.T) {
-	// applyXRead is only reached with a non-nil response; the Read methods
-	// return an empty ReadResponse on nil. This is covered indirectly via
-	// client 404 tests; here we just pin the sentinel used for import detection.
-	if (EndpointArgs{}).Name != "" {
-		t.Fatal("zero-value sentinel broken")
 	}
 }

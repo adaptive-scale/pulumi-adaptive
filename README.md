@@ -68,31 +68,58 @@ deletion) and `pulumi import` (see [Importing existing objects](#importing-exist
 
 ## Installation
 
-| Language | Package |
-|---|---|
-| TypeScript/JavaScript | `npm install @adaptive-scale/pulumi-adaptive` |
-| Python | `pip install pulumi-adaptive` |
-| Go | `go get github.com/adaptive-scale/pulumi-adaptive/sdk` |
-| .NET | `dotnet add package AdaptiveScale.Adaptive` |
-
 The plugin binary is downloaded automatically from this repo's GitHub releases
 (the schema's `pluginDownloadURL` points at
-`github://api.github.com/adaptive-scale/pulumi-adaptive`).
+`github://api.github.com/adaptive-scale/pulumi-adaptive`), so nothing needs
+installing for the provider itself.
+
+**No SDK is published to a package registry** — not npm, PyPI, or NuGet. Install
+from this repository:
+
+```bash
+# Go — the sdk/vX.Y.Z tag is what Go modules resolve
+go get github.com/adaptive-scale/pulumi-adaptive/sdk@latest
+
+# Python — from the sdk/python subdirectory of a release tag
+VERSION=$(make -s print-version)
+pip install "pulumi_adaptive @ git+https://github.com/adaptive-scale/pulumi-adaptive.git@v$VERSION#subdirectory=sdk/python"
+```
+
+Node.js and .NET have no published package, so build them from source and install
+from the local path:
+
+```bash
+make build_nodejs   # -> sdk/nodejs/bin, then: npm install <path-to>/sdk/nodejs/bin
+make build_dotnet   # -> a .nupkg under sdk/dotnet/bin, usable as a local NuGet source
+```
+
+For local development of the provider itself, `make install` puts the plugin on
+your `PATH` at the version in the Makefile; Pulumi prefers it over a downloaded
+one and says so in a warning.
 
 ## Configuration
 
-Generate a service account token in the Adaptive console, then either:
+Generate a service account token in the Adaptive console, then set it in the
+environment:
 
 ```bash
-pulumi config set adaptive:serviceToken --secret <your-service-token>
+export ADAPTIVE_SVC_TOKEN="your-service-token"
+export ADAPTIVE_URL="https://your-workspace"   # optional
 ```
 
-or set the environment variables:
+| Env var | Default |
+|---|---|
+| `ADAPTIVE_SVC_TOKEN` | falls back to `~/.adaptive/token` |
+| `ADAPTIVE_URL` | `https://app.adaptive.live` |
 
-| Setting | Env var | Default |
-|---|---|---|
-| `serviceToken` | `ADAPTIVE_SVC_TOKEN` | falls back to `~/.adaptive/token` |
-| `workspaceUrl` | `ADAPTIVE_URL` | `https://app.adaptive.live` |
+`ADAPTIVE_SVC_TOKEN` may hold a raw token or the JSON that `adaptive login`
+writes, in either the `{token,url}` or `{deployments:{...}}` shape; a
+multi-deployment config without a `default` is refused rather than guessed at.
+
+The provider takes no Pulumi config: the environment is the only way in, so
+credentials never reach stack state. One process therefore targets one workspace.
+See [Installation & configuration](docs/installation-configuration.md) for the
+reasoning and for upgrading from a version that had config.
 
 ## Usage
 
@@ -159,19 +186,36 @@ db = adaptive.Resource("db",
 
 **Secret drift detection.** The Adaptive API never returns secret values, but
 it returns an opaque server-side fingerprint per secret field
-(`redactedDigests` on resources, `commandDigest` on scripts). The provider
-records these in state and compares them on `pulumi refresh`: when a secret was
-changed out-of-band (e.g. rotated in the UI), refresh clears that field in
-state and the next `pulumi up` re-applies your program's value — shown as
-`[secret]`, never in plaintext. Notes:
+(`appliedDigests` on resources, `commandDigest` on scripts). The provider
+records the fingerprints as of its last write and compares them on
+`pulumi refresh`, so a secret rotated out-of-band (e.g. in the UI) shows up in
+the next preview on the argument it belongs to — as `[secret]`, never in
+plaintext. The argument name is what carries the information.
+
+What the preview then does depends on your program, because the platform stores
+the configuration as a single blob and every update replaces it whole:
+
+- the argument is in your program — the update re-applies your value.
+- it is not — the update clears it, because your program is the source of truth
+  for the whole resource. That has always been what an update does to an
+  argument you do not set; it is now visible beforehand instead of happening
+  silently on whatever unrelated `up` ran first.
+
+A secret *added* out-of-band is reported the same way. Notes:
 
 - Requires an Adaptive backend with digest support; against older servers,
   refresh keeps the prior value silently (previous behavior).
+- Nothing is reported on the first refresh after an import or a provider
+  upgrade: with no recorded fingerprints there is no baseline, so they are
+  recorded and compared from the next refresh on.
 - Fingerprints are HMACs under a server-held key (`ADAPTIVE_SECRET_DIGEST_KEY`)
   — they cannot be reversed or brute-forced, and rotating that key causes one
   self-healing drift cycle.
 - `pulumi import` cannot recover secret values: set them in config, and the
   first `pulumi up` re-establishes them; drift detection is active from then on.
+- A secret nested inside a structured field (the `adaptive_rdp` target list) is
+  reported as a warning naming the field rather than as a preview diff — there
+  is no single argument to attach it to.
 
 ## Importing existing objects
 
@@ -254,12 +298,13 @@ make install    # builds pulumi-resource-adaptive into $(go env GOPATH)/bin
 Push a `vX.Y.Z` tag. The release workflow then:
 
 1. builds the plugin binaries for every OS/arch with GoReleaser and attaches
-   them to a GitHub release (`pulumi-resource-adaptive-vX.Y.Z-<os>-<arch>.tar.gz`),
-2. regenerates the SDKs at the release version and publishes them to npm,
-   PyPI, and NuGet via `pulumi/pulumi-package-publisher`,
-3. tags `sdk/vX.Y.Z` so the Go SDK resolves.
+   them to a GitHub release (`pulumi-resource-adaptive-vX.Y.Z-<os>-<arch>.tar.gz`) —
+   this is what `pluginDownloadURL` resolves against,
+2. regenerates the SDKs at the release version and uploads them as workflow
+   artifacts,
+3. tags `sdk/vX.Y.Z` so `go get` resolves the Go SDK.
 
-It needs the `NPM_TOKEN`, `PYPI_API_TOKEN`, and `NUGET_PUBLISH_KEY` repo secrets.
+No SDK is published to a package registry, so no publishing secrets are needed.
 
 ## Status
 

@@ -114,10 +114,21 @@ func (*DataProtection) Read(ctx context.Context, req infer.ReadRequest[DataProte
 	if err != nil {
 		return infer.ReadResponse[DataProtectionArgs, DataProtectionState]{}, err
 	}
+	isImport := req.Inputs.Resource == ""
 	if r == nil {
+		if isImport {
+			return infer.ReadResponse[DataProtectionArgs, DataProtectionState]{}, notFoundOnImport("data protection policy", req.ID)
+		}
+		// Deleted out-of-band: an empty response drops the resource from state.
 		return infer.ReadResponse[DataProtectionArgs, DataProtectionState]{}, nil
 	}
-	isImport := req.Inputs.Resource == ""
+	// A 200 carrying no identity is not a real record — a server that answers
+	// unknown ids with a zero-valued body would otherwise fabricate a resource
+	// out of nothing. Only enforced on import, where there is no prior state to
+	// lose.
+	if isImport && r.ResourceName == "" {
+		return infer.ReadResponse[DataProtectionArgs, DataProtectionState]{}, notFoundOnImport("data protection policy", req.ID)
+	}
 	inputs := applyDataProtectionRead(req.Inputs, r, isImport)
 	state := DataProtectionState{DataProtectionArgs: inputs}
 	fillDataProtectionOutputs(&state, r)

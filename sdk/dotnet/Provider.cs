@@ -14,19 +14,6 @@ namespace AdaptiveScale.Adaptive
     public partial class Provider : global::Pulumi.ProviderResource
     {
         /// <summary>
-        /// Service account token for authenticating with the Adaptive service. If not provided, the provider reads the token from the default adaptive-cli location (~/.adaptive/token).
-        /// </summary>
-        [Output("serviceToken")]
-        public Output<string?> ServiceToken { get; private set; } = null!;
-
-        /// <summary>
-        /// The Adaptive workspace URL. Defaults to https://app.adaptive.live.
-        /// </summary>
-        [Output("workspaceUrl")]
-        public Output<string?> WorkspaceUrl { get; private set; } = null!;
-
-
-        /// <summary>
         /// Create a Provider resource with the given unique name, arguments, and options.
         /// </summary>
         ///
@@ -44,10 +31,6 @@ namespace AdaptiveScale.Adaptive
             {
                 Version = Utilities.Version,
                 PluginDownloadURL = "github://api.github.com/adaptive-scale/pulumi-adaptive",
-                AdditionalSecretOutputs =
-                {
-                    "serviceToken",
-                },
             };
             var merged = CustomResourceOptions.Merge(defaultOptions, options);
             // Override the ID if one was specified for consistency with other language SDKs.
@@ -58,32 +41,8 @@ namespace AdaptiveScale.Adaptive
 
     public sealed class ProviderArgs : global::Pulumi.ResourceArgs
     {
-        [Input("serviceToken")]
-        private Input<string>? _serviceToken;
-
-        /// <summary>
-        /// Service account token for authenticating with the Adaptive service. If not provided, the provider reads the token from the default adaptive-cli location (~/.adaptive/token).
-        /// </summary>
-        public Input<string>? ServiceToken
-        {
-            get => _serviceToken;
-            set
-            {
-                var emptySecret = Output.CreateSecret(0);
-                _serviceToken = Output.Tuple<Input<string>?, int>(value, emptySecret).Apply(t => t.Item1);
-            }
-        }
-
-        /// <summary>
-        /// The Adaptive workspace URL. Defaults to https://app.adaptive.live.
-        /// </summary>
-        [Input("workspaceUrl")]
-        public Input<string>? WorkspaceUrl { get; set; }
-
         public ProviderArgs()
         {
-            ServiceToken = Utilities.GetEnv("ADAPTIVE_SVC_TOKEN") ?? "";
-            WorkspaceUrl = Utilities.GetEnv("ADAPTIVE_URL") ?? "https://app.adaptive.live";
         }
         public static new ProviderArgs Empty => new ProviderArgs();
     }

@@ -26,9 +26,14 @@ type Config struct {
 	ClientSecret string // Client App secret used by the verifier to READ
 }
 
-// RequireConfig loads config from the environment (falling back to
-// tests/.env.local) and skips the test cleanly if required values are absent.
-func RequireConfig(t *testing.T) Config {
+// RequireProviderConfig loads config from the environment (falling back to
+// tests/.env.local) and skips the test cleanly if a service token is absent.
+//
+// This is the tier a test needs when it only drives Pulumi and the raw
+// /terraform API — which is most of them. Requiring a Client App as well, as
+// RequireConfig does, means you cannot run a drift test against a local server
+// without first creating one, and the drift tests never call that API.
+func RequireProviderConfig(t *testing.T) Config {
 	t.Helper()
 	loadDotEnv()
 
@@ -43,14 +48,22 @@ func RequireConfig(t *testing.T) Config {
 		ClientSecret: os.Getenv("ADAPTIVE_CLIENT_SECRET"),
 	}
 
-	if cfg.ClientID == "" || cfg.ClientSecret == "" {
-		t.Skip("integration test skipped: set ADAPTIVE_CLIENT_ID and ADAPTIVE_CLIENT_SECRET (e.g. in tests/.env.local)")
-	}
 	if cfg.ServiceToken == "" {
 		t.Skip("integration test skipped: no Adaptive service token (set ADAPTIVE_SVC_TOKEN or run `adaptive login`)")
 	}
 	preflight(t, cfg)
 	return cfg
+}
+
+// RequireConfig is RequireProviderConfig plus the Client App credentials the
+// verifier uses to read objects back independently of the provider.
+func RequireConfig(t *testing.T) Config {
+	t.Helper()
+	loadDotEnv()
+	if os.Getenv("ADAPTIVE_CLIENT_ID") == "" || os.Getenv("ADAPTIVE_CLIENT_SECRET") == "" {
+		t.Skip("integration test skipped: set ADAPTIVE_CLIENT_ID and ADAPTIVE_CLIENT_SECRET (e.g. in tests/.env.local)")
+	}
+	return RequireProviderConfig(t)
 }
 
 var (
@@ -81,8 +94,15 @@ func preflight(t *testing.T, cfg Config) {
 			return
 		}
 		resp.Body.Close()
-		if resp.StatusCode == http.StatusUnauthorized {
+		switch resp.StatusCode {
+		case http.StatusUnauthorized:
 			preflightErr = errors.New("Adaptive service token rejected (401) — run `adaptive login` to refresh (tokens expire after ~3h)")
+		case http.StatusForbidden:
+			// The /terraform reads are workspace-admin only. Without this, a
+			// non-admin token fails every test in the suite separately, deep
+			// inside a refresh, with nothing pointing at the cause.
+			preflightErr = errors.New("Adaptive service token is not a workspace admin (403) — " +
+				"the /terraform read endpoints require one, so refresh and import will fail for every test")
 		}
 	})
 	if preflightErr != nil {

@@ -45,6 +45,10 @@ export class Resource extends pulumi.CustomResource {
     declare public readonly appKey: pulumi.Output<string | undefined>;
     declare public readonly applicationId: pulumi.Output<string | undefined>;
     declare public readonly applicationName: pulumi.Output<string | undefined>;
+    /**
+     * Opaque server fingerprints of the write-only secret fields as of the last write by this provider, used to detect out-of-band secret changes on refresh. Not comparable across resources or workspaces.
+     */
+    declare public /*out*/ readonly appliedDigests: pulumi.Output<{[key: string]: string} | undefined>;
     declare public readonly arn: pulumi.Output<string | undefined>;
     declare public readonly automationMode: pulumi.Output<string | undefined>;
     declare public readonly awsArn: pulumi.Output<string | undefined>;
@@ -116,10 +120,6 @@ export class Resource extends pulumi.CustomResource {
     declare public readonly proxysqlAdminUsername: pulumi.Output<string | undefined>;
     declare public readonly proxysqlHostgroupId: pulumi.Output<string | undefined>;
     declare public readonly publicKey: pulumi.Output<string | undefined>;
-    /**
-     * Opaque server fingerprints of the write-only secret fields, used to detect out-of-band secret changes on refresh. Not comparable across resources or workspaces.
-     */
-    declare public /*out*/ readonly redactedDigests: pulumi.Output<{[key: string]: string} | undefined>;
     declare public readonly region: pulumi.Output<string | undefined>;
     declare public readonly regionName: pulumi.Output<string | undefined>;
     declare public readonly resource: pulumi.Output<string | undefined>;
@@ -189,7 +189,7 @@ export class Resource extends pulumi.CustomResource {
             }
             resourceInputs["accessControlGroup"] = args?.accessControlGroup;
             resourceInputs["accessControlMethod"] = args?.accessControlMethod;
-            resourceInputs["accessKeyId"] = args?.accessKeyId;
+            resourceInputs["accessKeyId"] = args?.accessKeyId ? pulumi.secret(args.accessKeyId) : undefined;
             resourceInputs["annotations"] = args?.annotations;
             resourceInputs["apiClientId"] = args?.apiClientId;
             resourceInputs["apiClientSecret"] = args?.apiClientSecret ? pulumi.secret(args.apiClientSecret) : undefined;
@@ -212,7 +212,7 @@ export class Resource extends pulumi.CustomResource {
             resourceInputs["clientKey"] = args?.clientKey ? pulumi.secret(args.clientKey) : undefined;
             resourceInputs["clientSecret"] = args?.clientSecret ? pulumi.secret(args.clientSecret) : undefined;
             resourceInputs["clientcert"] = args?.clientcert ? pulumi.secret(args.clientcert) : undefined;
-            resourceInputs["clusterCert"] = args?.clusterCert;
+            resourceInputs["clusterCert"] = args?.clusterCert ? pulumi.secret(args.clusterCert) : undefined;
             resourceInputs["clusterToken"] = args?.clusterToken ? pulumi.secret(args.clusterToken) : undefined;
             resourceInputs["connectServerUrl"] = args?.connectServerUrl;
             resourceInputs["cpu"] = args?.cpu;
@@ -265,12 +265,12 @@ export class Resource extends pulumi.CustomResource {
             resourceInputs["proxysqlAdminPort"] = args?.proxysqlAdminPort;
             resourceInputs["proxysqlAdminUsername"] = args?.proxysqlAdminUsername;
             resourceInputs["proxysqlHostgroupId"] = args?.proxysqlHostgroupId;
-            resourceInputs["publicKey"] = args?.publicKey;
+            resourceInputs["publicKey"] = args?.publicKey ? pulumi.secret(args.publicKey) : undefined;
             resourceInputs["region"] = args?.region;
             resourceInputs["regionName"] = args?.regionName;
             resourceInputs["resource"] = args?.resource;
             resourceInputs["role"] = args?.role;
-            resourceInputs["rootCert"] = args?.rootCert;
+            resourceInputs["rootCert"] = args?.rootCert ? pulumi.secret(args.rootCert) : undefined;
             resourceInputs["schema"] = args?.schema;
             resourceInputs["script"] = args?.script;
             resourceInputs["secretAccessKey"] = args?.secretAccessKey ? pulumi.secret(args.secretAccessKey) : undefined;
@@ -286,10 +286,10 @@ export class Resource extends pulumi.CustomResource {
             resourceInputs["targets"] = args?.targets ? pulumi.secret(args.targets) : undefined;
             resourceInputs["tenantId"] = args?.tenantId;
             resourceInputs["tlsCaCert"] = args?.tlsCaCert;
-            resourceInputs["tlsCertFile"] = args?.tlsCertFile;
+            resourceInputs["tlsCertFile"] = args?.tlsCertFile ? pulumi.secret(args.tlsCertFile) : undefined;
             resourceInputs["tlsEnabled"] = args?.tlsEnabled;
             resourceInputs["tlsKeyFile"] = args?.tlsKeyFile ? pulumi.secret(args.tlsKeyFile) : undefined;
-            resourceInputs["tlsRootCert"] = args?.tlsRootCert;
+            resourceInputs["tlsRootCert"] = args?.tlsRootCert ? pulumi.secret(args.tlsRootCert) : undefined;
             resourceInputs["tlsSkipVerify"] = args?.tlsSkipVerify;
             resourceInputs["token"] = args?.token ? pulumi.secret(args.token) : undefined;
             resourceInputs["tokenId"] = args?.tokenId ? pulumi.secret(args.tokenId) : undefined;
@@ -309,7 +309,7 @@ export class Resource extends pulumi.CustomResource {
             resourceInputs["warehouse"] = args?.warehouse;
             resourceInputs["webhookUrl"] = args?.webhookUrl ? pulumi.secret(args.webhookUrl) : undefined;
             resourceInputs["webuiPort"] = args?.webuiPort;
-            resourceInputs["redactedDigests"] = undefined /*out*/;
+            resourceInputs["appliedDigests"] = undefined /*out*/;
         } else {
             resourceInputs["accessControlGroup"] = undefined /*out*/;
             resourceInputs["accessControlMethod"] = undefined /*out*/;
@@ -325,6 +325,7 @@ export class Resource extends pulumi.CustomResource {
             resourceInputs["appKey"] = undefined /*out*/;
             resourceInputs["applicationId"] = undefined /*out*/;
             resourceInputs["applicationName"] = undefined /*out*/;
+            resourceInputs["appliedDigests"] = undefined /*out*/;
             resourceInputs["arn"] = undefined /*out*/;
             resourceInputs["automationMode"] = undefined /*out*/;
             resourceInputs["awsArn"] = undefined /*out*/;
@@ -390,7 +391,6 @@ export class Resource extends pulumi.CustomResource {
             resourceInputs["proxysqlAdminUsername"] = undefined /*out*/;
             resourceInputs["proxysqlHostgroupId"] = undefined /*out*/;
             resourceInputs["publicKey"] = undefined /*out*/;
-            resourceInputs["redactedDigests"] = undefined /*out*/;
             resourceInputs["region"] = undefined /*out*/;
             resourceInputs["regionName"] = undefined /*out*/;
             resourceInputs["resource"] = undefined /*out*/;
@@ -436,7 +436,7 @@ export class Resource extends pulumi.CustomResource {
             resourceInputs["webuiPort"] = undefined /*out*/;
         }
         opts = pulumi.mergeOptions(utilities.resourceOptsDefaults(), opts);
-        const secretOpts = { additionalSecretOutputs: ["apiClientSecret", "apiKey", "apiSecret", "apiToken", "appKey", "clientCert", "clientCertificate", "clientConfiguration", "clientKey", "clientSecret", "clientcert", "clusterToken", "credentialJson", "databasePassword", "ddApiKey", "key", "keyFile", "ldapSearchBindPassword", "password", "privateKey", "proxysqlAdminPassword", "secretAccessKey", "secretId", "sharedSecret", "targets", "tlsKeyFile", "token", "tokenId", "uri", "webhookUrl"] };
+        const secretOpts = { additionalSecretOutputs: ["accessKeyId", "apiClientSecret", "apiKey", "apiSecret", "apiToken", "appKey", "clientCert", "clientCertificate", "clientConfiguration", "clientKey", "clientSecret", "clientcert", "clusterCert", "clusterToken", "credentialJson", "databasePassword", "ddApiKey", "key", "keyFile", "ldapSearchBindPassword", "password", "privateKey", "proxysqlAdminPassword", "publicKey", "rootCert", "secretAccessKey", "secretId", "sharedSecret", "targets", "tlsCertFile", "tlsKeyFile", "tlsRootCert", "token", "tokenId", "uri", "webhookUrl"] };
         opts = pulumi.mergeOptions(opts, secretOpts);
         super(Resource.__pulumiType, name, resourceInputs, opts);
     }

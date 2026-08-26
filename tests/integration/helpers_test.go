@@ -3,9 +3,17 @@
 package integration
 
 import (
+	"bytes"
+	"encoding/json"
 	"fmt"
+	"net/http"
+	"strings"
 	"testing"
 	"time"
+
+	"github.com/adaptive-scale/pulumi-adaptive/tests/integration/internal/harness"
+	"github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/require"
 )
 
 // uniqueName returns a per-run unique object name, so repeated test runs don't
@@ -48,4 +56,58 @@ func retryFind[T any](t *testing.T, desc string, list func() ([]T, error), pred 
 	}
 	t.Fatalf("%s: not found via Client API after retries", desc)
 	return *new(T)
+}
+
+// rawTerraformAPI issues a request against the /api/v1/terraform surface with
+// the service token, for out-of-band mutations the tests need.
+func rawTerraformAPI(t *testing.T, cfg harness.Config, method, path string, body any) (*http.Response, []byte) {
+	t.Helper()
+	var buf *bytes.Buffer
+	if body != nil {
+		b, err := json.Marshal(body)
+		require.NoError(t, err)
+		buf = bytes.NewBuffer(b)
+	} else {
+		buf = bytes.NewBuffer(nil)
+	}
+	url := strings.TrimRight(cfg.URL, "/") + "/api/v1/terraform" + path
+	req, err := http.NewRequest(method, url, buf)
+	require.NoError(t, err)
+	req.Header.Set("Authorization", cfg.ServiceToken)
+	if body != nil {
+		req.Header.Set("Content-Type", "application/json")
+	}
+	resp, err := http.DefaultClient.Do(req)
+	require.NoError(t, err)
+	defer resp.Body.Close()
+	var out bytes.Buffer
+	_, _ = out.ReadFrom(resp.Body)
+	return resp, out.Bytes()
+}
+
+// terraformRead fetches an object through the same /terraform surface the
+// provider uses, decoded into a map.
+//
+// It is a weaker check than the Client App verifier — same API the provider
+// wrote through, so it cannot catch the provider lying to itself — but it needs
+// only a service token. That is what lets the lifecycle tests run against a
+// local backend without first creating a Client App, which was the point of
+// splitting the credential tiers. The per-type tests keep the independent
+// verifier for the cases where that distinction matters.
+func terraformRead(t *testing.T, cfg harness.Config, kind, id string) map[string]any {
+	t.Helper()
+	resp, body := rawTerraformAPI(t, cfg, "GET", "/"+kind+"/read/"+id, nil)
+	require.Less(t, resp.StatusCode, 300, "read %s %s: HTTP %d %s", kind, id, resp.StatusCode, body)
+	var out map[string]any
+	require.NoError(t, json.Unmarshal(body, &out), "decoding %s read: %s", kind, body)
+	return out
+}
+
+// assertTerraformGone fails unless the object no longer exists. 404 is the
+// answer a deleted object gives; anything 2xx means it survived the destroy.
+func assertTerraformGone(t *testing.T, cfg harness.Config, kind, id string) {
+	t.Helper()
+	resp, body := rawTerraformAPI(t, cfg, "GET", "/"+kind+"/read/"+id, nil)
+	assert.Equal(t, http.StatusNotFound, resp.StatusCode,
+		"%s %s still present after destroy (HTTP %d %s)", kind, id, resp.StatusCode, body)
 }

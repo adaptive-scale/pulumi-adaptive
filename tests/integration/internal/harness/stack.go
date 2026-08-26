@@ -5,6 +5,7 @@ package harness
 import (
 	"bytes"
 	"context"
+	"encoding/json"
 	"os/exec"
 	"testing"
 
@@ -75,6 +76,90 @@ func DeployStack(t *testing.T, cfg Config, stackName string, program pulumi.RunF
 	return res.Outputs, &stack
 }
 
+// Up re-runs `pulumi up` on a stack that DeployStack already created.
+//
+// The inline program is baked into the workspace, and Up re-executes it, so a
+// program that closes over a mutable spec produces a genuine update without a
+// second workspace:
+//
+//	spec := &pgSpec{Port: "5432"}
+//	_, stack := harness.DeployStack(t, cfg, name, func(ctx *pulumi.Context) error {
+//	    return declarePostgres(ctx, spec)
+//	})
+//	spec.Port = "5433"
+//	harness.Up(t, stack)   // same closure, now reading the mutated spec
+func Up(t *testing.T, stack *auto.Stack) auto.OutputMap {
+	t.Helper()
+	res, err := stack.Up(context.Background(), optup.ProgressStreams(&logWriter{t}))
+	if err != nil {
+		t.Fatalf("pulumi up: %v", err)
+	}
+	return res.Outputs
+}
+
+// Destroy tears the stack down and fails the test if it does not succeed, for
+// tests that assert the objects are actually gone afterwards. The DeployStack
+// cleanup hook only logs a warning, which is right for a best-effort safety net
+// but useless as an assertion. Destroying twice is harmless: the cleanup hook
+// finds nothing left to do.
+func Destroy(t *testing.T, stack *auto.Stack) {
+	t.Helper()
+	if _, err := stack.Destroy(context.Background(), optdestroy.ProgressStreams(&logWriter{t})); err != nil {
+		t.Fatalf("pulumi destroy: %v", err)
+	}
+}
+
+// StateOutputs returns the recorded output properties of the first resource of
+// the given Pulumi type token, e.g. "adaptive:index:Resource".
+//
+// Secret drift lives in state rather than in any API response: the whole
+// mechanism turns on appliedDigests moving when an update writes and staying put
+// when a refresh reads. Neither is visible in a diff, so the tests have to look
+// here. Returns nil when the stack holds no such resource.
+func StateOutputs(t *testing.T, stack *auto.Stack, typeToken string) map[string]any {
+	t.Helper()
+	dep, err := stack.Export(context.Background())
+	if err != nil {
+		t.Fatalf("pulumi stack export: %v", err)
+	}
+	var state struct {
+		Resources []struct {
+			Type    string         `json:"type"`
+			Outputs map[string]any `json:"outputs"`
+		} `json:"resources"`
+	}
+	if err := json.Unmarshal(dep.Deployment, &state); err != nil {
+		t.Fatalf("decode exported state: %v", err)
+	}
+	for _, r := range state.Resources {
+		if r.Type == typeToken {
+			return r.Outputs
+		}
+	}
+	return nil
+}
+
+// StateStringMap pulls a map-of-strings output (appliedDigests) out of the state
+// of the first resource of the given type. Values Pulumi has encrypted appear as
+// a {"4dabf18193072939515e22adb298388d": "..."} envelope rather than a string;
+// those are reported as the empty string, since a caller comparing fingerprints
+// only needs to know whether they moved.
+func StateStringMap(t *testing.T, stack *auto.Stack, typeToken, key string) map[string]string {
+	t.Helper()
+	outs := StateOutputs(t, stack, typeToken)
+	raw, ok := outs[key].(map[string]any)
+	if !ok {
+		return nil
+	}
+	got := make(map[string]string, len(raw))
+	for k, v := range raw {
+		if s, ok := v.(string); ok {
+			got[k] = s
+		}
+	}
+	return got
+}
+
 // Refresh runs `pulumi refresh` on the stack and returns the per-op resource
 // change counts (e.g. {"same": 2, "delete": 1}).
 func Refresh(t *testing.T, stack *auto.Stack) map[string]int {
@@ -107,14 +192,25 @@ func AssertRefreshClean(t *testing.T, stack *auto.Stack) {
 // "adaptive:index:Endpoint".
 func ImportResource(t *testing.T, stack *auto.Stack, typ, name, id string) string {
 	t.Helper()
+	code, err := ImportResourceErr(t, stack, typ, name, id)
+	if err != nil {
+		t.Fatalf("pulumi import %s %s %s: %v", typ, name, id, err)
+	}
+	return code
+}
+
+// ImportResourceErr is ImportResource without the fatal: it hands the error
+// back so tests can assert that an import is *rejected*.
+func ImportResourceErr(t *testing.T, stack *auto.Stack, typ, name, id string) (string, error) {
+	t.Helper()
 	res, err := stack.ImportResources(context.Background(),
 		optimport.Resources([]*optimport.ImportResource{{Type: typ, Name: name, ID: id}}),
 		optimport.ProgressStreams(&logWriter{t}),
 	)
 	if err != nil {
-		t.Fatalf("pulumi import %s %s %s: %v", typ, name, id, err)
+		return "", err
 	}
-	return res.GeneratedCode
+	return res.GeneratedCode, nil
 }
 
 // Preview returns the per-op change counts a `pulumi preview` would apply.

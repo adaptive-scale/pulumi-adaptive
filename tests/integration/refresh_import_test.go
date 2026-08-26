@@ -3,11 +3,9 @@
 package integration
 
 import (
-	"bytes"
 	"encoding/json"
 	"fmt"
 	"net/http"
-	"strings"
 	"testing"
 
 	adaptive "github.com/adaptive-scale/pulumi-adaptive/sdk/go/adaptive"
@@ -16,33 +14,6 @@ import (
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 )
-
-// rawTerraformAPI issues a request against the /api/v1/terraform surface with
-// the service token, for out-of-band mutations the tests need.
-func rawTerraformAPI(t *testing.T, cfg harness.Config, method, path string, body any) (*http.Response, []byte) {
-	t.Helper()
-	var buf *bytes.Buffer
-	if body != nil {
-		b, err := json.Marshal(body)
-		require.NoError(t, err)
-		buf = bytes.NewBuffer(b)
-	} else {
-		buf = bytes.NewBuffer(nil)
-	}
-	url := strings.TrimRight(cfg.URL, "/") + "/api/v1/terraform" + path
-	req, err := http.NewRequest(method, url, buf)
-	require.NoError(t, err)
-	req.Header.Set("Authorization", cfg.ServiceToken)
-	if body != nil {
-		req.Header.Set("Content-Type", "application/json")
-	}
-	resp, err := http.DefaultClient.Do(req)
-	require.NoError(t, err)
-	defer resp.Body.Close()
-	var out bytes.Buffer
-	_, _ = out.ReadFrom(resp.Body)
-	return resp, out.Bytes()
-}
 
 // TestRefreshClean deploys a Resource + Endpoint (with server-defaulted
 // memory/cpu/idleTimeout and the default "direct" type) and asserts a refresh
@@ -207,4 +178,30 @@ func TestImportEndpoint(t *testing.T) {
 	generated := harness.ImportResource(t, stack, "adaptive:index:Endpoint", "imported-ep", ep.ID)
 	assert.NotEmpty(t, generated, "import should generate program code")
 	assert.Contains(t, generated, epName, "generated code should carry the endpoint name")
+}
+
+// TestImportUnknownIDFails pins that an import naming an id the workspace does
+// not have is rejected outright. It used to succeed: the provider signalled
+// not-found with an empty ReadResponse, which the engine only honours for
+// refresh, so the bogus id landed in state with empty inputs and every later
+// preview showed a diff.
+func TestImportUnknownIDFails(t *testing.T) {
+	cfg := harness.RequireConfig(t)
+	_, stack := harness.DeployStack(t, cfg, stackName("import-bad"), func(ctx *pulumi.Context) error {
+		return nil
+	})
+
+	for _, typ := range []string{"adaptive:index:Endpoint", "adaptive:index:Resource"} {
+		t.Run(typ, func(t *testing.T) {
+			_, err := harness.ImportResourceErr(t, stack, typ, "nope", uniqueName("not-a-real-id"))
+			require.Error(t, err, "import of an unknown id must fail")
+			assert.Contains(t, err.Error(), "cannot import",
+				"the failure should name the id and say it does not exist")
+		})
+	}
+
+	// Nothing may have been written to state by the failed imports: the program
+	// is empty, so anything that had landed there would show up as a delete.
+	assert.Zero(t, harness.Preview(t, stack)["delete"],
+		"a rejected import must leave state untouched")
 }

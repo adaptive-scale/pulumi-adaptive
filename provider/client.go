@@ -466,6 +466,19 @@ func (c *Client) DeleteSession(ctx context.Context, sessionID string) error {
 	return nil
 }
 
+// identifiedRead is implemented by the read responses that carry the server's
+// own id for the record, so readTyped can check that a 200 actually describes
+// the object that was asked for.
+type identifiedRead interface{ readID() string }
+
+func (r *SessionReadResponse) readID() string        { return r.ID }
+func (r *ResourceReadResponse) readID() string       { return r.ID }
+func (r *AuthorizationReadResponse) readID() string  { return r.ID }
+func (r *TeamReadResponse) readID() string           { return r.ID }
+func (r *ScriptReadResponse) readID() string         { return r.ID }
+func (r *ScheduleReadResponse) readID() string       { return r.ID }
+func (r *DataProtectionReadResponse) readID() string { return r.ID }
+
 // readTyped performs a GET against a /read/:id route and decodes the response.
 // Not-found (404) is reported as (nil, nil) so callers can treat it as "the
 // resource no longer exists" rather than a fault.
@@ -485,6 +498,15 @@ func readTyped[T any](c *Client, ctx context.Context, url, what, id string) (*T,
 	out := new(T)
 	if err := json.NewDecoder(resp.Body).Decode(out); err != nil {
 		return nil, fmt.Errorf("failed to decode %s read response: %w", what, err)
+	}
+	// Fail loudly if the server hands back a different record than the one asked
+	// for. Deliberately silent when the id is absent: older servers omit it, and
+	// treating that as not-found would delete live resources from state on
+	// refresh.
+	if v, ok := any(out).(identifiedRead); ok {
+		if got := v.readID(); got != "" && got != id {
+			return nil, fmt.Errorf("read of %s %s returned %s instead", what, id, got)
+		}
 	}
 	return out, nil
 }
@@ -896,24 +918,20 @@ func readBody(resp *http.Response) string {
 	return strings.TrimSpace(string(b))
 }
 
-// resolveToken mirrors the Terraform provider's token resolution: an explicit
-// token (raw, or JSON in either the deployments-config or simple shape), then
-// the ADAPTIVE_SVC_TOKEN / ADAPTIVE_URL environment variables, then a fallback
-// to ~/.adaptive/token.
+// resolveToken resolves credentials at connection time: the ADAPTIVE_SVC_TOKEN
+// and ADAPTIVE_URL environment variables, falling back to ~/.adaptive/token. The
+// token may be raw, or JSON in either the deployments-config or the simple
+// {token,url} shape.
 //
-// The environment is consulted here — at connection time — and not only via
-// the provider's config defaults, because config defaults are applied when the
-// program runs (check phase). Operations that run purely from state, like a
-// plain `pulumi refresh` of a stack whose provider was registered without
-// config (e.g. by `pulumi import`), never go through that phase and would
-// otherwise silently ignore the environment.
-func resolveToken(serviceToken, workspaceURL string) (string, string, error) {
-	if serviceToken == "" {
-		serviceToken = os.Getenv("ADAPTIVE_SVC_TOKEN")
-	}
-	if workspaceURL == "" {
-		workspaceURL = os.Getenv("ADAPTIVE_URL")
-	}
+// This is the only source. Credentials used to also be provider config, but
+// Pulumi persists provider config in the stack, which put the token in state —
+// see the note in provider.go. Reading the environment at connection time rather
+// than through config defaults also means operations that run purely from state,
+// like a plain `pulumi refresh`, pick it up: config defaults are applied during
+// the program's check phase, which those never reach.
+func resolveToken() (string, string, error) {
+	serviceToken := os.Getenv("ADAPTIVE_SVC_TOKEN")
+	workspaceURL := os.Getenv("ADAPTIVE_URL")
 	if serviceToken == "" {
 		home, err := os.UserHomeDir()
 		if err != nil {

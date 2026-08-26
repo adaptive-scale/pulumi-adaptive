@@ -2,6 +2,7 @@ package adaptive
 
 import (
 	"fmt"
+	"reflect"
 	"sort"
 	"strconv"
 	"strings"
@@ -1377,6 +1378,78 @@ func getBool(cfg map[string]any, key string) (bool, bool) {
 		return b, true
 	}
 	return false, false
+}
+
+// argProbeSentinel is a value no real configuration can hold, used to trace a
+// server config key back to the argument it feeds.
+const argProbeSentinel = "\x00adaptive-arg-probe\x00"
+
+// argForConfigKey resolves the schema property that a server config key feeds.
+//
+// The mapping lives in applyIntegrationConfig's switch, one arm per integration
+// type. It is queried here rather than duplicated into a table: a parallel table
+// would be ~82 types long and would silently rot the first time someone edited
+// only one of the two. Running the real switch with a sentinel and seeing where
+// it lands cannot disagree with itself.
+//
+// ResourceArgs is a flat struct of *string fields carrying their own pulumi
+// tags, and setStr writes any non-empty value unconditionally, so the sentinel
+// always lands on exactly the field the key drives. Non-pointer fields (tags,
+// the setHosts targets) are skipped: no secret is carried in one.
+//
+// Reports ok=false for a key the type does not map, and for the dotted or
+// indexed paths the server produces for nested secrets ("targets[0].password") —
+// those name no single argument, so the caller reports them by name instead.
+func argForConfigKey(integrationType, cfgKey string) (field int, prop string, ok bool) {
+	if cfgKey == "" {
+		return 0, "", false
+	}
+	var probe ResourceArgs
+	applyIntegrationConfig(&probe, integrationType, map[string]any{cfgKey: argProbeSentinel})
+
+	v := reflect.ValueOf(probe)
+	t := v.Type()
+	for i := 0; i < t.NumField(); i++ {
+		f := v.Field(i)
+		if f.Kind() != reflect.Ptr || f.IsNil() || f.Elem().Kind() != reflect.String {
+			continue
+		}
+		if f.Elem().String() != argProbeSentinel {
+			continue
+		}
+		name, _, _ := strings.Cut(t.Field(i).Tag.Get("pulumi"), ",")
+		if name == "" {
+			return 0, "", false
+		}
+		return i, name, true
+	}
+	return 0, "", false
+}
+
+// argIsSecret reports whether the field at index i of ResourceArgs is declared
+// secret, so a key the server redacted is only ever marked on an argument the
+// schema also treats as secret.
+func argIsSecret(field int) bool {
+	return reflect.TypeOf(ResourceArgs{}).Field(field).Tag.Get("provider") == "secret"
+}
+
+// argIsSet reports whether the program supplied a value for the field at index
+// i. An unset argument means the secret is not under management: the drift is
+// still reported, and the next update clears it server-side, because the
+// program is the source of truth for the whole configuration.
+func argIsSet(a *ResourceArgs, field int) bool {
+	f := reflect.ValueOf(a).Elem().Field(field)
+	return f.Kind() == reflect.Ptr && !f.IsNil()
+}
+
+// setArg writes a value to the field at index i.
+func setArg(a *ResourceArgs, field int, value string) {
+	f := reflect.ValueOf(a).Elem().Field(field)
+	if f.Kind() != reflect.Ptr || f.Type().Elem().Kind() != reflect.String {
+		return
+	}
+	v := value
+	f.Set(reflect.ValueOf(&v))
 }
 
 // setStr reconciles one optional string argument against the server value. An

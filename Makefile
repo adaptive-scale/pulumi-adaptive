@@ -1,10 +1,10 @@
 PROVIDER  := pulumi-resource-adaptive
-VERSION   ?= 0.2.0
+VERSION   ?= 0.3.0
 GOBIN     := $(shell go env GOPATH)/bin
 LDFLAGS   := -X github.com/adaptive-scale/pulumi-adaptive/provider.Version=$(VERSION)
 
 .PHONY: help build gen gen_dotnet build_go build_nodejs build_python build_dotnet \
-	build_sdks install clean test test-integration
+	build_sdks install clean test test-integration print-version
 
 help:
 	@echo "Targets:"
@@ -19,7 +19,13 @@ help:
 	@echo "  install       Build the plugin onto your PATH ($(GOBIN)) for use by Pulumi"
 	@echo "  test          Run provider unit tests and compile the Go SDK"
 	@echo "  test-integration  Deploy real resources and verify via the Client API (needs creds + install)"
+	@echo "  print-version Print the build version, for scripts and install instructions"
 	@echo "  clean         Remove build artifacts"
+
+# The single source of the version, so install instructions and scripts never
+# hardcode a tag that can drift from what is actually built.
+print-version:
+	@echo $(VERSION)
 
 # Compile the provider plugin binary.
 build:
@@ -72,8 +78,10 @@ test:
 # Run the integration tests: deploy real resources via the SDK and verify them
 # through the Client App API. Requires ADAPTIVE_CLIENT_ID/SECRET (e.g. in
 # tests/.env.local) and a valid Adaptive token; installs the plugin first.
+# 45m rather than 30m: endpoint creation polls the server until the session is
+# up (~5 min each) and the lifecycle matrix creates several.
 test-integration: install
-	cd tests/integration && go test -tags=integration ./... -v -timeout 30m
+	cd tests/integration && go test -tags=integration ./... -v -timeout 45m
 
 clean:
 	rm -rf provider/bin dist sdk/nodejs/bin sdk/nodejs/node_modules \
