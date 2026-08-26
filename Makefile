@@ -78,8 +78,10 @@ test:
 # Run the integration tests: deploy real resources via the SDK and verify them
 # through the Client App API. Requires ADAPTIVE_CLIENT_ID/SECRET (e.g. in
 # tests/.env.local) and a valid Adaptive token; installs the plugin first.
+# 45m rather than 30m: endpoint creation polls the server until the session is
+# up (~5 min each) and the lifecycle matrix creates several.
 test-integration: install
-	cd tests/integration && go test -tags=integration ./... -v -timeout 30m
+	cd tests/integration && go test -tags=integration ./... -v -timeout 45m
 
 clean:
 	rm -rf provider/bin dist sdk/nodejs/bin sdk/nodejs/node_modules \
