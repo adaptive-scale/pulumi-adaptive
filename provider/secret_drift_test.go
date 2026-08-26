@@ -428,3 +428,54 @@ func TestResourceReadSecretDrift(t *testing.T) {
 		}
 	})
 }
+
+// A stack created before the rename carries `redactedDigests` in its state.
+// infer refuses to decode an unrecognized property, so without a state migration
+// every such stack fails to refresh outright:
+//
+//	error: 1 failures decoding:
+//	    redactedDigests: Unrecognized field 'redactedDigests' on 'adaptive.ResourceState'
+//
+// This is the regression test for that — it exercises Read against v1-shaped
+// state, which is what an existing stack actually supplies.
+func TestResourceReadMigratesV1State(t *testing.T) {
+	const body = `{"id":"r-1","name":"db","integrationType":"postgres",
+		"configuration":{"hostname":"h","username":"app","port":"5432"},
+		"redactedKeys":["password"],
+		"redactedDigests":{"password":"server-digest"}}`
+
+	args := map[string]property.Value{
+		"name": property.New("db"), "type": property.New("postgres"),
+		"hostname": property.New("h"), "username": property.New("app"),
+		"password": property.New("s3cret"),
+	}
+	// State as an older provider wrote it: the old property name.
+	oldState := map[string]property.Value{}
+	for k, v := range args {
+		oldState[k] = v
+	}
+	oldState["redactedDigests"] = property.New(map[string]property.Value{
+		"password": property.New("recorded-digest"),
+	})
+
+	srv := newReadServer(t, func(w http.ResponseWriter, _ *http.Request) {
+		_, _ = w.Write([]byte(body))
+	})
+	resp, err := srv.Read(p.ReadRequest{
+		ID: "r-1", Urn: urnFor("adaptive:index:Resource"),
+		Inputs: property.NewMap(args), Properties: property.NewMap(oldState),
+	})
+	if err != nil {
+		t.Fatalf("v1 state must still decode; an existing stack cannot refresh otherwise: %v", err)
+	}
+
+	// The recorded fingerprints carry across the rename rather than being
+	// dropped, so drift is detected on this refresh instead of the next one.
+	// "recorded-digest" != "server-digest", so the secret is marked.
+	if v, ok := resp.Inputs.GetOk("password"); !ok || v.AsString() != "server-digest" {
+		t.Errorf("migrated baseline should have been compared and the drift marked, got %v", v)
+	}
+	if _, ok := resp.Properties.GetOk("redactedDigests"); ok {
+		t.Error("migrated state must not carry the old property forward")
+	}
+}

@@ -185,6 +185,40 @@ type ResourceState struct {
 	AppliedDigests map[string]string `pulumi:"appliedDigests,optional"`
 }
 
+// resourceStateV1 is the state shape written before appliedDigests replaced
+// redactedDigests. Old state carries a field the current struct does not have,
+// and infer refuses to decode an unrecognized property — without this migration
+// every stack created by an earlier provider fails to refresh with
+// "Unrecognized field 'redactedDigests'".
+type resourceStateV1 struct {
+	ResourceArgs
+	RedactedDigests map[string]string `pulumi:"redactedDigests,optional"`
+}
+
+// migrateResourceStateV1 carries the recorded fingerprints across the rename.
+//
+// The two fields do not mean quite the same thing — redactedDigests held what
+// the server reported at the last *read*, appliedDigests holds what it reported
+// after the last *write* — but adopting them is better than discarding them.
+// Dropping them would leave the baseline empty, which the seeding path treats as
+// "nothing recorded yet": correct, but it silently skips drift detection for one
+// refresh. Carrying them over means a secret changed since that last read is
+// reported immediately.
+func migrateResourceStateV1(ctx context.Context, v1 resourceStateV1) (infer.MigrationResult[ResourceState], error) {
+	return infer.MigrationResult[ResourceState]{
+		Result: &ResourceState{
+			ResourceArgs:   v1.ResourceArgs,
+			AppliedDigests: v1.RedactedDigests,
+		},
+	}, nil
+}
+
+func (*Resource) StateMigrations(context.Context) []infer.StateMigrationFunc[ResourceState] {
+	return []infer.StateMigrationFunc[ResourceState]{
+		infer.StateMigration(migrateResourceStateV1),
+	}
+}
+
 func (r *ResourceArgs) Annotate(a infer.Annotator) {
 	a.Describe(&r.Type, "Type of the Adaptive resource (integration), e.g. postgres, mysql, mongodb, ssh, kubernetes, aws, gcp, azure, snowflake.")
 	a.Describe(&r.Name, "Name of the Adaptive resource.")
