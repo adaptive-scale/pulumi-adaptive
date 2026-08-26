@@ -232,3 +232,97 @@ func TestSecretDriftQuietWhenNothingChanged(t *testing.T) {
 		assert.Equal(t, first, digests(t, stack), "pass %d: fingerprints should not churn", i)
 	}
 }
+
+// Script bodies drift too, through a different mechanism that had no coverage.
+//
+// The server never returns a script body — it is write-only — so the provider
+// detects an out-of-band edit by comparing commandDigest, and signals it by
+// blanking `command`. Blanking works here for the reason it did not work for
+// resource secrets: `command` is required, so it is always set, and clearing it
+// always produces a diff. That difference is why this needs its own test rather
+// than an extra case in the resource ones.
+func TestScriptCommandDriftDetected(t *testing.T) {
+	t.Parallel()
+	cfg := harness.RequireProviderConfig(t)
+
+	resName := uniqueName("pulumi-it-drift-scr-res")
+	epName := uniqueName("pulumi-it-drift-scr-ep")
+	scrName := uniqueName("pulumi-it-drift-scr")
+
+	outs, stack := harness.DeployStack(t, cfg, stackName("drift-script"), func(ctx *pulumi.Context) error {
+		db, err := adaptive.NewResource(ctx, "db", &adaptive.ResourceArgs{
+			Name:     pulumi.String(resName),
+			Type:     pulumi.String("postgres"),
+			Host:     pulumi.String("db.example.com"),
+			Port:     pulumi.String("5432"),
+			Username: pulumi.String("admin"),
+			Password: pulumi.String("not-a-real-password"),
+			SslMode:  pulumi.String("require"),
+		})
+		if err != nil {
+			return err
+		}
+		ep, err := adaptive.NewEndpoint(ctx, "ep", &adaptive.EndpointArgs{
+			Name:     pulumi.String(epName),
+			Resource: db.Name,
+			Ttl:      pulumi.String("8h"),
+		})
+		if err != nil {
+			return err
+		}
+		scr, err := adaptive.NewScript(ctx, "scr", &adaptive.ScriptArgs{
+			Name:     pulumi.String(scrName),
+			Endpoint: ep.Name,
+			Command:  pulumi.String("psql -c 'select 1'"),
+		})
+		if err != nil {
+			return err
+		}
+		ctx.Export("scriptId", scr.ID())
+		return nil
+	})
+	scriptID := harness.StringOutput(t, outs, "scriptId")
+
+	// The server's own view of the body, which is the only thing that can show
+	// whether the program's command was re-applied over an out-of-band edit.
+	serverDigest := func() string {
+		t.Helper()
+		_, body := rawTerraformAPI(t, cfg, "GET", "/script/read/"+scriptID, nil)
+		var out struct {
+			CommandDigest string `json:"commandDigest"`
+		}
+		require.NoError(t, json.Unmarshal(body, &out), "decoding script read: %s", body)
+		return out.CommandDigest
+	}
+
+	recorded := serverDigest()
+	require.NotEmpty(t, recorded,
+		"no command fingerprint reported; an older server without commandDigest cannot detect this "+
+			"drift at all, and the rest of this test would pass for the wrong reason")
+
+	// Edit the body outside Pulumi. The script routes take capitalised keys.
+	rawTerraformAPI(t, cfg, "POST", "/script/update/"+scriptID, map[string]any{
+		"Name":     scrName,
+		"Endpoint": epName,
+		"Command":  "psql -c 'select 2 -- edited outside pulumi'",
+	})
+	require.NotEqual(t, recorded, serverDigest(),
+		"the out-of-band edit did not change the stored body, so there is no drift to detect")
+
+	harness.Refresh(t, stack)
+	harness.Up(t, stack)
+
+	// Deliberately not asserting on Preview's counts. They aggregate over every
+	// resource in the stack, and this stack holds three — so an update on the
+	// Resource or Endpoint would satisfy the assertion whether or not the script
+	// drifted, which is how an earlier version of this test passed with the
+	// detection removed. The server's fingerprint is specific to the script.
+	//
+	// The program's command never changed, so re-applying it restores the
+	// original fingerprint exactly. Left undetected, the edited body survives.
+	assert.Equal(t, recorded, serverDigest(),
+		"the program's command must be re-applied over the out-of-band edit; a fingerprint still "+
+			"matching the edit means the drift was never detected")
+
+	harness.AssertRefreshClean(t, stack)
+}
