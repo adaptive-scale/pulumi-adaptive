@@ -1,5 +1,5 @@
 PROVIDER  := pulumi-resource-adaptive
-VERSION   ?= 0.3.0
+VERSION   ?= 0.3.1
 GOBIN     := $(shell go env GOPATH)/bin
 LDFLAGS   := -X github.com/adaptive-scale/pulumi-adaptive/provider.Version=$(VERSION)
 
