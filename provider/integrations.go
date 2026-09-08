@@ -344,7 +344,7 @@ type kubernetesConfig struct {
 	TolerationsBytes  string `yaml:"tolerationsBytes,omitempty"`
 	AnnotationsBytes  string `yaml:"annotationsBytes,omitempty"`
 	NodeSelectorBytes string `yaml:"nodeSelectorBytes,omitempty"`
-	NodeAffinityBytes string `yaml:"nodeAffinityBytes,omitempty"`
+	NodeAffinityBytes string `yaml:"affinityBytes,omitempty"`
 }
 
 type awsDocumentDBConfig struct {
@@ -1018,12 +1018,7 @@ func applyIntegrationConfig(a *ResourceArgs, integrationType string, cfg map[str
 		setStr(&a.Tolerations, cfg, "tolerationsBytes")
 		setStr(&a.Annotations, cfg, "annotationsBytes")
 		setStr(&a.NodeSelector, cfg, "nodeSelectorBytes")
-		setStr(&a.NodeAffinity, cfg, "nodeAffinityBytes")
-		// affinityBytes was emitted by older UI/provider versions. New writes
-		// use nodeAffinityBytes, but imports must not lose existing values.
-		if a.NodeAffinity == nil {
-			setStr(&a.NodeAffinity, cfg, "affinityBytes")
-		}
+		setStr(&a.NodeAffinity, cfg, "affinityBytes")
 	case "awsdocumentdb":
 		setStr(&a.URI, cfg, "uri")
 	case "zerotier":
