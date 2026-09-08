@@ -1,6 +1,6 @@
 {
   "resource": true,
   "name": "adaptive",
-  "version": "0.3.1",
+  "version": "0.3.2",
   "server": "github://api.github.com/adaptive-scale/pulumi-adaptive"
 }
