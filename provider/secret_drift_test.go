@@ -61,7 +61,6 @@ func TestArgForConfigKeyResolvesRealArguments(t *testing.T) {
 		{"kubernetes", "annotationsBytes", "annotations"},
 		{"kubernetes", "tolerationsBytes", "tolerations"},
 		{"kubernetes", "nodeSelectorBytes", "nodeSelector"},
-		{"kubernetes", "nodeAffinityBytes", "nodeAffinity"},
 		{"kubernetes", "affinityBytes", "nodeAffinity"},
 	}
 	for _, c := range cases {

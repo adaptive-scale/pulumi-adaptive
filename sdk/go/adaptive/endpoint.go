@@ -44,8 +44,10 @@ type Endpoint struct {
 	// Require multiple approvers for Just-In-Time access requests.
 	JitMultiApprover pulumi.BoolPtrOutput `pulumi:"jitMultiApprover"`
 	// Number of approvals required when multi-approver is enabled.
-	JitTotalApprovers pulumi.IntPtrOutput    `pulumi:"jitTotalApprovers"`
-	Memory            pulumi.StringPtrOutput `pulumi:"memory"`
+	JitTotalApprovers pulumi.IntPtrOutput `pulumi:"jitTotalApprovers"`
+	// Maximum duration of a Just-In-Time access request for this endpoint. Empty clears the endpoint override and inherits the workspace setting.
+	MaxJitRequestDuration pulumi.StringPtrOutput `pulumi:"maxJitRequestDuration"`
+	Memory                pulumi.StringPtrOutput `pulumi:"memory"`
 	// The name of the endpoint to create.
 	Name         pulumi.StringOutput    `pulumi:"name"`
 	PauseTimeout pulumi.StringPtrOutput `pulumi:"pauseTimeout"`
@@ -135,8 +137,10 @@ type endpointArgs struct {
 	// Require multiple approvers for Just-In-Time access requests.
 	JitMultiApprover *bool `pulumi:"jitMultiApprover"`
 	// Number of approvals required when multi-approver is enabled.
-	JitTotalApprovers *int    `pulumi:"jitTotalApprovers"`
-	Memory            *string `pulumi:"memory"`
+	JitTotalApprovers *int `pulumi:"jitTotalApprovers"`
+	// Maximum duration of a Just-In-Time access request for this endpoint. Empty clears the endpoint override and inherits the workspace setting.
+	MaxJitRequestDuration *string `pulumi:"maxJitRequestDuration"`
+	Memory                *string `pulumi:"memory"`
 	// The name of the endpoint to create.
 	Name         string  `pulumi:"name"`
 	PauseTimeout *string `pulumi:"pauseTimeout"`
@@ -178,7 +182,9 @@ type EndpointArgs struct {
 	JitMultiApprover pulumi.BoolPtrInput
 	// Number of approvals required when multi-approver is enabled.
 	JitTotalApprovers pulumi.IntPtrInput
-	Memory            pulumi.StringPtrInput
+	// Maximum duration of a Just-In-Time access request for this endpoint. Empty clears the endpoint override and inherits the workspace setting.
+	MaxJitRequestDuration pulumi.StringPtrInput
+	Memory                pulumi.StringPtrInput
 	// The name of the endpoint to create.
 	Name         pulumi.StringInput
 	PauseTimeout pulumi.StringPtrInput
@@ -360,6 +366,11 @@ func (o EndpointOutput) JitMultiApprover() pulumi.BoolPtrOutput {
 // Number of approvals required when multi-approver is enabled.
 func (o EndpointOutput) JitTotalApprovers() pulumi.IntPtrOutput {
 	return o.ApplyT(func(v *Endpoint) pulumi.IntPtrOutput { return v.JitTotalApprovers }).(pulumi.IntPtrOutput)
+}
+
+// Maximum duration of a Just-In-Time access request for this endpoint. Empty clears the endpoint override and inherits the workspace setting.
+func (o EndpointOutput) MaxJitRequestDuration() pulumi.StringPtrOutput {
+	return o.ApplyT(func(v *Endpoint) pulumi.StringPtrOutput { return v.MaxJitRequestDuration }).(pulumi.StringPtrOutput)
 }
 
 func (o EndpointOutput) Memory() pulumi.StringPtrOutput {

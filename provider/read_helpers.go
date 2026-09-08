@@ -192,6 +192,7 @@ func applyEndpointRead(prior EndpointArgs, r *SessionReadResponse, isImport bool
 	a.AutoApproval = boolOpt(prior.AutoApproval, r.AutoApproval, isImport)
 	a.JitMultiApprover = boolOpt(prior.JitMultiApprover, r.JITMultiApprover, isImport)
 	a.JitTotalApprovers = intOpt(prior.JitTotalApprovers, r.JITTotalApprovers, isImport)
+	a.MaxJitRequestDuration = strOpt(prior.MaxJitRequestDuration, r.MaxJITRequestDuration, isImport)
 	return a
 }
 

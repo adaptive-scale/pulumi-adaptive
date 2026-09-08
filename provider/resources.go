@@ -32,13 +32,14 @@ type EndpointArgs struct {
 	ScriptOnlyAccess *bool    `pulumi:"scriptOnlyAccess,optional"`
 	Tags             []string `pulumi:"tags,optional"`
 
-	DisableOutputCapture *bool   `pulumi:"disableOutputCapture,optional"`
-	DisableDataStudio    *bool   `pulumi:"disableDataStudio,optional"`
-	DisableWebCli        *bool   `pulumi:"disableWebCli,optional"`
-	JitMode              *string `pulumi:"jitMode,optional"`
-	AutoApproval         *bool   `pulumi:"autoApproval,optional"`
-	JitMultiApprover     *bool   `pulumi:"jitMultiApprover,optional"`
-	JitTotalApprovers    *int    `pulumi:"jitTotalApprovers,optional"`
+	DisableOutputCapture  *bool   `pulumi:"disableOutputCapture,optional"`
+	DisableDataStudio     *bool   `pulumi:"disableDataStudio,optional"`
+	DisableWebCli         *bool   `pulumi:"disableWebCli,optional"`
+	JitMode               *string `pulumi:"jitMode,optional"`
+	AutoApproval          *bool   `pulumi:"autoApproval,optional"`
+	JitMultiApprover      *bool   `pulumi:"jitMultiApprover,optional"`
+	JitTotalApprovers     *int    `pulumi:"jitTotalApprovers,optional"`
+	MaxJitRequestDuration *string `pulumi:"maxJitRequestDuration,optional"`
 }
 
 type EndpointState struct {
@@ -68,6 +69,7 @@ func (e *EndpointArgs) Annotate(a infer.Annotator) {
 	a.Describe(&e.AutoApproval, "Automatically approve Just-In-Time access requests.")
 	a.Describe(&e.JitMultiApprover, "Require multiple approvers for Just-In-Time access requests.")
 	a.Describe(&e.JitTotalApprovers, "Number of approvals required when multi-approver is enabled.")
+	a.Describe(&e.MaxJitRequestDuration, "Maximum duration of a Just-In-Time access request for this endpoint. Empty clears the endpoint override and inherits the workspace setting.")
 }
 
 func (e *EndpointState) Annotate(a infer.Annotator) {
@@ -113,13 +115,14 @@ func (a EndpointArgs) toSessionRequest() (CreateSessionRequest, error) {
 		IdleTimeout:       sv(a.IdleTimeout),
 		ScriptOnlyAccess:  bv(a.ScriptOnlyAccess),
 
-		DisableOutputCapture: bv(a.DisableOutputCapture),
-		DisableDataStudio:    bv(a.DisableDataStudio),
-		DisableWebCLI:        bv(a.DisableWebCli),
-		JITMode:              sv(a.JitMode),
-		AutoApproval:         a.AutoApproval,
-		JITMultiApprover:     a.JitMultiApprover,
-		JITTotalApprovers:    a.JitTotalApprovers,
+		DisableOutputCapture:  bv(a.DisableOutputCapture),
+		DisableDataStudio:     bv(a.DisableDataStudio),
+		DisableWebCLI:         bv(a.DisableWebCli),
+		JITMode:               sv(a.JitMode),
+		AutoApproval:          a.AutoApproval,
+		JITMultiApprover:      a.JitMultiApprover,
+		JITTotalApprovers:     a.JitTotalApprovers,
+		MaxJITRequestDuration: a.MaxJitRequestDuration,
 	}, nil
 }
 

@@ -5,7 +5,7 @@
   keywords = ["pulumi", "adaptive", "access-management", "security", "category/infrastructure", "kind/native"]
   readme = "README.md"
   requires-python = ">=3.9"
-  version = "0.3.1"
+  version = "0.3.2"
   [project.license]
     text = "Apache-2.0"
   [project.urls]
