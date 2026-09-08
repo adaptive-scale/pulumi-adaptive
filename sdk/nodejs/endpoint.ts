@@ -87,6 +87,10 @@ export class Endpoint extends pulumi.CustomResource {
      * Number of approvals required when multi-approver is enabled.
      */
     declare public readonly jitTotalApprovers: pulumi.Output<number | undefined>;
+    /**
+     * Maximum duration of a Just-In-Time access request for this endpoint. Empty clears the endpoint override and inherits the workspace setting.
+     */
+    declare public readonly maxJitRequestDuration: pulumi.Output<string | undefined>;
     declare public readonly memory: pulumi.Output<string | undefined>;
     /**
      * The name of the endpoint to create.
@@ -147,6 +151,7 @@ export class Endpoint extends pulumi.CustomResource {
             resourceInputs["jitMode"] = args?.jitMode;
             resourceInputs["jitMultiApprover"] = args?.jitMultiApprover;
             resourceInputs["jitTotalApprovers"] = args?.jitTotalApprovers;
+            resourceInputs["maxJitRequestDuration"] = args?.maxJitRequestDuration;
             resourceInputs["memory"] = args?.memory;
             resourceInputs["name"] = args?.name;
             resourceInputs["pauseTimeout"] = args?.pauseTimeout;
@@ -178,6 +183,7 @@ export class Endpoint extends pulumi.CustomResource {
             resourceInputs["jitMode"] = undefined /*out*/;
             resourceInputs["jitMultiApprover"] = undefined /*out*/;
             resourceInputs["jitTotalApprovers"] = undefined /*out*/;
+            resourceInputs["maxJitRequestDuration"] = undefined /*out*/;
             resourceInputs["memory"] = undefined /*out*/;
             resourceInputs["name"] = undefined /*out*/;
             resourceInputs["pauseTimeout"] = undefined /*out*/;
@@ -242,6 +248,10 @@ export interface EndpointArgs {
      * Number of approvals required when multi-approver is enabled.
      */
     jitTotalApprovers?: pulumi.Input<number>;
+    /**
+     * Maximum duration of a Just-In-Time access request for this endpoint. Empty clears the endpoint override and inherits the workspace setting.
+     */
+    maxJitRequestDuration?: pulumi.Input<string>;
     memory?: pulumi.Input<string>;
     /**
      * The name of the endpoint to create.

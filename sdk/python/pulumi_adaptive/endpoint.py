@@ -35,6 +35,7 @@ class EndpointArgs:
                  jit_mode: Optional[pulumi.Input[_builtins.str]] = None,
                  jit_multi_approver: Optional[pulumi.Input[_builtins.bool]] = None,
                  jit_total_approvers: Optional[pulumi.Input[_builtins.int]] = None,
+                 max_jit_request_duration: Optional[pulumi.Input[_builtins.str]] = None,
                  memory: Optional[pulumi.Input[_builtins.str]] = None,
                  pause_timeout: Optional[pulumi.Input[_builtins.str]] = None,
                  script_only_access: Optional[pulumi.Input[_builtins.bool]] = None,
@@ -57,6 +58,7 @@ class EndpointArgs:
         :param pulumi.Input[_builtins.str] jit_mode: Which access paths require Just-In-Time approval: session, script, or both.
         :param pulumi.Input[_builtins.bool] jit_multi_approver: Require multiple approvers for Just-In-Time access requests.
         :param pulumi.Input[_builtins.int] jit_total_approvers: Number of approvals required when multi-approver is enabled.
+        :param pulumi.Input[_builtins.str] max_jit_request_duration: Maximum duration of a Just-In-Time access request for this endpoint. Empty clears the endpoint override and inherits the workspace setting.
         :param pulumi.Input[_builtins.bool] script_only_access: Whether the endpoint is only accessible via script.
         :param pulumi.Input[_builtins.str] ttl: Time-to-live for the endpoint, e.g. 8h, 7d, 90d.
         :param pulumi.Input[_builtins.str] type: The type of session: direct, client, cli, or services.
@@ -91,6 +93,8 @@ class EndpointArgs:
             pulumi.set(__self__, "jit_multi_approver", jit_multi_approver)
         if jit_total_approvers is not None:
             pulumi.set(__self__, "jit_total_approvers", jit_total_approvers)
+        if max_jit_request_duration is not None:
+            pulumi.set(__self__, "max_jit_request_duration", max_jit_request_duration)
         if memory is not None:
             pulumi.set(__self__, "memory", memory)
         if pause_timeout is not None:
@@ -289,6 +293,18 @@ class EndpointArgs:
         pulumi.set(self, "jit_total_approvers", value)
 
     @_builtins.property
+    @pulumi.getter(name="maxJitRequestDuration")
+    def max_jit_request_duration(self) -> Optional[pulumi.Input[_builtins.str]]:
+        """
+        Maximum duration of a Just-In-Time access request for this endpoint. Empty clears the endpoint override and inherits the workspace setting.
+        """
+        return pulumi.get(self, "max_jit_request_duration")
+
+    @max_jit_request_duration.setter
+    def max_jit_request_duration(self, value: Optional[pulumi.Input[_builtins.str]]):
+        pulumi.set(self, "max_jit_request_duration", value)
+
+    @_builtins.property
     @pulumi.getter
     def memory(self) -> Optional[pulumi.Input[_builtins.str]]:
         return pulumi.get(self, "memory")
@@ -381,6 +397,7 @@ class Endpoint(pulumi.CustomResource):
                  jit_mode: Optional[pulumi.Input[_builtins.str]] = None,
                  jit_multi_approver: Optional[pulumi.Input[_builtins.bool]] = None,
                  jit_total_approvers: Optional[pulumi.Input[_builtins.int]] = None,
+                 max_jit_request_duration: Optional[pulumi.Input[_builtins.str]] = None,
                  memory: Optional[pulumi.Input[_builtins.str]] = None,
                  name: Optional[pulumi.Input[_builtins.str]] = None,
                  pause_timeout: Optional[pulumi.Input[_builtins.str]] = None,
@@ -406,6 +423,7 @@ class Endpoint(pulumi.CustomResource):
         :param pulumi.Input[_builtins.str] jit_mode: Which access paths require Just-In-Time approval: session, script, or both.
         :param pulumi.Input[_builtins.bool] jit_multi_approver: Require multiple approvers for Just-In-Time access requests.
         :param pulumi.Input[_builtins.int] jit_total_approvers: Number of approvals required when multi-approver is enabled.
+        :param pulumi.Input[_builtins.str] max_jit_request_duration: Maximum duration of a Just-In-Time access request for this endpoint. Empty clears the endpoint override and inherits the workspace setting.
         :param pulumi.Input[_builtins.str] name: The name of the endpoint to create.
         :param pulumi.Input[_builtins.str] resource: The resource (by name) this endpoint grants access to.
         :param pulumi.Input[_builtins.bool] script_only_access: Whether the endpoint is only accessible via script.
@@ -450,6 +468,7 @@ class Endpoint(pulumi.CustomResource):
                  jit_mode: Optional[pulumi.Input[_builtins.str]] = None,
                  jit_multi_approver: Optional[pulumi.Input[_builtins.bool]] = None,
                  jit_total_approvers: Optional[pulumi.Input[_builtins.int]] = None,
+                 max_jit_request_duration: Optional[pulumi.Input[_builtins.str]] = None,
                  memory: Optional[pulumi.Input[_builtins.str]] = None,
                  name: Optional[pulumi.Input[_builtins.str]] = None,
                  pause_timeout: Optional[pulumi.Input[_builtins.str]] = None,
@@ -482,6 +501,7 @@ class Endpoint(pulumi.CustomResource):
             __props__.__dict__["jit_mode"] = jit_mode
             __props__.__dict__["jit_multi_approver"] = jit_multi_approver
             __props__.__dict__["jit_total_approvers"] = jit_total_approvers
+            __props__.__dict__["max_jit_request_duration"] = max_jit_request_duration
             __props__.__dict__["memory"] = memory
             if name is None and not opts.urn:
                 raise TypeError("Missing required property 'name'")
@@ -540,6 +560,7 @@ class Endpoint(pulumi.CustomResource):
         __props__.__dict__["jit_mode"] = None
         __props__.__dict__["jit_multi_approver"] = None
         __props__.__dict__["jit_total_approvers"] = None
+        __props__.__dict__["max_jit_request_duration"] = None
         __props__.__dict__["memory"] = None
         __props__.__dict__["name"] = None
         __props__.__dict__["pause_timeout"] = None
@@ -675,6 +696,14 @@ class Endpoint(pulumi.CustomResource):
         Number of approvals required when multi-approver is enabled.
         """
         return pulumi.get(self, "jit_total_approvers")
+
+    @_builtins.property
+    @pulumi.getter(name="maxJitRequestDuration")
+    def max_jit_request_duration(self) -> pulumi.Output[Optional[_builtins.str]]:
+        """
+        Maximum duration of a Just-In-Time access request for this endpoint. Empty clears the endpoint override and inherits the workspace setting.
+        """
+        return pulumi.get(self, "max_jit_request_duration")
 
     @_builtins.property
     @pulumi.getter

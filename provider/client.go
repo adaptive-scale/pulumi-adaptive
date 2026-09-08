@@ -105,13 +105,14 @@ type CreateSessionRequest struct {
 	IdleTimeout       string   `json:"idle_timeout,omitempty"`
 	ScriptOnlyAccess  bool     `json:"script_only_access"`
 
-	DisableOutputCapture bool   `json:"disable_output_capture"`
-	DisableDataStudio    bool   `json:"disable_data_studio"`
-	DisableWebCLI        bool   `json:"disable_web_cli"`
-	JITMode              string `json:"jit_mode,omitempty"`
-	AutoApproval         *bool  `json:"auto_approval,omitempty"`
-	JITMultiApprover     *bool  `json:"jit_multi_approver,omitempty"`
-	JITTotalApprovers    *int   `json:"jit_total_approvers,omitempty"`
+	DisableOutputCapture  bool    `json:"disable_output_capture"`
+	DisableDataStudio     bool    `json:"disable_data_studio"`
+	DisableWebCLI         bool    `json:"disable_web_cli"`
+	JITMode               string  `json:"jit_mode,omitempty"`
+	AutoApproval          *bool   `json:"auto_approval,omitempty"`
+	JITMultiApprover      *bool   `json:"jit_multi_approver,omitempty"`
+	JITTotalApprovers     *int    `json:"jit_total_approvers,omitempty"`
+	MaxJITRequestDuration *string `json:"max_jit_request_duration,omitempty"`
 }
 
 type ScriptRequest struct {
@@ -201,36 +202,37 @@ type ResourceReadResponse struct {
 }
 
 type SessionReadResponse struct {
-	ID                   string   `json:"id"`
-	Name                 string   `json:"name"`
-	Resource             string   `json:"resource"` // integration name, not id
-	Cluster              string   `json:"cluster"`
-	Authorization        string   `json:"authorization"`
-	Status               string   `json:"status"`
-	SessionType          string   `json:"sessionType"` // cli | client | services
-	TTL                  string   `json:"ttl"`
-	IdleTimeout          string   `json:"idleTimeout"`
-	PauseTimeout         string   `json:"pauseTimeout"`
-	Memory               string   `json:"memory"`
-	CPU                  string   `json:"cpu"`
-	Storage              string   `json:"storage"`
-	IsJITEnabled         bool     `json:"isJitEnabled"`
-	JITMode              string   `json:"jitMode"`
-	JITMultiApprover     bool     `json:"jitMultiApprover"`
-	JITTotalApprovers    int      `json:"jitTotalApprovers"`
-	AutoApproval         bool     `json:"autoApproval"`
-	SessionUsers         []string `json:"sessionUsers"`
-	AccessApprovers      []string `json:"accessApprovers"`
-	Groups               []string `json:"groups"`
-	UserTags             []string `json:"userTags"`
-	ScriptOnlyAccess     bool     `json:"scriptOnlyAccess"`
-	DisableOutputCapture bool     `json:"disableOutputCapture"`
-	DisableDataStudio    bool     `json:"disableDataStudio"`
-	DisableWebCLI        bool     `json:"disableWebCli"`
-	Public               bool     `json:"public"`
-	Exposed              bool     `json:"exposed"`
-	ExposeType           string   `json:"exposeType"`
-	ExposeStatus         string   `json:"exposeStatus"`
+	ID                    string   `json:"id"`
+	Name                  string   `json:"name"`
+	Resource              string   `json:"resource"` // integration name, not id
+	Cluster               string   `json:"cluster"`
+	Authorization         string   `json:"authorization"`
+	Status                string   `json:"status"`
+	SessionType           string   `json:"sessionType"` // cli | client | services
+	TTL                   string   `json:"ttl"`
+	IdleTimeout           string   `json:"idleTimeout"`
+	PauseTimeout          string   `json:"pauseTimeout"`
+	Memory                string   `json:"memory"`
+	CPU                   string   `json:"cpu"`
+	Storage               string   `json:"storage"`
+	IsJITEnabled          bool     `json:"isJitEnabled"`
+	JITMode               string   `json:"jitMode"`
+	MaxJITRequestDuration string   `json:"maxJitRequestDuration"`
+	JITMultiApprover      bool     `json:"jitMultiApprover"`
+	JITTotalApprovers     int      `json:"jitTotalApprovers"`
+	AutoApproval          bool     `json:"autoApproval"`
+	SessionUsers          []string `json:"sessionUsers"`
+	AccessApprovers       []string `json:"accessApprovers"`
+	Groups                []string `json:"groups"`
+	UserTags              []string `json:"userTags"`
+	ScriptOnlyAccess      bool     `json:"scriptOnlyAccess"`
+	DisableOutputCapture  bool     `json:"disableOutputCapture"`
+	DisableDataStudio     bool     `json:"disableDataStudio"`
+	DisableWebCLI         bool     `json:"disableWebCli"`
+	Public                bool     `json:"public"`
+	Exposed               bool     `json:"exposed"`
+	ExposeType            string   `json:"exposeType"`
+	ExposeStatus          string   `json:"exposeStatus"`
 }
 
 type AuthorizationReadResponse struct {

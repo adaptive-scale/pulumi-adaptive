@@ -103,6 +103,12 @@ namespace AdaptiveScale.Adaptive
         [Output("jitTotalApprovers")]
         public Output<int?> JitTotalApprovers { get; private set; } = null!;
 
+        /// <summary>
+        /// Maximum duration of a Just-In-Time access request for this endpoint. Empty clears the endpoint override and inherits the workspace setting.
+        /// </summary>
+        [Output("maxJitRequestDuration")]
+        public Output<string?> MaxJitRequestDuration { get; private set; } = null!;
+
         [Output("memory")]
         public Output<string?> Memory { get; private set; } = null!;
 
@@ -279,6 +285,12 @@ namespace AdaptiveScale.Adaptive
         /// </summary>
         [Input("jitTotalApprovers")]
         public Input<int>? JitTotalApprovers { get; set; }
+
+        /// <summary>
+        /// Maximum duration of a Just-In-Time access request for this endpoint. Empty clears the endpoint override and inherits the workspace setting.
+        /// </summary>
+        [Input("maxJitRequestDuration")]
+        public Input<string>? MaxJitRequestDuration { get; set; }
 
         [Input("memory")]
         public Input<string>? Memory { get; set; }

@@ -281,6 +281,10 @@
           "type": "integer",
           "description": "Number of approvals required when multi-approver is enabled."
         },
+        "maxJitRequestDuration": {
+          "type": "string",
+          "description": "Maximum duration of a Just-In-Time access request for this endpoint. Empty clears the endpoint override and inherits the workspace setting."
+        },
         "memory": {
           "type": "string"
         },
@@ -387,6 +391,10 @@
         "jitTotalApprovers": {
           "type": "integer",
           "description": "Number of approvals required when multi-approver is enabled."
+        },
+        "maxJitRequestDuration": {
+          "type": "string",
+          "description": "Maximum duration of a Just-In-Time access request for this endpoint. Empty clears the endpoint override and inherits the workspace setting."
         },
         "memory": {
           "type": "string"
