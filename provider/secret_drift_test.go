@@ -8,6 +8,7 @@ import (
 
 	p "github.com/pulumi/pulumi-go-provider"
 	"github.com/pulumi/pulumi/sdk/v3/go/property"
+	"github.com/stretchr/testify/assert"
 	"gopkg.in/yaml.v2"
 )
 
@@ -57,6 +58,11 @@ func TestArgForConfigKeyResolvesRealArguments(t *testing.T) {
 		{"gcp", "key_file", "keyFile"},
 		{"azure", "clientSecret", "clientSecret"},
 		{"mongodb", "uri", "uri"},
+		{"kubernetes", "annotationsBytes", "annotations"},
+		{"kubernetes", "tolerationsBytes", "tolerations"},
+		{"kubernetes", "nodeSelectorBytes", "nodeSelector"},
+		{"kubernetes", "nodeAffinityBytes", "nodeAffinity"},
+		{"kubernetes", "affinityBytes", "nodeAffinity"},
 	}
 	for _, c := range cases {
 		t.Run(c.integrationType+"/"+c.cfgKey, func(t *testing.T) {
@@ -69,6 +75,28 @@ func TestArgForConfigKeyResolvesRealArguments(t *testing.T) {
 			}
 		})
 	}
+}
+
+func TestHeldArgumentsMissing(t *testing.T) {
+	args := ResourceArgs{Type: "kubernetes", Name: "cluster"}
+	assert.Equal(t, []string{"annotations", "tolerations"}, heldArgumentsMissing(args, args.Type, map[string]string{
+		"annotationsBytes": "digest-a", "tolerationsBytes": "digest-t",
+	}))
+
+	empty := ""
+	args.Tolerations = &empty
+	assert.Equal(t, []string{"annotations"}, heldArgumentsMissing(args, args.Type, map[string]string{
+		"annotationsBytes": "digest-a", "tolerationsBytes": "digest-t",
+	}), "an explicit empty value is an allowed clear")
+
+	err := validateHeldArguments(ResourceArgs{Type: "kubernetes"}, "kubernetes", map[string]string{"nodeSelectorBytes": "digest"})
+	assert.ErrorContains(t, err, "nodeSelector")
+	assert.NoError(t, validateHeldArguments(ResourceArgs{Type: "kubernetes", NodeSelector: &empty}, "kubernetes", map[string]string{"nodeSelectorBytes": "digest"}))
+}
+
+func TestImportArgumentNames(t *testing.T) {
+	assert.Equal(t, []string{"clusterToken", "clusterCert", "tolerations"},
+		importArgumentNames("kubernetes", []string{"token", "cacrt", "tolerationsBytes"}))
 }
 
 func TestArgForConfigKeyRejectsUnresolvable(t *testing.T) {

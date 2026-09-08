@@ -269,6 +269,9 @@ func (*Resource) Update(ctx context.Context, req infer.UpdateRequest[ResourceArg
 	if req.DryRun {
 		return out, nil
 	}
+	if err := validateHeldArguments(req.Inputs, req.Inputs.Type, req.State.AppliedDigests); err != nil {
+		return out, err
+	}
 	c, err := clientFromConfig(ctx)
 	if err != nil {
 		return out, err
@@ -408,10 +411,12 @@ func (*Resource) Read(ctx context.Context, req infer.ReadRequest[ResourceArgs, R
 	}
 
 	if isImport && len(r.RedactedKeys) > 0 {
+		keys := importArgumentNames(r.IntegrationType, r.RedactedKeys)
 		p.GetLogger(ctx).Warningf(
 			"resource %q was imported without its credentials: the server withholds %s. "+
-				"Set the matching arguments in your program, or the next update will clear them.",
-			r.Name, strings.Join(r.RedactedKeys, ", "))
+				"Set the matching arguments in your program; the first pulumi up will show a one-time + diff. "+
+				"Leaving one unset would clear it on a later update.",
+			r.Name, strings.Join(keys, ", "))
 	}
 
 	return infer.ReadResponse[ResourceArgs, ResourceState]{
@@ -419,6 +424,46 @@ func (*Resource) Read(ctx context.Context, req infer.ReadRequest[ResourceArgs, R
 		Inputs: inputs,
 		State:  ResourceState{ResourceArgs: inputs, AppliedDigests: appliedDigests},
 	}, nil
+}
+
+// heldArgumentsMissing identifies server-held, write-only values that this
+// update would omit. Resource updates replace the whole configuration blob, so
+// nil means clear while a non-nil pointer to "" is an intentional clear.
+func heldArgumentsMissing(inputs ResourceArgs, integrationType string, applied map[string]string) []string {
+	missing := map[string]bool{}
+	for key := range applied {
+		field, prop, ok := argForConfigKey(integrationType, key)
+		if ok && !argIsSet(&inputs, field) {
+			missing[prop] = true
+		}
+	}
+	out := make([]string, 0, len(missing))
+	for prop := range missing {
+		out = append(out, prop)
+	}
+	sort.Strings(out)
+	return out
+}
+
+func validateHeldArguments(inputs ResourceArgs, integrationType string, applied map[string]string) error {
+	if missing := heldArgumentsMissing(inputs, integrationType, applied); len(missing) > 0 {
+		return fmt.Errorf("updating resource would clear server-held values for %s; set each argument to retain its value, or set it explicitly to \"\" to clear it", strings.Join(missing, ", "))
+	}
+	return nil
+}
+
+// importArgumentNames makes import diagnostics actionable by translating the
+// platform's storage keys to public Pulumi argument names.
+func importArgumentNames(integrationType string, keys []string) []string {
+	out := make([]string, 0, len(keys))
+	for _, key := range keys {
+		if _, prop, ok := argForConfigKey(integrationType, key); ok {
+			out = append(out, prop)
+		} else {
+			out = append(out, key)
+		}
+	}
+	return out
 }
 
 // driftedDigestKeys returns the keys whose fingerprint no longer matches the one

@@ -234,15 +234,26 @@ pulumi import adaptive:index:DataProtection my-policy <resource-id>
 (`DataProtection` imports by the protected **resource's** ID — a policy has no
 separate identity of its own.)
 
-Caveats — some values are write-only in the Adaptive API and cannot be
-recovered on import:
+Before importing a resource with credentials, capture its values from the
+admin-only, audited export path. The provider deliberately does not use this
+endpoint:
+
+```bash
+adaptive admin export resources --name <name> --type <type> --include-secrets
+```
+
+Some values are write-only in ordinary Adaptive API reads, so the provider
+cannot recover them during import:
 
 - **Script `command`**: script bodies are never returned by the API. After
   importing a script, set `command` in your program; the first `pulumi up`
   rewrites it (refresh never touches it).
 - **Resource secrets**: secret configuration values (passwords, keys, tokens)
-  are stripped from API reads. The import warns with the exact list of
-  redacted fields to fill in. On refresh, secrets already in state are kept.
+  are stripped from API reads. Capture them with the command above before
+  import, then add the matching arguments to your program. The import warning
+  names those public argument names; the first `pulumi up` shows a one-time
+  `+` diff as it records the values. On refresh, secrets already in state are
+  kept.
 - **Webhook URLs** (e.g. `msteams_workflow` resources): redacted like other secrets.
 - **Schedules are upserted by name**: creating a schedule whose name already
   exists on the backend adopts the existing schedule instead of failing.
@@ -252,6 +263,11 @@ server-computed defaults (memory/cpu/cluster/idle timeout), so refresh stays
 clean; out-of-band deletion drops the resource from state; against Adaptive
 servers older than the accompanying backend change, refreshing a deleted
 endpoint/authorization fails loudly instead of pruning it.
+
+The protection against clearing a server-held value runs in `Update`, so an
+omitted argument is rejected at apply time rather than preview time. `Check`
+does not receive prior state or its fingerprints. The existing read-side drift
+check therefore covers `refresh` and `up --refresh` only.
 
 ## Development
 
