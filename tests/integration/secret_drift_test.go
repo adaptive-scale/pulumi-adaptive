@@ -233,6 +233,103 @@ func TestSecretDriftQuietWhenNothingChanged(t *testing.T) {
 	}
 }
 
+type syncPgSpec struct {
+	Name     string
+	Host     string
+	Password string
+}
+
+func (s *syncPgSpec) declare(ctx *pulumi.Context) error {
+	clusterName := s.Name + "-cluster"
+	cluster, err := adaptive.NewResource(ctx, "cluster", &adaptive.ResourceArgs{
+		Name:         pulumi.String(clusterName),
+		Type:         pulumi.String("kubernetes"),
+		ApiServer:    pulumi.String("https://kubernetes.default.svc"),
+		ClusterToken: pulumi.String("not-a-real-token"),
+		ClusterCert:  pulumi.String("not-a-real-cert"),
+	})
+	if err != nil {
+		return err
+	}
+	db, err := adaptive.NewResource(ctx, "db", &adaptive.ResourceArgs{
+		Name:           pulumi.String(s.Name),
+		Type:           pulumi.String("postgres"),
+		DefaultCluster: pulumi.String(clusterName),
+		Host:           pulumi.String(s.Host),
+		Port:           pulumi.String("5432"),
+		Username:       pulumi.String("admin"),
+		Password:       pulumi.String(s.Password),
+		SslMode:        pulumi.String("require"),
+	}, pulumi.DependsOn([]pulumi.Resource{cluster}))
+	if err != nil {
+		return err
+	}
+	ctx.Export("id", db.ID())
+	return nil
+}
+
+func updatePostgresOutOfBand(t *testing.T, cfg harness.Config, id, name, clusterName, host, password string) {
+	t.Helper()
+	yaml := fmt.Sprintf("name: %q\n", name)
+	for k, v := range map[string]string{
+		"username": "admin", "hostname": host, "port": "5432", "sslMode": "require", "password": password,
+	} {
+		yaml += fmt.Sprintf("%s: %q\n", k, v)
+	}
+	resp, body := rawTerraformAPI(t, cfg, "POST", "/resource/update/"+id, map[string]any{
+		"integrationType": "postgres",
+		"config":          yaml,
+		"userTags":        []string{},
+		"defaultCluster":  clusterName,
+	})
+	require.Equalf(t, 200, resp.StatusCode, "out-of-band update failed: %s", string(body))
+}
+
+func postgresHost(t *testing.T, cfg harness.Config, id string) string {
+	t.Helper()
+	got := terraformRead(t, cfg, "resource", id)
+	cfgMap, ok := got["configuration"].(map[string]any)
+	require.True(t, ok, "resource read had no configuration map: %v", got)
+	host, _ := cfgMap["hostname"].(string)
+	return host
+}
+
+func TestResourceConfigBidirectionalSync(t *testing.T) {
+	cfg := harness.RequireProviderConfig(t)
+
+	spec := &syncPgSpec{
+		Name:     uniqueName("pulumi-it-sync"),
+		Host:     "db-original.example.com",
+		Password: "pw-original",
+	}
+	outs, stack := harness.DeployStack(t, cfg, stackName("resource-sync"), spec.declare)
+	id := harness.StringOutput(t, outs, "id")
+	clusterName := spec.Name + "-cluster"
+
+	originalDigests := serverDigests(t, cfg, id)
+	require.NotEmpty(t, originalDigests["password"])
+
+	// UI/out-of-band -> preview -> Pulumi reconciliation back to source of truth.
+	updatePostgresOutOfBand(t, cfg, id, spec.Name, clusterName, "db-ui.example.com", "pw-ui")
+	require.Equal(t, "db-ui.example.com", postgresHost(t, cfg, id))
+	require.NotEqual(t, originalDigests["password"], serverDigests(t, cfg, id)["password"])
+
+	harness.Refresh(t, stack)
+	assert.NotZero(t, harness.Preview(t, stack)["update"], "UI drift should produce a Pulumi update")
+	harness.Up(t, stack)
+	require.Equal(t, spec.Host, postgresHost(t, cfg, id))
+	harness.AssertRefreshClean(t, stack)
+
+	// Local -> Adaptive: change the Pulumi program and push with up.
+	beforeLocal := serverDigests(t, cfg, id)["password"]
+	spec.Host = "db-local.example.com"
+	spec.Password = "pw-local"
+	harness.Up(t, stack)
+	require.Equal(t, "db-local.example.com", postgresHost(t, cfg, id))
+	assert.NotEqual(t, beforeLocal, serverDigests(t, cfg, id)["password"])
+	harness.AssertRefreshClean(t, stack)
+}
+
 // Script bodies drift too, through a different mechanism that had no coverage.
 //
 // The server never returns a script body — it is write-only — so the provider
