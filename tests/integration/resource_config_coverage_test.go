@@ -21,6 +21,7 @@ type resourceRead struct {
 	ID              string         `json:"id"`
 	Name            string         `json:"name"`
 	IntegrationType string         `json:"integrationType"`
+	UserTags        []string       `json:"userTags"`
 	Configuration   map[string]any `json:"configuration"`
 	RedactedKeys    []string       `json:"redactedKeys"`
 }
@@ -124,11 +125,26 @@ func TestResourceConfigCoverage(t *testing.T) {
 		"juniper":       {"juniper_sw", map[string]any{"hostname": "juniper.example.com", "login_url": "https://juniper.example.com", "port": "22", "usePassword": false, "username": "admin", "webui_port": "443"}, []string{"password", "sshKey"}},
 	}
 
-	outs := harness.Deploy(t, cfg, stackName("cfg-coverage"), func(ctx *pulumi.Context) error {
+	commonTags := pulumi.StringArray{pulumi.String("phase=create")}
+	outs, stack := harness.DeployStack(t, cfg, stackName("cfg-coverage"), func(ctx *pulumi.Context) error {
 		mkName := func(suffix string) string { return prefix + "-" + suffix }
+		clusterName := mkName("cluster")
+		cluster, err := adaptive.NewResource(ctx, "cluster", &adaptive.ResourceArgs{
+			Name:         pulumi.String(clusterName),
+			Type:         pulumi.String("kubernetes"),
+			ApiServer:    pulumi.String("https://kubernetes.default.svc"),
+			ClusterToken: pulumi.String("not-a-real-token"),
+			ClusterCert:  pulumi.String("not-a-real-cert"),
+			Tags:         pulumi.StringArray{pulumi.String("phase=create")},
+		})
+		if err != nil {
+			return err
+		}
 		add := func(key string, args *adaptive.ResourceArgs) error {
 			args.Name = pulumi.String(mkName(key))
-			r, err := adaptive.NewResource(ctx, key, args)
+			args.DefaultCluster = pulumi.String(clusterName)
+			args.Tags = commonTags
+			r, err := adaptive.NewResource(ctx, key, args, pulumi.DependsOn([]pulumi.Resource{cluster}))
 			if err != nil {
 				return err
 			}
@@ -174,11 +190,26 @@ func TestResourceConfigCoverage(t *testing.T) {
 		got := readTerraformResource(t, cfg, id)
 		require.Equal(t, check.typ, got.IntegrationType, key)
 		require.True(t, strings.HasPrefix(got.Name, prefix+"-"), got.Name)
+		assert.Contains(t, got.UserTags, "phase=create", key)
 		assertConfigContains(t, got.Configuration, check.want)
 		if len(check.redacted) > 0 {
 			assertRedacted(t, got.RedactedKeys, check.redacted...)
 		}
 	}
+
+	// Exercise the update/sync path for every resource in the matrix. We update
+	// a common non-secret field (tags), preview the change, apply it, and verify
+	// every resource in Adaptive now reflects the local Pulumi program.
+	commonTags = pulumi.StringArray{pulumi.String("phase=updated")}
+	changes := harness.Preview(t, stack)
+	assert.GreaterOrEqual(t, changes["update"], len(checks), "all matrix resources should plan tag updates: %v", changes)
+	harness.Up(t, stack)
+	for key := range checks {
+		id := harness.StringOutput(t, outs, "id_"+key)
+		got := readTerraformResource(t, cfg, id)
+		assert.Contains(t, got.UserTags, "phase=updated", key)
+	}
+	harness.AssertRefreshClean(t, stack)
 }
 
 func sortedKeys[V any](m map[string]V) []string {
