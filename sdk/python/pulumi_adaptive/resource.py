@@ -24,6 +24,8 @@ class ResourceArgs:
                  access_control_group: Optional[pulumi.Input[_builtins.str]] = None,
                  access_control_method: Optional[pulumi.Input[_builtins.str]] = None,
                  access_key_id: Optional[pulumi.Input[_builtins.str]] = None,
+                 allow_file_transfer: Optional[pulumi.Input[_builtins.bool]] = None,
+                 allowed_commands: Optional[pulumi.Input[_builtins.str]] = None,
                  annotations: Optional[pulumi.Input[_builtins.str]] = None,
                  api_client_id: Optional[pulumi.Input[_builtins.str]] = None,
                  api_client_secret: Optional[pulumi.Input[_builtins.str]] = None,
@@ -36,9 +38,17 @@ class ResourceArgs:
                  application_id: Optional[pulumi.Input[_builtins.str]] = None,
                  application_name: Optional[pulumi.Input[_builtins.str]] = None,
                  arn: Optional[pulumi.Input[_builtins.str]] = None,
+                 auth_mode: Optional[pulumi.Input[_builtins.str]] = None,
                  automation_mode: Optional[pulumi.Input[_builtins.str]] = None,
                  aws_arn: Optional[pulumi.Input[_builtins.str]] = None,
+                 aws_region: Optional[pulumi.Input[_builtins.str]] = None,
                  aws_region_name: Optional[pulumi.Input[_builtins.str]] = None,
+                 aws_role_arn: Optional[pulumi.Input[_builtins.str]] = None,
+                 aws_service_account: Optional[pulumi.Input[_builtins.str]] = None,
+                 bootstrap_servers: Optional[pulumi.Input[_builtins.str]] = None,
+                 ca_certificate: Optional[pulumi.Input[_builtins.str]] = None,
+                 cache_name: Optional[pulumi.Input[_builtins.str]] = None,
+                 cache_type: Optional[pulumi.Input[_builtins.str]] = None,
                  client_cert: Optional[pulumi.Input[_builtins.str]] = None,
                  client_certificate: Optional[pulumi.Input[_builtins.str]] = None,
                  client_configuration: Optional[pulumi.Input[_builtins.str]] = None,
@@ -57,19 +67,25 @@ class ResourceArgs:
                  database_password: Optional[pulumi.Input[_builtins.str]] = None,
                  database_username: Optional[pulumi.Input[_builtins.str]] = None,
                  dd_api_key: Optional[pulumi.Input[_builtins.str]] = None,
+                 dd_app_key: Optional[pulumi.Input[_builtins.str]] = None,
                  dd_site: Optional[pulumi.Input[_builtins.str]] = None,
                  default_cluster: Optional[pulumi.Input[_builtins.str]] = None,
                  default_user: Optional[pulumi.Input[_builtins.str]] = None,
                  domain: Optional[pulumi.Input[_builtins.str]] = None,
+                 enable_allowed_commands: Optional[pulumi.Input[_builtins.bool]] = None,
+                 enable_tls: Optional[pulumi.Input[_builtins.bool]] = None,
                  fields: Optional[pulumi.Input[_builtins.str]] = None,
                  host: Optional[pulumi.Input[_builtins.str]] = None,
                  hostname: Optional[pulumi.Input[_builtins.str]] = None,
                  hosts: Optional[pulumi.Input[Sequence[pulumi.Input[_builtins.str]]]] = None,
                  image: Optional[pulumi.Input[_builtins.str]] = None,
                  index: Optional[pulumi.Input[_builtins.str]] = None,
+                 insecure_skip_verify: Optional[pulumi.Input[_builtins.bool]] = None,
                  is_redis_labs: Optional[pulumi.Input[_builtins.bool]] = None,
                  key: Optional[pulumi.Input[_builtins.str]] = None,
                  key_file: Optional[pulumi.Input[_builtins.str]] = None,
+                 keyspace: Optional[pulumi.Input[_builtins.str]] = None,
+                 keyspaces_endpoint: Optional[pulumi.Input[_builtins.str]] = None,
                  ldap_encryption_method: Optional[pulumi.Input[_builtins.str]] = None,
                  ldap_hostname: Optional[pulumi.Input[_builtins.str]] = None,
                  ldap_port: Optional[pulumi.Input[_builtins.str]] = None,
@@ -131,7 +147,12 @@ class ResourceArgs:
                  url: Optional[pulumi.Input[_builtins.str]] = None,
                  urls: Optional[pulumi.Input[_builtins.str]] = None,
                  use_connect_server: Optional[pulumi.Input[_builtins.bool]] = None,
+                 use_iam_auth: Optional[pulumi.Input[_builtins.bool]] = None,
+                 use_irsa: Optional[pulumi.Input[_builtins.bool]] = None,
+                 use_msk_iam: Optional[pulumi.Input[_builtins.bool]] = None,
                  use_proxy: Optional[pulumi.Input[_builtins.bool]] = None,
+                 use_rds_iam: Optional[pulumi.Input[_builtins.bool]] = None,
+                 use_role_arn: Optional[pulumi.Input[_builtins.bool]] = None,
                  use_service_account: Optional[pulumi.Input[_builtins.bool]] = None,
                  use_tenant: Optional[pulumi.Input[_builtins.bool]] = None,
                  use_tls: Optional[pulumi.Input[_builtins.bool]] = None,
@@ -157,6 +178,10 @@ class ResourceArgs:
             pulumi.set(__self__, "access_control_method", access_control_method)
         if access_key_id is not None:
             pulumi.set(__self__, "access_key_id", access_key_id)
+        if allow_file_transfer is not None:
+            pulumi.set(__self__, "allow_file_transfer", allow_file_transfer)
+        if allowed_commands is not None:
+            pulumi.set(__self__, "allowed_commands", allowed_commands)
         if annotations is not None:
             pulumi.set(__self__, "annotations", annotations)
         if api_client_id is not None:
@@ -181,12 +206,28 @@ class ResourceArgs:
             pulumi.set(__self__, "application_name", application_name)
         if arn is not None:
             pulumi.set(__self__, "arn", arn)
+        if auth_mode is not None:
+            pulumi.set(__self__, "auth_mode", auth_mode)
         if automation_mode is not None:
             pulumi.set(__self__, "automation_mode", automation_mode)
         if aws_arn is not None:
             pulumi.set(__self__, "aws_arn", aws_arn)
+        if aws_region is not None:
+            pulumi.set(__self__, "aws_region", aws_region)
         if aws_region_name is not None:
             pulumi.set(__self__, "aws_region_name", aws_region_name)
+        if aws_role_arn is not None:
+            pulumi.set(__self__, "aws_role_arn", aws_role_arn)
+        if aws_service_account is not None:
+            pulumi.set(__self__, "aws_service_account", aws_service_account)
+        if bootstrap_servers is not None:
+            pulumi.set(__self__, "bootstrap_servers", bootstrap_servers)
+        if ca_certificate is not None:
+            pulumi.set(__self__, "ca_certificate", ca_certificate)
+        if cache_name is not None:
+            pulumi.set(__self__, "cache_name", cache_name)
+        if cache_type is not None:
+            pulumi.set(__self__, "cache_type", cache_type)
         if client_cert is not None:
             pulumi.set(__self__, "client_cert", client_cert)
         if client_certificate is not None:
@@ -223,6 +264,8 @@ class ResourceArgs:
             pulumi.set(__self__, "database_username", database_username)
         if dd_api_key is not None:
             pulumi.set(__self__, "dd_api_key", dd_api_key)
+        if dd_app_key is not None:
+            pulumi.set(__self__, "dd_app_key", dd_app_key)
         if dd_site is not None:
             pulumi.set(__self__, "dd_site", dd_site)
         if default_cluster is not None:
@@ -231,6 +274,10 @@ class ResourceArgs:
             pulumi.set(__self__, "default_user", default_user)
         if domain is not None:
             pulumi.set(__self__, "domain", domain)
+        if enable_allowed_commands is not None:
+            pulumi.set(__self__, "enable_allowed_commands", enable_allowed_commands)
+        if enable_tls is not None:
+            pulumi.set(__self__, "enable_tls", enable_tls)
         if fields is not None:
             pulumi.set(__self__, "fields", fields)
         if host is not None:
@@ -243,12 +290,18 @@ class ResourceArgs:
             pulumi.set(__self__, "image", image)
         if index is not None:
             pulumi.set(__self__, "index", index)
+        if insecure_skip_verify is not None:
+            pulumi.set(__self__, "insecure_skip_verify", insecure_skip_verify)
         if is_redis_labs is not None:
             pulumi.set(__self__, "is_redis_labs", is_redis_labs)
         if key is not None:
             pulumi.set(__self__, "key", key)
         if key_file is not None:
             pulumi.set(__self__, "key_file", key_file)
+        if keyspace is not None:
+            pulumi.set(__self__, "keyspace", keyspace)
+        if keyspaces_endpoint is not None:
+            pulumi.set(__self__, "keyspaces_endpoint", keyspaces_endpoint)
         if ldap_encryption_method is not None:
             pulumi.set(__self__, "ldap_encryption_method", ldap_encryption_method)
         if ldap_hostname is not None:
@@ -371,8 +424,18 @@ class ResourceArgs:
             pulumi.set(__self__, "urls", urls)
         if use_connect_server is not None:
             pulumi.set(__self__, "use_connect_server", use_connect_server)
+        if use_iam_auth is not None:
+            pulumi.set(__self__, "use_iam_auth", use_iam_auth)
+        if use_irsa is not None:
+            pulumi.set(__self__, "use_irsa", use_irsa)
+        if use_msk_iam is not None:
+            pulumi.set(__self__, "use_msk_iam", use_msk_iam)
         if use_proxy is not None:
             pulumi.set(__self__, "use_proxy", use_proxy)
+        if use_rds_iam is not None:
+            pulumi.set(__self__, "use_rds_iam", use_rds_iam)
+        if use_role_arn is not None:
+            pulumi.set(__self__, "use_role_arn", use_role_arn)
         if use_service_account is not None:
             pulumi.set(__self__, "use_service_account", use_service_account)
         if use_tenant is not None:
@@ -442,6 +505,24 @@ class ResourceArgs:
     @access_key_id.setter
     def access_key_id(self, value: Optional[pulumi.Input[_builtins.str]]):
         pulumi.set(self, "access_key_id", value)
+
+    @_builtins.property
+    @pulumi.getter(name="allowFileTransfer")
+    def allow_file_transfer(self) -> Optional[pulumi.Input[_builtins.bool]]:
+        return pulumi.get(self, "allow_file_transfer")
+
+    @allow_file_transfer.setter
+    def allow_file_transfer(self, value: Optional[pulumi.Input[_builtins.bool]]):
+        pulumi.set(self, "allow_file_transfer", value)
+
+    @_builtins.property
+    @pulumi.getter(name="allowedCommands")
+    def allowed_commands(self) -> Optional[pulumi.Input[_builtins.str]]:
+        return pulumi.get(self, "allowed_commands")
+
+    @allowed_commands.setter
+    def allowed_commands(self, value: Optional[pulumi.Input[_builtins.str]]):
+        pulumi.set(self, "allowed_commands", value)
 
     @_builtins.property
     @pulumi.getter
@@ -552,6 +633,15 @@ class ResourceArgs:
         pulumi.set(self, "arn", value)
 
     @_builtins.property
+    @pulumi.getter(name="authMode")
+    def auth_mode(self) -> Optional[pulumi.Input[_builtins.str]]:
+        return pulumi.get(self, "auth_mode")
+
+    @auth_mode.setter
+    def auth_mode(self, value: Optional[pulumi.Input[_builtins.str]]):
+        pulumi.set(self, "auth_mode", value)
+
+    @_builtins.property
     @pulumi.getter(name="automationMode")
     def automation_mode(self) -> Optional[pulumi.Input[_builtins.str]]:
         return pulumi.get(self, "automation_mode")
@@ -570,6 +660,15 @@ class ResourceArgs:
         pulumi.set(self, "aws_arn", value)
 
     @_builtins.property
+    @pulumi.getter(name="awsRegion")
+    def aws_region(self) -> Optional[pulumi.Input[_builtins.str]]:
+        return pulumi.get(self, "aws_region")
+
+    @aws_region.setter
+    def aws_region(self, value: Optional[pulumi.Input[_builtins.str]]):
+        pulumi.set(self, "aws_region", value)
+
+    @_builtins.property
     @pulumi.getter(name="awsRegionName")
     def aws_region_name(self) -> Optional[pulumi.Input[_builtins.str]]:
         return pulumi.get(self, "aws_region_name")
@@ -577,6 +676,60 @@ class ResourceArgs:
     @aws_region_name.setter
     def aws_region_name(self, value: Optional[pulumi.Input[_builtins.str]]):
         pulumi.set(self, "aws_region_name", value)
+
+    @_builtins.property
+    @pulumi.getter(name="awsRoleArn")
+    def aws_role_arn(self) -> Optional[pulumi.Input[_builtins.str]]:
+        return pulumi.get(self, "aws_role_arn")
+
+    @aws_role_arn.setter
+    def aws_role_arn(self, value: Optional[pulumi.Input[_builtins.str]]):
+        pulumi.set(self, "aws_role_arn", value)
+
+    @_builtins.property
+    @pulumi.getter(name="awsServiceAccount")
+    def aws_service_account(self) -> Optional[pulumi.Input[_builtins.str]]:
+        return pulumi.get(self, "aws_service_account")
+
+    @aws_service_account.setter
+    def aws_service_account(self, value: Optional[pulumi.Input[_builtins.str]]):
+        pulumi.set(self, "aws_service_account", value)
+
+    @_builtins.property
+    @pulumi.getter(name="bootstrapServers")
+    def bootstrap_servers(self) -> Optional[pulumi.Input[_builtins.str]]:
+        return pulumi.get(self, "bootstrap_servers")
+
+    @bootstrap_servers.setter
+    def bootstrap_servers(self, value: Optional[pulumi.Input[_builtins.str]]):
+        pulumi.set(self, "bootstrap_servers", value)
+
+    @_builtins.property
+    @pulumi.getter(name="caCertificate")
+    def ca_certificate(self) -> Optional[pulumi.Input[_builtins.str]]:
+        return pulumi.get(self, "ca_certificate")
+
+    @ca_certificate.setter
+    def ca_certificate(self, value: Optional[pulumi.Input[_builtins.str]]):
+        pulumi.set(self, "ca_certificate", value)
+
+    @_builtins.property
+    @pulumi.getter(name="cacheName")
+    def cache_name(self) -> Optional[pulumi.Input[_builtins.str]]:
+        return pulumi.get(self, "cache_name")
+
+    @cache_name.setter
+    def cache_name(self, value: Optional[pulumi.Input[_builtins.str]]):
+        pulumi.set(self, "cache_name", value)
+
+    @_builtins.property
+    @pulumi.getter(name="cacheType")
+    def cache_type(self) -> Optional[pulumi.Input[_builtins.str]]:
+        return pulumi.get(self, "cache_type")
+
+    @cache_type.setter
+    def cache_type(self, value: Optional[pulumi.Input[_builtins.str]]):
+        pulumi.set(self, "cache_type", value)
 
     @_builtins.property
     @pulumi.getter(name="clientCert")
@@ -741,6 +894,15 @@ class ResourceArgs:
         pulumi.set(self, "dd_api_key", value)
 
     @_builtins.property
+    @pulumi.getter(name="ddAppKey")
+    def dd_app_key(self) -> Optional[pulumi.Input[_builtins.str]]:
+        return pulumi.get(self, "dd_app_key")
+
+    @dd_app_key.setter
+    def dd_app_key(self, value: Optional[pulumi.Input[_builtins.str]]):
+        pulumi.set(self, "dd_app_key", value)
+
+    @_builtins.property
     @pulumi.getter(name="ddSite")
     def dd_site(self) -> Optional[pulumi.Input[_builtins.str]]:
         return pulumi.get(self, "dd_site")
@@ -778,6 +940,24 @@ class ResourceArgs:
     @domain.setter
     def domain(self, value: Optional[pulumi.Input[_builtins.str]]):
         pulumi.set(self, "domain", value)
+
+    @_builtins.property
+    @pulumi.getter(name="enableAllowedCommands")
+    def enable_allowed_commands(self) -> Optional[pulumi.Input[_builtins.bool]]:
+        return pulumi.get(self, "enable_allowed_commands")
+
+    @enable_allowed_commands.setter
+    def enable_allowed_commands(self, value: Optional[pulumi.Input[_builtins.bool]]):
+        pulumi.set(self, "enable_allowed_commands", value)
+
+    @_builtins.property
+    @pulumi.getter(name="enableTls")
+    def enable_tls(self) -> Optional[pulumi.Input[_builtins.bool]]:
+        return pulumi.get(self, "enable_tls")
+
+    @enable_tls.setter
+    def enable_tls(self, value: Optional[pulumi.Input[_builtins.bool]]):
+        pulumi.set(self, "enable_tls", value)
 
     @_builtins.property
     @pulumi.getter
@@ -834,6 +1014,15 @@ class ResourceArgs:
         pulumi.set(self, "index", value)
 
     @_builtins.property
+    @pulumi.getter(name="insecureSkipVerify")
+    def insecure_skip_verify(self) -> Optional[pulumi.Input[_builtins.bool]]:
+        return pulumi.get(self, "insecure_skip_verify")
+
+    @insecure_skip_verify.setter
+    def insecure_skip_verify(self, value: Optional[pulumi.Input[_builtins.bool]]):
+        pulumi.set(self, "insecure_skip_verify", value)
+
+    @_builtins.property
     @pulumi.getter(name="isRedisLabs")
     def is_redis_labs(self) -> Optional[pulumi.Input[_builtins.bool]]:
         return pulumi.get(self, "is_redis_labs")
@@ -859,6 +1048,24 @@ class ResourceArgs:
     @key_file.setter
     def key_file(self, value: Optional[pulumi.Input[_builtins.str]]):
         pulumi.set(self, "key_file", value)
+
+    @_builtins.property
+    @pulumi.getter
+    def keyspace(self) -> Optional[pulumi.Input[_builtins.str]]:
+        return pulumi.get(self, "keyspace")
+
+    @keyspace.setter
+    def keyspace(self, value: Optional[pulumi.Input[_builtins.str]]):
+        pulumi.set(self, "keyspace", value)
+
+    @_builtins.property
+    @pulumi.getter(name="keyspacesEndpoint")
+    def keyspaces_endpoint(self) -> Optional[pulumi.Input[_builtins.str]]:
+        return pulumi.get(self, "keyspaces_endpoint")
+
+    @keyspaces_endpoint.setter
+    def keyspaces_endpoint(self, value: Optional[pulumi.Input[_builtins.str]]):
+        pulumi.set(self, "keyspaces_endpoint", value)
 
     @_builtins.property
     @pulumi.getter(name="ldapEncryptionMethod")
@@ -1413,6 +1620,33 @@ class ResourceArgs:
         pulumi.set(self, "use_connect_server", value)
 
     @_builtins.property
+    @pulumi.getter(name="useIamAuth")
+    def use_iam_auth(self) -> Optional[pulumi.Input[_builtins.bool]]:
+        return pulumi.get(self, "use_iam_auth")
+
+    @use_iam_auth.setter
+    def use_iam_auth(self, value: Optional[pulumi.Input[_builtins.bool]]):
+        pulumi.set(self, "use_iam_auth", value)
+
+    @_builtins.property
+    @pulumi.getter(name="useIrsa")
+    def use_irsa(self) -> Optional[pulumi.Input[_builtins.bool]]:
+        return pulumi.get(self, "use_irsa")
+
+    @use_irsa.setter
+    def use_irsa(self, value: Optional[pulumi.Input[_builtins.bool]]):
+        pulumi.set(self, "use_irsa", value)
+
+    @_builtins.property
+    @pulumi.getter(name="useMskIam")
+    def use_msk_iam(self) -> Optional[pulumi.Input[_builtins.bool]]:
+        return pulumi.get(self, "use_msk_iam")
+
+    @use_msk_iam.setter
+    def use_msk_iam(self, value: Optional[pulumi.Input[_builtins.bool]]):
+        pulumi.set(self, "use_msk_iam", value)
+
+    @_builtins.property
     @pulumi.getter(name="useProxy")
     def use_proxy(self) -> Optional[pulumi.Input[_builtins.bool]]:
         return pulumi.get(self, "use_proxy")
@@ -1420,6 +1654,24 @@ class ResourceArgs:
     @use_proxy.setter
     def use_proxy(self, value: Optional[pulumi.Input[_builtins.bool]]):
         pulumi.set(self, "use_proxy", value)
+
+    @_builtins.property
+    @pulumi.getter(name="useRdsIam")
+    def use_rds_iam(self) -> Optional[pulumi.Input[_builtins.bool]]:
+        return pulumi.get(self, "use_rds_iam")
+
+    @use_rds_iam.setter
+    def use_rds_iam(self, value: Optional[pulumi.Input[_builtins.bool]]):
+        pulumi.set(self, "use_rds_iam", value)
+
+    @_builtins.property
+    @pulumi.getter(name="useRoleArn")
+    def use_role_arn(self) -> Optional[pulumi.Input[_builtins.bool]]:
+        return pulumi.get(self, "use_role_arn")
+
+    @use_role_arn.setter
+    def use_role_arn(self, value: Optional[pulumi.Input[_builtins.bool]]):
+        pulumi.set(self, "use_role_arn", value)
 
     @_builtins.property
     @pulumi.getter(name="useServiceAccount")
@@ -1512,6 +1764,8 @@ class Resource(pulumi.CustomResource):
                  access_control_group: Optional[pulumi.Input[_builtins.str]] = None,
                  access_control_method: Optional[pulumi.Input[_builtins.str]] = None,
                  access_key_id: Optional[pulumi.Input[_builtins.str]] = None,
+                 allow_file_transfer: Optional[pulumi.Input[_builtins.bool]] = None,
+                 allowed_commands: Optional[pulumi.Input[_builtins.str]] = None,
                  annotations: Optional[pulumi.Input[_builtins.str]] = None,
                  api_client_id: Optional[pulumi.Input[_builtins.str]] = None,
                  api_client_secret: Optional[pulumi.Input[_builtins.str]] = None,
@@ -1524,9 +1778,17 @@ class Resource(pulumi.CustomResource):
                  application_id: Optional[pulumi.Input[_builtins.str]] = None,
                  application_name: Optional[pulumi.Input[_builtins.str]] = None,
                  arn: Optional[pulumi.Input[_builtins.str]] = None,
+                 auth_mode: Optional[pulumi.Input[_builtins.str]] = None,
                  automation_mode: Optional[pulumi.Input[_builtins.str]] = None,
                  aws_arn: Optional[pulumi.Input[_builtins.str]] = None,
+                 aws_region: Optional[pulumi.Input[_builtins.str]] = None,
                  aws_region_name: Optional[pulumi.Input[_builtins.str]] = None,
+                 aws_role_arn: Optional[pulumi.Input[_builtins.str]] = None,
+                 aws_service_account: Optional[pulumi.Input[_builtins.str]] = None,
+                 bootstrap_servers: Optional[pulumi.Input[_builtins.str]] = None,
+                 ca_certificate: Optional[pulumi.Input[_builtins.str]] = None,
+                 cache_name: Optional[pulumi.Input[_builtins.str]] = None,
+                 cache_type: Optional[pulumi.Input[_builtins.str]] = None,
                  client_cert: Optional[pulumi.Input[_builtins.str]] = None,
                  client_certificate: Optional[pulumi.Input[_builtins.str]] = None,
                  client_configuration: Optional[pulumi.Input[_builtins.str]] = None,
@@ -1545,19 +1807,25 @@ class Resource(pulumi.CustomResource):
                  database_password: Optional[pulumi.Input[_builtins.str]] = None,
                  database_username: Optional[pulumi.Input[_builtins.str]] = None,
                  dd_api_key: Optional[pulumi.Input[_builtins.str]] = None,
+                 dd_app_key: Optional[pulumi.Input[_builtins.str]] = None,
                  dd_site: Optional[pulumi.Input[_builtins.str]] = None,
                  default_cluster: Optional[pulumi.Input[_builtins.str]] = None,
                  default_user: Optional[pulumi.Input[_builtins.str]] = None,
                  domain: Optional[pulumi.Input[_builtins.str]] = None,
+                 enable_allowed_commands: Optional[pulumi.Input[_builtins.bool]] = None,
+                 enable_tls: Optional[pulumi.Input[_builtins.bool]] = None,
                  fields: Optional[pulumi.Input[_builtins.str]] = None,
                  host: Optional[pulumi.Input[_builtins.str]] = None,
                  hostname: Optional[pulumi.Input[_builtins.str]] = None,
                  hosts: Optional[pulumi.Input[Sequence[pulumi.Input[_builtins.str]]]] = None,
                  image: Optional[pulumi.Input[_builtins.str]] = None,
                  index: Optional[pulumi.Input[_builtins.str]] = None,
+                 insecure_skip_verify: Optional[pulumi.Input[_builtins.bool]] = None,
                  is_redis_labs: Optional[pulumi.Input[_builtins.bool]] = None,
                  key: Optional[pulumi.Input[_builtins.str]] = None,
                  key_file: Optional[pulumi.Input[_builtins.str]] = None,
+                 keyspace: Optional[pulumi.Input[_builtins.str]] = None,
+                 keyspaces_endpoint: Optional[pulumi.Input[_builtins.str]] = None,
                  ldap_encryption_method: Optional[pulumi.Input[_builtins.str]] = None,
                  ldap_hostname: Optional[pulumi.Input[_builtins.str]] = None,
                  ldap_port: Optional[pulumi.Input[_builtins.str]] = None,
@@ -1621,7 +1889,12 @@ class Resource(pulumi.CustomResource):
                  url: Optional[pulumi.Input[_builtins.str]] = None,
                  urls: Optional[pulumi.Input[_builtins.str]] = None,
                  use_connect_server: Optional[pulumi.Input[_builtins.bool]] = None,
+                 use_iam_auth: Optional[pulumi.Input[_builtins.bool]] = None,
+                 use_irsa: Optional[pulumi.Input[_builtins.bool]] = None,
+                 use_msk_iam: Optional[pulumi.Input[_builtins.bool]] = None,
                  use_proxy: Optional[pulumi.Input[_builtins.bool]] = None,
+                 use_rds_iam: Optional[pulumi.Input[_builtins.bool]] = None,
+                 use_role_arn: Optional[pulumi.Input[_builtins.bool]] = None,
                  use_service_account: Optional[pulumi.Input[_builtins.bool]] = None,
                  use_tenant: Optional[pulumi.Input[_builtins.bool]] = None,
                  use_tls: Optional[pulumi.Input[_builtins.bool]] = None,
@@ -1669,6 +1942,8 @@ class Resource(pulumi.CustomResource):
                  access_control_group: Optional[pulumi.Input[_builtins.str]] = None,
                  access_control_method: Optional[pulumi.Input[_builtins.str]] = None,
                  access_key_id: Optional[pulumi.Input[_builtins.str]] = None,
+                 allow_file_transfer: Optional[pulumi.Input[_builtins.bool]] = None,
+                 allowed_commands: Optional[pulumi.Input[_builtins.str]] = None,
                  annotations: Optional[pulumi.Input[_builtins.str]] = None,
                  api_client_id: Optional[pulumi.Input[_builtins.str]] = None,
                  api_client_secret: Optional[pulumi.Input[_builtins.str]] = None,
@@ -1681,9 +1956,17 @@ class Resource(pulumi.CustomResource):
                  application_id: Optional[pulumi.Input[_builtins.str]] = None,
                  application_name: Optional[pulumi.Input[_builtins.str]] = None,
                  arn: Optional[pulumi.Input[_builtins.str]] = None,
+                 auth_mode: Optional[pulumi.Input[_builtins.str]] = None,
                  automation_mode: Optional[pulumi.Input[_builtins.str]] = None,
                  aws_arn: Optional[pulumi.Input[_builtins.str]] = None,
+                 aws_region: Optional[pulumi.Input[_builtins.str]] = None,
                  aws_region_name: Optional[pulumi.Input[_builtins.str]] = None,
+                 aws_role_arn: Optional[pulumi.Input[_builtins.str]] = None,
+                 aws_service_account: Optional[pulumi.Input[_builtins.str]] = None,
+                 bootstrap_servers: Optional[pulumi.Input[_builtins.str]] = None,
+                 ca_certificate: Optional[pulumi.Input[_builtins.str]] = None,
+                 cache_name: Optional[pulumi.Input[_builtins.str]] = None,
+                 cache_type: Optional[pulumi.Input[_builtins.str]] = None,
                  client_cert: Optional[pulumi.Input[_builtins.str]] = None,
                  client_certificate: Optional[pulumi.Input[_builtins.str]] = None,
                  client_configuration: Optional[pulumi.Input[_builtins.str]] = None,
@@ -1702,19 +1985,25 @@ class Resource(pulumi.CustomResource):
                  database_password: Optional[pulumi.Input[_builtins.str]] = None,
                  database_username: Optional[pulumi.Input[_builtins.str]] = None,
                  dd_api_key: Optional[pulumi.Input[_builtins.str]] = None,
+                 dd_app_key: Optional[pulumi.Input[_builtins.str]] = None,
                  dd_site: Optional[pulumi.Input[_builtins.str]] = None,
                  default_cluster: Optional[pulumi.Input[_builtins.str]] = None,
                  default_user: Optional[pulumi.Input[_builtins.str]] = None,
                  domain: Optional[pulumi.Input[_builtins.str]] = None,
+                 enable_allowed_commands: Optional[pulumi.Input[_builtins.bool]] = None,
+                 enable_tls: Optional[pulumi.Input[_builtins.bool]] = None,
                  fields: Optional[pulumi.Input[_builtins.str]] = None,
                  host: Optional[pulumi.Input[_builtins.str]] = None,
                  hostname: Optional[pulumi.Input[_builtins.str]] = None,
                  hosts: Optional[pulumi.Input[Sequence[pulumi.Input[_builtins.str]]]] = None,
                  image: Optional[pulumi.Input[_builtins.str]] = None,
                  index: Optional[pulumi.Input[_builtins.str]] = None,
+                 insecure_skip_verify: Optional[pulumi.Input[_builtins.bool]] = None,
                  is_redis_labs: Optional[pulumi.Input[_builtins.bool]] = None,
                  key: Optional[pulumi.Input[_builtins.str]] = None,
                  key_file: Optional[pulumi.Input[_builtins.str]] = None,
+                 keyspace: Optional[pulumi.Input[_builtins.str]] = None,
+                 keyspaces_endpoint: Optional[pulumi.Input[_builtins.str]] = None,
                  ldap_encryption_method: Optional[pulumi.Input[_builtins.str]] = None,
                  ldap_hostname: Optional[pulumi.Input[_builtins.str]] = None,
                  ldap_port: Optional[pulumi.Input[_builtins.str]] = None,
@@ -1778,7 +2067,12 @@ class Resource(pulumi.CustomResource):
                  url: Optional[pulumi.Input[_builtins.str]] = None,
                  urls: Optional[pulumi.Input[_builtins.str]] = None,
                  use_connect_server: Optional[pulumi.Input[_builtins.bool]] = None,
+                 use_iam_auth: Optional[pulumi.Input[_builtins.bool]] = None,
+                 use_irsa: Optional[pulumi.Input[_builtins.bool]] = None,
+                 use_msk_iam: Optional[pulumi.Input[_builtins.bool]] = None,
                  use_proxy: Optional[pulumi.Input[_builtins.bool]] = None,
+                 use_rds_iam: Optional[pulumi.Input[_builtins.bool]] = None,
+                 use_role_arn: Optional[pulumi.Input[_builtins.bool]] = None,
                  use_service_account: Optional[pulumi.Input[_builtins.bool]] = None,
                  use_tenant: Optional[pulumi.Input[_builtins.bool]] = None,
                  use_tls: Optional[pulumi.Input[_builtins.bool]] = None,
@@ -1800,6 +2094,8 @@ class Resource(pulumi.CustomResource):
             __props__.__dict__["access_control_group"] = access_control_group
             __props__.__dict__["access_control_method"] = access_control_method
             __props__.__dict__["access_key_id"] = None if access_key_id is None else pulumi.Output.secret(access_key_id)
+            __props__.__dict__["allow_file_transfer"] = allow_file_transfer
+            __props__.__dict__["allowed_commands"] = allowed_commands
             __props__.__dict__["annotations"] = annotations
             __props__.__dict__["api_client_id"] = api_client_id
             __props__.__dict__["api_client_secret"] = None if api_client_secret is None else pulumi.Output.secret(api_client_secret)
@@ -1812,9 +2108,17 @@ class Resource(pulumi.CustomResource):
             __props__.__dict__["application_id"] = application_id
             __props__.__dict__["application_name"] = application_name
             __props__.__dict__["arn"] = arn
+            __props__.__dict__["auth_mode"] = auth_mode
             __props__.__dict__["automation_mode"] = automation_mode
             __props__.__dict__["aws_arn"] = aws_arn
+            __props__.__dict__["aws_region"] = aws_region
             __props__.__dict__["aws_region_name"] = aws_region_name
+            __props__.__dict__["aws_role_arn"] = aws_role_arn
+            __props__.__dict__["aws_service_account"] = aws_service_account
+            __props__.__dict__["bootstrap_servers"] = bootstrap_servers
+            __props__.__dict__["ca_certificate"] = ca_certificate
+            __props__.__dict__["cache_name"] = cache_name
+            __props__.__dict__["cache_type"] = cache_type
             __props__.__dict__["client_cert"] = None if client_cert is None else pulumi.Output.secret(client_cert)
             __props__.__dict__["client_certificate"] = None if client_certificate is None else pulumi.Output.secret(client_certificate)
             __props__.__dict__["client_configuration"] = None if client_configuration is None else pulumi.Output.secret(client_configuration)
@@ -1833,19 +2137,25 @@ class Resource(pulumi.CustomResource):
             __props__.__dict__["database_password"] = None if database_password is None else pulumi.Output.secret(database_password)
             __props__.__dict__["database_username"] = database_username
             __props__.__dict__["dd_api_key"] = None if dd_api_key is None else pulumi.Output.secret(dd_api_key)
+            __props__.__dict__["dd_app_key"] = None if dd_app_key is None else pulumi.Output.secret(dd_app_key)
             __props__.__dict__["dd_site"] = dd_site
             __props__.__dict__["default_cluster"] = default_cluster
             __props__.__dict__["default_user"] = default_user
             __props__.__dict__["domain"] = domain
+            __props__.__dict__["enable_allowed_commands"] = enable_allowed_commands
+            __props__.__dict__["enable_tls"] = enable_tls
             __props__.__dict__["fields"] = fields
             __props__.__dict__["host"] = host
             __props__.__dict__["hostname"] = hostname
             __props__.__dict__["hosts"] = hosts
             __props__.__dict__["image"] = image
             __props__.__dict__["index"] = index
+            __props__.__dict__["insecure_skip_verify"] = insecure_skip_verify
             __props__.__dict__["is_redis_labs"] = is_redis_labs
             __props__.__dict__["key"] = None if key is None else pulumi.Output.secret(key)
             __props__.__dict__["key_file"] = None if key_file is None else pulumi.Output.secret(key_file)
+            __props__.__dict__["keyspace"] = keyspace
+            __props__.__dict__["keyspaces_endpoint"] = keyspaces_endpoint
             __props__.__dict__["ldap_encryption_method"] = ldap_encryption_method
             __props__.__dict__["ldap_hostname"] = ldap_hostname
             __props__.__dict__["ldap_port"] = ldap_port
@@ -1913,7 +2223,12 @@ class Resource(pulumi.CustomResource):
             __props__.__dict__["url"] = url
             __props__.__dict__["urls"] = urls
             __props__.__dict__["use_connect_server"] = use_connect_server
+            __props__.__dict__["use_iam_auth"] = use_iam_auth
+            __props__.__dict__["use_irsa"] = use_irsa
+            __props__.__dict__["use_msk_iam"] = use_msk_iam
             __props__.__dict__["use_proxy"] = use_proxy
+            __props__.__dict__["use_rds_iam"] = use_rds_iam
+            __props__.__dict__["use_role_arn"] = use_role_arn
             __props__.__dict__["use_service_account"] = use_service_account
             __props__.__dict__["use_tenant"] = use_tenant
             __props__.__dict__["use_tls"] = use_tls
@@ -1924,7 +2239,7 @@ class Resource(pulumi.CustomResource):
             __props__.__dict__["webhook_url"] = None if webhook_url is None else pulumi.Output.secret(webhook_url)
             __props__.__dict__["webui_port"] = webui_port
             __props__.__dict__["applied_digests"] = None
-        secret_opts = pulumi.ResourceOptions(additional_secret_outputs=["accessKeyId", "apiClientSecret", "apiKey", "apiSecret", "apiToken", "appKey", "clientCert", "clientCertificate", "clientConfiguration", "clientKey", "clientSecret", "clientcert", "clusterCert", "clusterToken", "credentialJson", "databasePassword", "ddApiKey", "key", "keyFile", "ldapSearchBindPassword", "password", "privateKey", "proxysqlAdminPassword", "publicKey", "rootCert", "secretAccessKey", "secretId", "sharedSecret", "targets", "tlsCertFile", "tlsKeyFile", "tlsRootCert", "token", "tokenId", "uri", "webhookUrl"])
+        secret_opts = pulumi.ResourceOptions(additional_secret_outputs=["accessKeyId", "apiClientSecret", "apiKey", "apiSecret", "apiToken", "appKey", "clientCert", "clientCertificate", "clientConfiguration", "clientKey", "clientSecret", "clientcert", "clusterCert", "clusterToken", "credentialJson", "databasePassword", "ddApiKey", "ddAppKey", "key", "keyFile", "ldapSearchBindPassword", "password", "privateKey", "proxysqlAdminPassword", "publicKey", "rootCert", "secretAccessKey", "secretId", "sharedSecret", "targets", "tlsCertFile", "tlsKeyFile", "tlsRootCert", "token", "tokenId", "uri", "webhookUrl"])
         opts = pulumi.ResourceOptions.merge(opts, secret_opts)
         super(Resource, __self__).__init__(
             'adaptive:index:Resource',
@@ -1951,6 +2266,8 @@ class Resource(pulumi.CustomResource):
         __props__.__dict__["access_control_group"] = None
         __props__.__dict__["access_control_method"] = None
         __props__.__dict__["access_key_id"] = None
+        __props__.__dict__["allow_file_transfer"] = None
+        __props__.__dict__["allowed_commands"] = None
         __props__.__dict__["annotations"] = None
         __props__.__dict__["api_client_id"] = None
         __props__.__dict__["api_client_secret"] = None
@@ -1964,9 +2281,17 @@ class Resource(pulumi.CustomResource):
         __props__.__dict__["application_name"] = None
         __props__.__dict__["applied_digests"] = None
         __props__.__dict__["arn"] = None
+        __props__.__dict__["auth_mode"] = None
         __props__.__dict__["automation_mode"] = None
         __props__.__dict__["aws_arn"] = None
+        __props__.__dict__["aws_region"] = None
         __props__.__dict__["aws_region_name"] = None
+        __props__.__dict__["aws_role_arn"] = None
+        __props__.__dict__["aws_service_account"] = None
+        __props__.__dict__["bootstrap_servers"] = None
+        __props__.__dict__["ca_certificate"] = None
+        __props__.__dict__["cache_name"] = None
+        __props__.__dict__["cache_type"] = None
         __props__.__dict__["client_cert"] = None
         __props__.__dict__["client_certificate"] = None
         __props__.__dict__["client_configuration"] = None
@@ -1985,19 +2310,25 @@ class Resource(pulumi.CustomResource):
         __props__.__dict__["database_password"] = None
         __props__.__dict__["database_username"] = None
         __props__.__dict__["dd_api_key"] = None
+        __props__.__dict__["dd_app_key"] = None
         __props__.__dict__["dd_site"] = None
         __props__.__dict__["default_cluster"] = None
         __props__.__dict__["default_user"] = None
         __props__.__dict__["domain"] = None
+        __props__.__dict__["enable_allowed_commands"] = None
+        __props__.__dict__["enable_tls"] = None
         __props__.__dict__["fields"] = None
         __props__.__dict__["host"] = None
         __props__.__dict__["hostname"] = None
         __props__.__dict__["hosts"] = None
         __props__.__dict__["image"] = None
         __props__.__dict__["index"] = None
+        __props__.__dict__["insecure_skip_verify"] = None
         __props__.__dict__["is_redis_labs"] = None
         __props__.__dict__["key"] = None
         __props__.__dict__["key_file"] = None
+        __props__.__dict__["keyspace"] = None
+        __props__.__dict__["keyspaces_endpoint"] = None
         __props__.__dict__["ldap_encryption_method"] = None
         __props__.__dict__["ldap_hostname"] = None
         __props__.__dict__["ldap_port"] = None
@@ -2061,7 +2392,12 @@ class Resource(pulumi.CustomResource):
         __props__.__dict__["url"] = None
         __props__.__dict__["urls"] = None
         __props__.__dict__["use_connect_server"] = None
+        __props__.__dict__["use_iam_auth"] = None
+        __props__.__dict__["use_irsa"] = None
+        __props__.__dict__["use_msk_iam"] = None
         __props__.__dict__["use_proxy"] = None
+        __props__.__dict__["use_rds_iam"] = None
+        __props__.__dict__["use_role_arn"] = None
         __props__.__dict__["use_service_account"] = None
         __props__.__dict__["use_tenant"] = None
         __props__.__dict__["use_tls"] = None
@@ -2087,6 +2423,16 @@ class Resource(pulumi.CustomResource):
     @pulumi.getter(name="accessKeyId")
     def access_key_id(self) -> pulumi.Output[Optional[_builtins.str]]:
         return pulumi.get(self, "access_key_id")
+
+    @_builtins.property
+    @pulumi.getter(name="allowFileTransfer")
+    def allow_file_transfer(self) -> pulumi.Output[Optional[_builtins.bool]]:
+        return pulumi.get(self, "allow_file_transfer")
+
+    @_builtins.property
+    @pulumi.getter(name="allowedCommands")
+    def allowed_commands(self) -> pulumi.Output[Optional[_builtins.str]]:
+        return pulumi.get(self, "allowed_commands")
 
     @_builtins.property
     @pulumi.getter
@@ -2157,6 +2503,11 @@ class Resource(pulumi.CustomResource):
         return pulumi.get(self, "arn")
 
     @_builtins.property
+    @pulumi.getter(name="authMode")
+    def auth_mode(self) -> pulumi.Output[Optional[_builtins.str]]:
+        return pulumi.get(self, "auth_mode")
+
+    @_builtins.property
     @pulumi.getter(name="automationMode")
     def automation_mode(self) -> pulumi.Output[Optional[_builtins.str]]:
         return pulumi.get(self, "automation_mode")
@@ -2167,9 +2518,44 @@ class Resource(pulumi.CustomResource):
         return pulumi.get(self, "aws_arn")
 
     @_builtins.property
+    @pulumi.getter(name="awsRegion")
+    def aws_region(self) -> pulumi.Output[Optional[_builtins.str]]:
+        return pulumi.get(self, "aws_region")
+
+    @_builtins.property
     @pulumi.getter(name="awsRegionName")
     def aws_region_name(self) -> pulumi.Output[Optional[_builtins.str]]:
         return pulumi.get(self, "aws_region_name")
+
+    @_builtins.property
+    @pulumi.getter(name="awsRoleArn")
+    def aws_role_arn(self) -> pulumi.Output[Optional[_builtins.str]]:
+        return pulumi.get(self, "aws_role_arn")
+
+    @_builtins.property
+    @pulumi.getter(name="awsServiceAccount")
+    def aws_service_account(self) -> pulumi.Output[Optional[_builtins.str]]:
+        return pulumi.get(self, "aws_service_account")
+
+    @_builtins.property
+    @pulumi.getter(name="bootstrapServers")
+    def bootstrap_servers(self) -> pulumi.Output[Optional[_builtins.str]]:
+        return pulumi.get(self, "bootstrap_servers")
+
+    @_builtins.property
+    @pulumi.getter(name="caCertificate")
+    def ca_certificate(self) -> pulumi.Output[Optional[_builtins.str]]:
+        return pulumi.get(self, "ca_certificate")
+
+    @_builtins.property
+    @pulumi.getter(name="cacheName")
+    def cache_name(self) -> pulumi.Output[Optional[_builtins.str]]:
+        return pulumi.get(self, "cache_name")
+
+    @_builtins.property
+    @pulumi.getter(name="cacheType")
+    def cache_type(self) -> pulumi.Output[Optional[_builtins.str]]:
+        return pulumi.get(self, "cache_type")
 
     @_builtins.property
     @pulumi.getter(name="clientCert")
@@ -2262,6 +2648,11 @@ class Resource(pulumi.CustomResource):
         return pulumi.get(self, "dd_api_key")
 
     @_builtins.property
+    @pulumi.getter(name="ddAppKey")
+    def dd_app_key(self) -> pulumi.Output[Optional[_builtins.str]]:
+        return pulumi.get(self, "dd_app_key")
+
+    @_builtins.property
     @pulumi.getter(name="ddSite")
     def dd_site(self) -> pulumi.Output[Optional[_builtins.str]]:
         return pulumi.get(self, "dd_site")
@@ -2283,6 +2674,16 @@ class Resource(pulumi.CustomResource):
     @pulumi.getter
     def domain(self) -> pulumi.Output[Optional[_builtins.str]]:
         return pulumi.get(self, "domain")
+
+    @_builtins.property
+    @pulumi.getter(name="enableAllowedCommands")
+    def enable_allowed_commands(self) -> pulumi.Output[Optional[_builtins.bool]]:
+        return pulumi.get(self, "enable_allowed_commands")
+
+    @_builtins.property
+    @pulumi.getter(name="enableTls")
+    def enable_tls(self) -> pulumi.Output[Optional[_builtins.bool]]:
+        return pulumi.get(self, "enable_tls")
 
     @_builtins.property
     @pulumi.getter
@@ -2315,6 +2716,11 @@ class Resource(pulumi.CustomResource):
         return pulumi.get(self, "index")
 
     @_builtins.property
+    @pulumi.getter(name="insecureSkipVerify")
+    def insecure_skip_verify(self) -> pulumi.Output[Optional[_builtins.bool]]:
+        return pulumi.get(self, "insecure_skip_verify")
+
+    @_builtins.property
     @pulumi.getter(name="isRedisLabs")
     def is_redis_labs(self) -> pulumi.Output[Optional[_builtins.bool]]:
         return pulumi.get(self, "is_redis_labs")
@@ -2328,6 +2734,16 @@ class Resource(pulumi.CustomResource):
     @pulumi.getter(name="keyFile")
     def key_file(self) -> pulumi.Output[Optional[_builtins.str]]:
         return pulumi.get(self, "key_file")
+
+    @_builtins.property
+    @pulumi.getter
+    def keyspace(self) -> pulumi.Output[Optional[_builtins.str]]:
+        return pulumi.get(self, "keyspace")
+
+    @_builtins.property
+    @pulumi.getter(name="keyspacesEndpoint")
+    def keyspaces_endpoint(self) -> pulumi.Output[Optional[_builtins.str]]:
+        return pulumi.get(self, "keyspaces_endpoint")
 
     @_builtins.property
     @pulumi.getter(name="ldapEncryptionMethod")
@@ -2654,9 +3070,34 @@ class Resource(pulumi.CustomResource):
         return pulumi.get(self, "use_connect_server")
 
     @_builtins.property
+    @pulumi.getter(name="useIamAuth")
+    def use_iam_auth(self) -> pulumi.Output[Optional[_builtins.bool]]:
+        return pulumi.get(self, "use_iam_auth")
+
+    @_builtins.property
+    @pulumi.getter(name="useIrsa")
+    def use_irsa(self) -> pulumi.Output[Optional[_builtins.bool]]:
+        return pulumi.get(self, "use_irsa")
+
+    @_builtins.property
+    @pulumi.getter(name="useMskIam")
+    def use_msk_iam(self) -> pulumi.Output[Optional[_builtins.bool]]:
+        return pulumi.get(self, "use_msk_iam")
+
+    @_builtins.property
     @pulumi.getter(name="useProxy")
     def use_proxy(self) -> pulumi.Output[Optional[_builtins.bool]]:
         return pulumi.get(self, "use_proxy")
+
+    @_builtins.property
+    @pulumi.getter(name="useRdsIam")
+    def use_rds_iam(self) -> pulumi.Output[Optional[_builtins.bool]]:
+        return pulumi.get(self, "use_rds_iam")
+
+    @_builtins.property
+    @pulumi.getter(name="useRoleArn")
+    def use_role_arn(self) -> pulumi.Output[Optional[_builtins.bool]]:
+        return pulumi.get(self, "use_role_arn")
 
     @_builtins.property
     @pulumi.getter(name="useServiceAccount")

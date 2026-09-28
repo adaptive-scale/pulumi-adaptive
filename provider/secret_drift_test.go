@@ -133,7 +133,6 @@ func TestArgForConfigKeyResolvesEveryTypesOwnKeys(t *testing.T) {
 		"vnc/hosts":                   "same as serverlist",
 		"mysql/sslMode":               `forced to "require" by the forward mapping; not an input`,
 		"awsredshift/sslMode":         "vestigial struct field, never populated on the way out",
-		"ssh/password":                "mirrors sshKey; the read arm reconciles via sshKey",
 	}
 
 	for typ := range validIntegrationTypes {
@@ -290,7 +289,7 @@ func TestSecretDriftLeavesMatchingDigestsAlone(t *testing.T) {
 }
 
 // A key mapping to no single argument is reported by name rather than dropped:
-// the nested paths the server emits, and ssh's password/sshKey mirror.
+// for example, nested paths the server emits.
 func TestSecretDriftReportsUnattributableKeys(t *testing.T) {
 	args := ResourceArgs{Type: "postgres", Name: "db"}
 

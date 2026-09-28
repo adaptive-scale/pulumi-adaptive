@@ -18,6 +18,8 @@ type Resource struct {
 	AccessControlGroup  pulumi.StringPtrOutput `pulumi:"accessControlGroup"`
 	AccessControlMethod pulumi.StringPtrOutput `pulumi:"accessControlMethod"`
 	AccessKeyId         pulumi.StringPtrOutput `pulumi:"accessKeyId"`
+	AllowFileTransfer   pulumi.BoolPtrOutput   `pulumi:"allowFileTransfer"`
+	AllowedCommands     pulumi.StringPtrOutput `pulumi:"allowedCommands"`
 	Annotations         pulumi.StringPtrOutput `pulumi:"annotations"`
 	ApiClientId         pulumi.StringPtrOutput `pulumi:"apiClientId"`
 	ApiClientSecret     pulumi.StringPtrOutput `pulumi:"apiClientSecret"`
@@ -32,9 +34,17 @@ type Resource struct {
 	// Opaque server fingerprints of the write-only secret fields as of the last write by this provider, used to detect out-of-band secret changes on refresh. Not comparable across resources or workspaces.
 	AppliedDigests      pulumi.StringMapOutput `pulumi:"appliedDigests"`
 	Arn                 pulumi.StringPtrOutput `pulumi:"arn"`
+	AuthMode            pulumi.StringPtrOutput `pulumi:"authMode"`
 	AutomationMode      pulumi.StringPtrOutput `pulumi:"automationMode"`
 	AwsArn              pulumi.StringPtrOutput `pulumi:"awsArn"`
+	AwsRegion           pulumi.StringPtrOutput `pulumi:"awsRegion"`
 	AwsRegionName       pulumi.StringPtrOutput `pulumi:"awsRegionName"`
+	AwsRoleArn          pulumi.StringPtrOutput `pulumi:"awsRoleArn"`
+	AwsServiceAccount   pulumi.StringPtrOutput `pulumi:"awsServiceAccount"`
+	BootstrapServers    pulumi.StringPtrOutput `pulumi:"bootstrapServers"`
+	CaCertificate       pulumi.StringPtrOutput `pulumi:"caCertificate"`
+	CacheName           pulumi.StringPtrOutput `pulumi:"cacheName"`
+	CacheType           pulumi.StringPtrOutput `pulumi:"cacheType"`
 	ClientCert          pulumi.StringPtrOutput `pulumi:"clientCert"`
 	ClientCertificate   pulumi.StringPtrOutput `pulumi:"clientCertificate"`
 	ClientConfiguration pulumi.StringPtrOutput `pulumi:"clientConfiguration"`
@@ -53,20 +63,26 @@ type Resource struct {
 	DatabasePassword    pulumi.StringPtrOutput `pulumi:"databasePassword"`
 	DatabaseUsername    pulumi.StringPtrOutput `pulumi:"databaseUsername"`
 	DdApiKey            pulumi.StringPtrOutput `pulumi:"ddApiKey"`
+	DdAppKey            pulumi.StringPtrOutput `pulumi:"ddAppKey"`
 	DdSite              pulumi.StringPtrOutput `pulumi:"ddSite"`
 	// The default cluster the resource is deployed to.
 	DefaultCluster         pulumi.StringPtrOutput   `pulumi:"defaultCluster"`
 	DefaultUser            pulumi.StringPtrOutput   `pulumi:"defaultUser"`
 	Domain                 pulumi.StringPtrOutput   `pulumi:"domain"`
+	EnableAllowedCommands  pulumi.BoolPtrOutput     `pulumi:"enableAllowedCommands"`
+	EnableTls              pulumi.BoolPtrOutput     `pulumi:"enableTls"`
 	Fields                 pulumi.StringPtrOutput   `pulumi:"fields"`
 	Host                   pulumi.StringPtrOutput   `pulumi:"host"`
 	Hostname               pulumi.StringPtrOutput   `pulumi:"hostname"`
 	Hosts                  pulumi.StringArrayOutput `pulumi:"hosts"`
 	Image                  pulumi.StringPtrOutput   `pulumi:"image"`
 	Index                  pulumi.StringPtrOutput   `pulumi:"index"`
+	InsecureSkipVerify     pulumi.BoolPtrOutput     `pulumi:"insecureSkipVerify"`
 	IsRedisLabs            pulumi.BoolPtrOutput     `pulumi:"isRedisLabs"`
 	Key                    pulumi.StringPtrOutput   `pulumi:"key"`
 	KeyFile                pulumi.StringPtrOutput   `pulumi:"keyFile"`
+	Keyspace               pulumi.StringPtrOutput   `pulumi:"keyspace"`
+	KeyspacesEndpoint      pulumi.StringPtrOutput   `pulumi:"keyspacesEndpoint"`
 	LdapEncryptionMethod   pulumi.StringPtrOutput   `pulumi:"ldapEncryptionMethod"`
 	LdapHostname           pulumi.StringPtrOutput   `pulumi:"ldapHostname"`
 	LdapPort               pulumi.StringPtrOutput   `pulumi:"ldapPort"`
@@ -133,7 +149,12 @@ type Resource struct {
 	Url               pulumi.StringPtrOutput `pulumi:"url"`
 	Urls              pulumi.StringPtrOutput `pulumi:"urls"`
 	UseConnectServer  pulumi.BoolPtrOutput   `pulumi:"useConnectServer"`
+	UseIamAuth        pulumi.BoolPtrOutput   `pulumi:"useIamAuth"`
+	UseIrsa           pulumi.BoolPtrOutput   `pulumi:"useIrsa"`
+	UseMskIam         pulumi.BoolPtrOutput   `pulumi:"useMskIam"`
 	UseProxy          pulumi.BoolPtrOutput   `pulumi:"useProxy"`
+	UseRdsIam         pulumi.BoolPtrOutput   `pulumi:"useRdsIam"`
+	UseRoleArn        pulumi.BoolPtrOutput   `pulumi:"useRoleArn"`
 	UseServiceAccount pulumi.BoolPtrOutput   `pulumi:"useServiceAccount"`
 	UseTenant         pulumi.BoolPtrOutput   `pulumi:"useTenant"`
 	UseTls            pulumi.BoolPtrOutput   `pulumi:"useTls"`
@@ -208,6 +229,9 @@ func NewResource(ctx *pulumi.Context,
 	}
 	if args.DdApiKey != nil {
 		args.DdApiKey = pulumi.ToSecret(args.DdApiKey).(pulumi.StringPtrInput)
+	}
+	if args.DdAppKey != nil {
+		args.DdAppKey = pulumi.ToSecret(args.DdAppKey).(pulumi.StringPtrInput)
 	}
 	if args.Key != nil {
 		args.Key = pulumi.ToSecret(args.Key).(pulumi.StringPtrInput)
@@ -284,6 +308,7 @@ func NewResource(ctx *pulumi.Context,
 		"credentialJson",
 		"databasePassword",
 		"ddApiKey",
+		"ddAppKey",
 		"key",
 		"keyFile",
 		"ldapSearchBindPassword",
@@ -341,6 +366,8 @@ type resourceArgs struct {
 	AccessControlGroup  *string `pulumi:"accessControlGroup"`
 	AccessControlMethod *string `pulumi:"accessControlMethod"`
 	AccessKeyId         *string `pulumi:"accessKeyId"`
+	AllowFileTransfer   *bool   `pulumi:"allowFileTransfer"`
+	AllowedCommands     *string `pulumi:"allowedCommands"`
 	Annotations         *string `pulumi:"annotations"`
 	ApiClientId         *string `pulumi:"apiClientId"`
 	ApiClientSecret     *string `pulumi:"apiClientSecret"`
@@ -353,9 +380,17 @@ type resourceArgs struct {
 	ApplicationId       *string `pulumi:"applicationId"`
 	ApplicationName     *string `pulumi:"applicationName"`
 	Arn                 *string `pulumi:"arn"`
+	AuthMode            *string `pulumi:"authMode"`
 	AutomationMode      *string `pulumi:"automationMode"`
 	AwsArn              *string `pulumi:"awsArn"`
+	AwsRegion           *string `pulumi:"awsRegion"`
 	AwsRegionName       *string `pulumi:"awsRegionName"`
+	AwsRoleArn          *string `pulumi:"awsRoleArn"`
+	AwsServiceAccount   *string `pulumi:"awsServiceAccount"`
+	BootstrapServers    *string `pulumi:"bootstrapServers"`
+	CaCertificate       *string `pulumi:"caCertificate"`
+	CacheName           *string `pulumi:"cacheName"`
+	CacheType           *string `pulumi:"cacheType"`
 	ClientCert          *string `pulumi:"clientCert"`
 	ClientCertificate   *string `pulumi:"clientCertificate"`
 	ClientConfiguration *string `pulumi:"clientConfiguration"`
@@ -374,20 +409,26 @@ type resourceArgs struct {
 	DatabasePassword    *string `pulumi:"databasePassword"`
 	DatabaseUsername    *string `pulumi:"databaseUsername"`
 	DdApiKey            *string `pulumi:"ddApiKey"`
+	DdAppKey            *string `pulumi:"ddAppKey"`
 	DdSite              *string `pulumi:"ddSite"`
 	// The default cluster the resource is deployed to.
 	DefaultCluster         *string  `pulumi:"defaultCluster"`
 	DefaultUser            *string  `pulumi:"defaultUser"`
 	Domain                 *string  `pulumi:"domain"`
+	EnableAllowedCommands  *bool    `pulumi:"enableAllowedCommands"`
+	EnableTls              *bool    `pulumi:"enableTls"`
 	Fields                 *string  `pulumi:"fields"`
 	Host                   *string  `pulumi:"host"`
 	Hostname               *string  `pulumi:"hostname"`
 	Hosts                  []string `pulumi:"hosts"`
 	Image                  *string  `pulumi:"image"`
 	Index                  *string  `pulumi:"index"`
+	InsecureSkipVerify     *bool    `pulumi:"insecureSkipVerify"`
 	IsRedisLabs            *bool    `pulumi:"isRedisLabs"`
 	Key                    *string  `pulumi:"key"`
 	KeyFile                *string  `pulumi:"keyFile"`
+	Keyspace               *string  `pulumi:"keyspace"`
+	KeyspacesEndpoint      *string  `pulumi:"keyspacesEndpoint"`
 	LdapEncryptionMethod   *string  `pulumi:"ldapEncryptionMethod"`
 	LdapHostname           *string  `pulumi:"ldapHostname"`
 	LdapPort               *string  `pulumi:"ldapPort"`
@@ -454,7 +495,12 @@ type resourceArgs struct {
 	Url               *string `pulumi:"url"`
 	Urls              *string `pulumi:"urls"`
 	UseConnectServer  *bool   `pulumi:"useConnectServer"`
+	UseIamAuth        *bool   `pulumi:"useIamAuth"`
+	UseIrsa           *bool   `pulumi:"useIrsa"`
+	UseMskIam         *bool   `pulumi:"useMskIam"`
 	UseProxy          *bool   `pulumi:"useProxy"`
+	UseRdsIam         *bool   `pulumi:"useRdsIam"`
+	UseRoleArn        *bool   `pulumi:"useRoleArn"`
 	UseServiceAccount *bool   `pulumi:"useServiceAccount"`
 	UseTenant         *bool   `pulumi:"useTenant"`
 	UseTls            *bool   `pulumi:"useTls"`
@@ -471,6 +517,8 @@ type ResourceArgs struct {
 	AccessControlGroup  pulumi.StringPtrInput
 	AccessControlMethod pulumi.StringPtrInput
 	AccessKeyId         pulumi.StringPtrInput
+	AllowFileTransfer   pulumi.BoolPtrInput
+	AllowedCommands     pulumi.StringPtrInput
 	Annotations         pulumi.StringPtrInput
 	ApiClientId         pulumi.StringPtrInput
 	ApiClientSecret     pulumi.StringPtrInput
@@ -483,9 +531,17 @@ type ResourceArgs struct {
 	ApplicationId       pulumi.StringPtrInput
 	ApplicationName     pulumi.StringPtrInput
 	Arn                 pulumi.StringPtrInput
+	AuthMode            pulumi.StringPtrInput
 	AutomationMode      pulumi.StringPtrInput
 	AwsArn              pulumi.StringPtrInput
+	AwsRegion           pulumi.StringPtrInput
 	AwsRegionName       pulumi.StringPtrInput
+	AwsRoleArn          pulumi.StringPtrInput
+	AwsServiceAccount   pulumi.StringPtrInput
+	BootstrapServers    pulumi.StringPtrInput
+	CaCertificate       pulumi.StringPtrInput
+	CacheName           pulumi.StringPtrInput
+	CacheType           pulumi.StringPtrInput
 	ClientCert          pulumi.StringPtrInput
 	ClientCertificate   pulumi.StringPtrInput
 	ClientConfiguration pulumi.StringPtrInput
@@ -504,20 +560,26 @@ type ResourceArgs struct {
 	DatabasePassword    pulumi.StringPtrInput
 	DatabaseUsername    pulumi.StringPtrInput
 	DdApiKey            pulumi.StringPtrInput
+	DdAppKey            pulumi.StringPtrInput
 	DdSite              pulumi.StringPtrInput
 	// The default cluster the resource is deployed to.
 	DefaultCluster         pulumi.StringPtrInput
 	DefaultUser            pulumi.StringPtrInput
 	Domain                 pulumi.StringPtrInput
+	EnableAllowedCommands  pulumi.BoolPtrInput
+	EnableTls              pulumi.BoolPtrInput
 	Fields                 pulumi.StringPtrInput
 	Host                   pulumi.StringPtrInput
 	Hostname               pulumi.StringPtrInput
 	Hosts                  pulumi.StringArrayInput
 	Image                  pulumi.StringPtrInput
 	Index                  pulumi.StringPtrInput
+	InsecureSkipVerify     pulumi.BoolPtrInput
 	IsRedisLabs            pulumi.BoolPtrInput
 	Key                    pulumi.StringPtrInput
 	KeyFile                pulumi.StringPtrInput
+	Keyspace               pulumi.StringPtrInput
+	KeyspacesEndpoint      pulumi.StringPtrInput
 	LdapEncryptionMethod   pulumi.StringPtrInput
 	LdapHostname           pulumi.StringPtrInput
 	LdapPort               pulumi.StringPtrInput
@@ -584,7 +646,12 @@ type ResourceArgs struct {
 	Url               pulumi.StringPtrInput
 	Urls              pulumi.StringPtrInput
 	UseConnectServer  pulumi.BoolPtrInput
+	UseIamAuth        pulumi.BoolPtrInput
+	UseIrsa           pulumi.BoolPtrInput
+	UseMskIam         pulumi.BoolPtrInput
 	UseProxy          pulumi.BoolPtrInput
+	UseRdsIam         pulumi.BoolPtrInput
+	UseRoleArn        pulumi.BoolPtrInput
 	UseServiceAccount pulumi.BoolPtrInput
 	UseTenant         pulumi.BoolPtrInput
 	UseTls            pulumi.BoolPtrInput
@@ -695,6 +762,14 @@ func (o ResourceOutput) AccessKeyId() pulumi.StringPtrOutput {
 	return o.ApplyT(func(v *Resource) pulumi.StringPtrOutput { return v.AccessKeyId }).(pulumi.StringPtrOutput)
 }
 
+func (o ResourceOutput) AllowFileTransfer() pulumi.BoolPtrOutput {
+	return o.ApplyT(func(v *Resource) pulumi.BoolPtrOutput { return v.AllowFileTransfer }).(pulumi.BoolPtrOutput)
+}
+
+func (o ResourceOutput) AllowedCommands() pulumi.StringPtrOutput {
+	return o.ApplyT(func(v *Resource) pulumi.StringPtrOutput { return v.AllowedCommands }).(pulumi.StringPtrOutput)
+}
+
 func (o ResourceOutput) Annotations() pulumi.StringPtrOutput {
 	return o.ApplyT(func(v *Resource) pulumi.StringPtrOutput { return v.Annotations }).(pulumi.StringPtrOutput)
 }
@@ -748,6 +823,10 @@ func (o ResourceOutput) Arn() pulumi.StringPtrOutput {
 	return o.ApplyT(func(v *Resource) pulumi.StringPtrOutput { return v.Arn }).(pulumi.StringPtrOutput)
 }
 
+func (o ResourceOutput) AuthMode() pulumi.StringPtrOutput {
+	return o.ApplyT(func(v *Resource) pulumi.StringPtrOutput { return v.AuthMode }).(pulumi.StringPtrOutput)
+}
+
 func (o ResourceOutput) AutomationMode() pulumi.StringPtrOutput {
 	return o.ApplyT(func(v *Resource) pulumi.StringPtrOutput { return v.AutomationMode }).(pulumi.StringPtrOutput)
 }
@@ -756,8 +835,36 @@ func (o ResourceOutput) AwsArn() pulumi.StringPtrOutput {
 	return o.ApplyT(func(v *Resource) pulumi.StringPtrOutput { return v.AwsArn }).(pulumi.StringPtrOutput)
 }
 
+func (o ResourceOutput) AwsRegion() pulumi.StringPtrOutput {
+	return o.ApplyT(func(v *Resource) pulumi.StringPtrOutput { return v.AwsRegion }).(pulumi.StringPtrOutput)
+}
+
 func (o ResourceOutput) AwsRegionName() pulumi.StringPtrOutput {
 	return o.ApplyT(func(v *Resource) pulumi.StringPtrOutput { return v.AwsRegionName }).(pulumi.StringPtrOutput)
+}
+
+func (o ResourceOutput) AwsRoleArn() pulumi.StringPtrOutput {
+	return o.ApplyT(func(v *Resource) pulumi.StringPtrOutput { return v.AwsRoleArn }).(pulumi.StringPtrOutput)
+}
+
+func (o ResourceOutput) AwsServiceAccount() pulumi.StringPtrOutput {
+	return o.ApplyT(func(v *Resource) pulumi.StringPtrOutput { return v.AwsServiceAccount }).(pulumi.StringPtrOutput)
+}
+
+func (o ResourceOutput) BootstrapServers() pulumi.StringPtrOutput {
+	return o.ApplyT(func(v *Resource) pulumi.StringPtrOutput { return v.BootstrapServers }).(pulumi.StringPtrOutput)
+}
+
+func (o ResourceOutput) CaCertificate() pulumi.StringPtrOutput {
+	return o.ApplyT(func(v *Resource) pulumi.StringPtrOutput { return v.CaCertificate }).(pulumi.StringPtrOutput)
+}
+
+func (o ResourceOutput) CacheName() pulumi.StringPtrOutput {
+	return o.ApplyT(func(v *Resource) pulumi.StringPtrOutput { return v.CacheName }).(pulumi.StringPtrOutput)
+}
+
+func (o ResourceOutput) CacheType() pulumi.StringPtrOutput {
+	return o.ApplyT(func(v *Resource) pulumi.StringPtrOutput { return v.CacheType }).(pulumi.StringPtrOutput)
 }
 
 func (o ResourceOutput) ClientCert() pulumi.StringPtrOutput {
@@ -832,6 +939,10 @@ func (o ResourceOutput) DdApiKey() pulumi.StringPtrOutput {
 	return o.ApplyT(func(v *Resource) pulumi.StringPtrOutput { return v.DdApiKey }).(pulumi.StringPtrOutput)
 }
 
+func (o ResourceOutput) DdAppKey() pulumi.StringPtrOutput {
+	return o.ApplyT(func(v *Resource) pulumi.StringPtrOutput { return v.DdAppKey }).(pulumi.StringPtrOutput)
+}
+
 func (o ResourceOutput) DdSite() pulumi.StringPtrOutput {
 	return o.ApplyT(func(v *Resource) pulumi.StringPtrOutput { return v.DdSite }).(pulumi.StringPtrOutput)
 }
@@ -847,6 +958,14 @@ func (o ResourceOutput) DefaultUser() pulumi.StringPtrOutput {
 
 func (o ResourceOutput) Domain() pulumi.StringPtrOutput {
 	return o.ApplyT(func(v *Resource) pulumi.StringPtrOutput { return v.Domain }).(pulumi.StringPtrOutput)
+}
+
+func (o ResourceOutput) EnableAllowedCommands() pulumi.BoolPtrOutput {
+	return o.ApplyT(func(v *Resource) pulumi.BoolPtrOutput { return v.EnableAllowedCommands }).(pulumi.BoolPtrOutput)
+}
+
+func (o ResourceOutput) EnableTls() pulumi.BoolPtrOutput {
+	return o.ApplyT(func(v *Resource) pulumi.BoolPtrOutput { return v.EnableTls }).(pulumi.BoolPtrOutput)
 }
 
 func (o ResourceOutput) Fields() pulumi.StringPtrOutput {
@@ -873,6 +992,10 @@ func (o ResourceOutput) Index() pulumi.StringPtrOutput {
 	return o.ApplyT(func(v *Resource) pulumi.StringPtrOutput { return v.Index }).(pulumi.StringPtrOutput)
 }
 
+func (o ResourceOutput) InsecureSkipVerify() pulumi.BoolPtrOutput {
+	return o.ApplyT(func(v *Resource) pulumi.BoolPtrOutput { return v.InsecureSkipVerify }).(pulumi.BoolPtrOutput)
+}
+
 func (o ResourceOutput) IsRedisLabs() pulumi.BoolPtrOutput {
 	return o.ApplyT(func(v *Resource) pulumi.BoolPtrOutput { return v.IsRedisLabs }).(pulumi.BoolPtrOutput)
 }
@@ -883,6 +1006,14 @@ func (o ResourceOutput) Key() pulumi.StringPtrOutput {
 
 func (o ResourceOutput) KeyFile() pulumi.StringPtrOutput {
 	return o.ApplyT(func(v *Resource) pulumi.StringPtrOutput { return v.KeyFile }).(pulumi.StringPtrOutput)
+}
+
+func (o ResourceOutput) Keyspace() pulumi.StringPtrOutput {
+	return o.ApplyT(func(v *Resource) pulumi.StringPtrOutput { return v.Keyspace }).(pulumi.StringPtrOutput)
+}
+
+func (o ResourceOutput) KeyspacesEndpoint() pulumi.StringPtrOutput {
+	return o.ApplyT(func(v *Resource) pulumi.StringPtrOutput { return v.KeyspacesEndpoint }).(pulumi.StringPtrOutput)
 }
 
 func (o ResourceOutput) LdapEncryptionMethod() pulumi.StringPtrOutput {
@@ -1140,8 +1271,28 @@ func (o ResourceOutput) UseConnectServer() pulumi.BoolPtrOutput {
 	return o.ApplyT(func(v *Resource) pulumi.BoolPtrOutput { return v.UseConnectServer }).(pulumi.BoolPtrOutput)
 }
 
+func (o ResourceOutput) UseIamAuth() pulumi.BoolPtrOutput {
+	return o.ApplyT(func(v *Resource) pulumi.BoolPtrOutput { return v.UseIamAuth }).(pulumi.BoolPtrOutput)
+}
+
+func (o ResourceOutput) UseIrsa() pulumi.BoolPtrOutput {
+	return o.ApplyT(func(v *Resource) pulumi.BoolPtrOutput { return v.UseIrsa }).(pulumi.BoolPtrOutput)
+}
+
+func (o ResourceOutput) UseMskIam() pulumi.BoolPtrOutput {
+	return o.ApplyT(func(v *Resource) pulumi.BoolPtrOutput { return v.UseMskIam }).(pulumi.BoolPtrOutput)
+}
+
 func (o ResourceOutput) UseProxy() pulumi.BoolPtrOutput {
 	return o.ApplyT(func(v *Resource) pulumi.BoolPtrOutput { return v.UseProxy }).(pulumi.BoolPtrOutput)
+}
+
+func (o ResourceOutput) UseRdsIam() pulumi.BoolPtrOutput {
+	return o.ApplyT(func(v *Resource) pulumi.BoolPtrOutput { return v.UseRdsIam }).(pulumi.BoolPtrOutput)
+}
+
+func (o ResourceOutput) UseRoleArn() pulumi.BoolPtrOutput {
+	return o.ApplyT(func(v *Resource) pulumi.BoolPtrOutput { return v.UseRoleArn }).(pulumi.BoolPtrOutput)
 }
 
 func (o ResourceOutput) UseServiceAccount() pulumi.BoolPtrOutput {

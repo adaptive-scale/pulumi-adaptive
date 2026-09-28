@@ -509,6 +509,12 @@
           "type": "string",
           "secret": true
         },
+        "allowFileTransfer": {
+          "type": "boolean"
+        },
+        "allowedCommands": {
+          "type": "string"
+        },
         "annotations": {
           "type": "string"
         },
@@ -557,13 +563,37 @@
         "arn": {
           "type": "string"
         },
+        "authMode": {
+          "type": "string"
+        },
         "automationMode": {
           "type": "string"
         },
         "awsArn": {
           "type": "string"
         },
+        "awsRegion": {
+          "type": "string"
+        },
         "awsRegionName": {
+          "type": "string"
+        },
+        "awsRoleArn": {
+          "type": "string"
+        },
+        "awsServiceAccount": {
+          "type": "string"
+        },
+        "bootstrapServers": {
+          "type": "string"
+        },
+        "caCertificate": {
+          "type": "string"
+        },
+        "cacheName": {
+          "type": "string"
+        },
+        "cacheType": {
           "type": "string"
         },
         "clientCert": {
@@ -631,6 +661,10 @@
           "type": "string",
           "secret": true
         },
+        "ddAppKey": {
+          "type": "string",
+          "secret": true
+        },
         "ddSite": {
           "type": "string"
         },
@@ -643,6 +677,12 @@
         },
         "domain": {
           "type": "string"
+        },
+        "enableAllowedCommands": {
+          "type": "boolean"
+        },
+        "enableTls": {
+          "type": "boolean"
         },
         "fields": {
           "type": "string"
@@ -665,6 +705,9 @@
         "index": {
           "type": "string"
         },
+        "insecureSkipVerify": {
+          "type": "boolean"
+        },
         "isRedisLabs": {
           "type": "boolean"
         },
@@ -675,6 +718,12 @@
         "keyFile": {
           "type": "string",
           "secret": true
+        },
+        "keyspace": {
+          "type": "string"
+        },
+        "keyspacesEndpoint": {
+          "type": "string"
         },
         "ldapEncryptionMethod": {
           "type": "string"
@@ -887,7 +936,22 @@
         "useConnectServer": {
           "type": "boolean"
         },
+        "useIamAuth": {
+          "type": "boolean"
+        },
+        "useIrsa": {
+          "type": "boolean"
+        },
+        "useMskIam": {
+          "type": "boolean"
+        },
         "useProxy": {
+          "type": "boolean"
+        },
+        "useRdsIam": {
+          "type": "boolean"
+        },
+        "useRoleArn": {
           "type": "boolean"
         },
         "useServiceAccount": {
@@ -934,6 +998,12 @@
           "type": "string",
           "secret": true
         },
+        "allowFileTransfer": {
+          "type": "boolean"
+        },
+        "allowedCommands": {
+          "type": "string"
+        },
         "annotations": {
           "type": "string"
         },
@@ -975,13 +1045,37 @@
         "arn": {
           "type": "string"
         },
+        "authMode": {
+          "type": "string"
+        },
         "automationMode": {
           "type": "string"
         },
         "awsArn": {
           "type": "string"
         },
+        "awsRegion": {
+          "type": "string"
+        },
         "awsRegionName": {
+          "type": "string"
+        },
+        "awsRoleArn": {
+          "type": "string"
+        },
+        "awsServiceAccount": {
+          "type": "string"
+        },
+        "bootstrapServers": {
+          "type": "string"
+        },
+        "caCertificate": {
+          "type": "string"
+        },
+        "cacheName": {
+          "type": "string"
+        },
+        "cacheType": {
           "type": "string"
         },
         "clientCert": {
@@ -1049,6 +1143,10 @@
           "type": "string",
           "secret": true
         },
+        "ddAppKey": {
+          "type": "string",
+          "secret": true
+        },
         "ddSite": {
           "type": "string"
         },
@@ -1061,6 +1159,12 @@
         },
         "domain": {
           "type": "string"
+        },
+        "enableAllowedCommands": {
+          "type": "boolean"
+        },
+        "enableTls": {
+          "type": "boolean"
         },
         "fields": {
           "type": "string"
@@ -1083,6 +1187,9 @@
         "index": {
           "type": "string"
         },
+        "insecureSkipVerify": {
+          "type": "boolean"
+        },
         "isRedisLabs": {
           "type": "boolean"
         },
@@ -1093,6 +1200,12 @@
         "keyFile": {
           "type": "string",
           "secret": true
+        },
+        "keyspace": {
+          "type": "string"
+        },
+        "keyspacesEndpoint": {
+          "type": "string"
         },
         "ldapEncryptionMethod": {
           "type": "string"
@@ -1305,7 +1418,22 @@
         "useConnectServer": {
           "type": "boolean"
         },
+        "useIamAuth": {
+          "type": "boolean"
+        },
+        "useIrsa": {
+          "type": "boolean"
+        },
+        "useMskIam": {
+          "type": "boolean"
+        },
         "useProxy": {
+          "type": "boolean"
+        },
+        "useRdsIam": {
+          "type": "boolean"
+        },
+        "useRoleArn": {
           "type": "boolean"
         },
         "useServiceAccount": {

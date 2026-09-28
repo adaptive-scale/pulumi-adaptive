@@ -50,18 +50,19 @@ func TestBuildIntegrationConfig_Postgres(t *testing.T) {
 
 func TestBuildIntegrationConfig_SSH(t *testing.T) {
 	// No key -> password auth.
-	noKey, _, _ := buildIntegrationConfig(ResourceArgs{Type: "ssh", Name: "s", Username: strp("u"), Host: strp("h")})
-	if m := toMap(t, noKey); m["usePassword"] != true {
-		t.Errorf("ssh without key: usePassword = %v, want true", m["usePassword"])
+	noKey, _, _ := buildIntegrationConfig(ResourceArgs{Type: "ssh", Name: "s", Username: strp("u"), Host: strp("h"), Password: strp("PW")})
+	if m := toMap(t, noKey); m["usePassword"] != true || m["password"] != "PW" {
+		t.Errorf("ssh without key: usePassword=%v password=%v, want true/PW", m["usePassword"], m["password"])
 	}
-	// Key present -> key auth, and password mirrors the key (matches TF behavior).
-	withKey, _, _ := buildIntegrationConfig(ResourceArgs{Type: "ssh", Name: "s", Key: strp("PRIVKEY")})
+	// Key present -> key auth; password remains the password field, not a mirror
+	// of sshKey.
+	withKey, _, _ := buildIntegrationConfig(ResourceArgs{Type: "ssh", Name: "s", Key: strp("PRIVKEY"), Password: strp("PW")})
 	m := toMap(t, withKey)
 	if m["usePassword"] != false {
 		t.Errorf("ssh with key: usePassword = %v, want false", m["usePassword"])
 	}
-	if m["sshKey"] != "PRIVKEY" || m["password"] != "PRIVKEY" {
-		t.Errorf("ssh with key: sshKey=%v password=%v, want both PRIVKEY", m["sshKey"], m["password"])
+	if m["sshKey"] != "PRIVKEY" || m["password"] != "PW" {
+		t.Errorf("ssh with key: sshKey=%v password=%v, want PRIVKEY/PW", m["sshKey"], m["password"])
 	}
 }
 
@@ -105,6 +106,47 @@ func TestBuildIntegrationConfig_KubernetesTrims(t *testing.T) {
 	m := toMap(t, cfg)
 	if m["apiserver"] != "https://api" || m["token"] != "tok" || m["cacrt"] != "cert" {
 		t.Errorf("kubernetes yaml = %v", m)
+	}
+}
+
+func TestBuildIntegrationConfig_AWS(t *testing.T) {
+	cfg, _, err := buildIntegrationConfig(ResourceArgs{
+		Type: "aws", Name: "aws",
+		RegionName: strp("us-east-1"), AccessKeyID: strp("AKIA"), SecretAccessKey: strp("secret"),
+		UseRoleARN: boolp(true), AWSRoleARN: strp("arn:aws:iam::123456789012:role/demo"),
+		UseServiceAccount: boolp(true), ServiceAccount: strp("adaptive-aws"), CreateIfNotExists: boolp(true),
+		EnableAllowedCommands: boolp(true), AllowedCommands: strp("s3:ls,ec2:describe-instances"),
+	})
+	if err != nil {
+		t.Fatal(err)
+	}
+	m := toMap(t, cfg)
+	for k, want := range map[string]any{
+		"aws_region_name":         "us-east-1",
+		"aws_access_key_id":       "AKIA",
+		"aws_secret_access_key":   "secret",
+		"use_role_arn":            true,
+		"aws_role_arn":            "arn:aws:iam::123456789012:role/demo",
+		"use_service_account":     true,
+		"service_account":         "adaptive-aws",
+		"create_if_not_exists":    true,
+		"enable_allowed_commands": true,
+		"allowed_commands":        "s3:ls,ec2:describe-instances",
+	} {
+		if m[k] != want {
+			t.Errorf("aws yaml[%q] = %v, want %v", k, m[k], want)
+		}
+	}
+}
+
+func TestBuildIntegrationConfig_RabbitMQUsesNonSecretURL(t *testing.T) {
+	cfg, _, err := buildIntegrationConfig(ResourceArgs{Type: "rabbitmq", Name: "rabbit", URL: strp("https://rabbit.example"), Username: strp("u"), Password: strp("p")})
+	if err != nil {
+		t.Fatal(err)
+	}
+	m := toMap(t, cfg)
+	if m["url"] != "https://rabbit.example" {
+		t.Errorf("rabbitmq yaml[url] = %v, want https://rabbit.example", m["url"])
 	}
 }
 
