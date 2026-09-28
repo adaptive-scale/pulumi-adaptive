@@ -37,16 +37,28 @@ func TestResourceLifecycle(t *testing.T) {
 	}{Port: "5432"}
 
 	outs, stack := harness.DeployStack(t, cfg, stackName("lc-res"), func(ctx *pulumi.Context) error {
-		db, err := adaptive.NewResource(ctx, "db", &adaptive.ResourceArgs{
-			Name:     pulumi.String(name),
-			Type:     pulumi.String("postgres"),
-			Host:     pulumi.String("db.example.com"),
-			Port:     pulumi.String(spec.Port),
-			Username: pulumi.String("admin"),
-			Password: pulumi.String("not-a-real-password"),
-			SslMode:  pulumi.String("require"),
-			Tags:     spec.Tags,
+		clusterName := name + "-cluster"
+		cluster, err := adaptive.NewResource(ctx, "cluster", &adaptive.ResourceArgs{
+			Name:         pulumi.String(clusterName),
+			Type:         pulumi.String("kubernetes"),
+			ApiServer:    pulumi.String("https://kubernetes.default.svc"),
+			ClusterToken: pulumi.String("not-a-real-token"),
+			ClusterCert:  pulumi.String("not-a-real-cert"),
 		})
+		if err != nil {
+			return err
+		}
+		db, err := adaptive.NewResource(ctx, "db", &adaptive.ResourceArgs{
+			Name:           pulumi.String(name),
+			Type:           pulumi.String("postgres"),
+			DefaultCluster: pulumi.String(clusterName),
+			Host:           pulumi.String("db.example.com"),
+			Port:           pulumi.String(spec.Port),
+			Username:       pulumi.String("admin"),
+			Password:       pulumi.String("not-a-real-password"),
+			SslMode:        pulumi.String("require"),
+			Tags:           spec.Tags,
+		}, pulumi.DependsOn([]pulumi.Resource{cluster}))
 		if err != nil {
 			return err
 		}
