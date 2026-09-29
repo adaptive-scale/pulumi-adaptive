@@ -504,14 +504,17 @@ namespace AdaptiveScale.Adaptive
                     "databasePassword",
                     "ddApiKey",
                     "ddAppKey",
+                    "fields",
                     "key",
                     "keyFile",
                     "ldapSearchBindPassword",
                     "password",
+                    "prestart",
                     "privateKey",
                     "proxysqlAdminPassword",
                     "publicKey",
                     "rootCert",
+                    "script",
                     "secretAccessKey",
                     "secretId",
                     "sharedSecret",
@@ -522,6 +525,7 @@ namespace AdaptiveScale.Adaptive
                     "token",
                     "tokenId",
                     "uri",
+                    "value",
                     "webhookUrl",
                 },
             };
@@ -871,7 +875,16 @@ namespace AdaptiveScale.Adaptive
         public Input<bool>? EnableTls { get; set; }
 
         [Input("fields")]
-        public Input<string>? Fields { get; set; }
+        private Input<string>? _fields;
+        public Input<string>? Fields
+        {
+            get => _fields;
+            set
+            {
+                var emptySecret = Output.CreateSecret(0);
+                _fields = Output.Tuple<Input<string>?, int>(value, emptySecret).Apply(t => t.Item1);
+            }
+        }
 
         [Input("host")]
         public Input<string>? Host { get; set; }
@@ -1014,7 +1027,16 @@ namespace AdaptiveScale.Adaptive
         public Input<string>? Port { get; set; }
 
         [Input("prestart")]
-        public Input<string>? Prestart { get; set; }
+        private Input<string>? _prestart;
+        public Input<string>? Prestart
+        {
+            get => _prestart;
+            set
+            {
+                var emptySecret = Output.CreateSecret(0);
+                _prestart = Output.Tuple<Input<string>?, int>(value, emptySecret).Apply(t => t.Item1);
+            }
+        }
 
         [Input("privateKey")]
         private Input<string>? _privateKey;
@@ -1095,7 +1117,16 @@ namespace AdaptiveScale.Adaptive
         public Input<string>? Schema { get; set; }
 
         [Input("script")]
-        public Input<string>? Script { get; set; }
+        private Input<string>? _script;
+        public Input<string>? Script
+        {
+            get => _script;
+            set
+            {
+                var emptySecret = Output.CreateSecret(0);
+                _script = Output.Tuple<Input<string>?, int>(value, emptySecret).Apply(t => t.Item1);
+            }
+        }
 
         [Input("secretAccessKey")]
         private Input<string>? _secretAccessKey;
@@ -1308,7 +1339,16 @@ namespace AdaptiveScale.Adaptive
         public Input<string>? Username { get; set; }
 
         [Input("value")]
-        public Input<string>? Value { get; set; }
+        private Input<string>? _value;
+        public Input<string>? Value
+        {
+            get => _value;
+            set
+            {
+                var emptySecret = Output.CreateSecret(0);
+                _value = Output.Tuple<Input<string>?, int>(value, emptySecret).Apply(t => t.Item1);
+            }
+        }
 
         [Input("version")]
         public Input<string>? Version { get; set; }

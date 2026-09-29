@@ -685,7 +685,8 @@
           "type": "boolean"
         },
         "fields": {
-          "type": "string"
+          "type": "string",
+          "secret": true
         },
         "host": {
           "type": "string"
@@ -792,7 +793,8 @@
           "type": "string"
         },
         "prestart": {
-          "type": "string"
+          "type": "string",
+          "secret": true
         },
         "privateKey": {
           "type": "string",
@@ -841,7 +843,8 @@
           "type": "string"
         },
         "script": {
-          "type": "string"
+          "type": "string",
+          "secret": true
         },
         "secretAccessKey": {
           "type": "string",
@@ -967,7 +970,8 @@
           "type": "string"
         },
         "value": {
-          "type": "string"
+          "type": "string",
+          "secret": true
         },
         "version": {
           "type": "string"
@@ -1167,7 +1171,8 @@
           "type": "boolean"
         },
         "fields": {
-          "type": "string"
+          "type": "string",
+          "secret": true
         },
         "host": {
           "type": "string"
@@ -1274,7 +1279,8 @@
           "type": "string"
         },
         "prestart": {
-          "type": "string"
+          "type": "string",
+          "secret": true
         },
         "privateKey": {
           "type": "string",
@@ -1323,7 +1329,8 @@
           "type": "string"
         },
         "script": {
-          "type": "string"
+          "type": "string",
+          "secret": true
         },
         "secretAccessKey": {
           "type": "string",
@@ -1449,7 +1456,8 @@
           "type": "string"
         },
         "value": {
-          "type": "string"
+          "type": "string",
+          "secret": true
         },
         "version": {
           "type": "string"

@@ -233,6 +233,9 @@ func NewResource(ctx *pulumi.Context,
 	if args.DdAppKey != nil {
 		args.DdAppKey = pulumi.ToSecret(args.DdAppKey).(pulumi.StringPtrInput)
 	}
+	if args.Fields != nil {
+		args.Fields = pulumi.ToSecret(args.Fields).(pulumi.StringPtrInput)
+	}
 	if args.Key != nil {
 		args.Key = pulumi.ToSecret(args.Key).(pulumi.StringPtrInput)
 	}
@@ -245,6 +248,9 @@ func NewResource(ctx *pulumi.Context,
 	if args.Password != nil {
 		args.Password = pulumi.ToSecret(args.Password).(pulumi.StringPtrInput)
 	}
+	if args.Prestart != nil {
+		args.Prestart = pulumi.ToSecret(args.Prestart).(pulumi.StringPtrInput)
+	}
 	if args.PrivateKey != nil {
 		args.PrivateKey = pulumi.ToSecret(args.PrivateKey).(pulumi.StringPtrInput)
 	}
@@ -256,6 +262,9 @@ func NewResource(ctx *pulumi.Context,
 	}
 	if args.RootCert != nil {
 		args.RootCert = pulumi.ToSecret(args.RootCert).(pulumi.StringPtrInput)
+	}
+	if args.Script != nil {
+		args.Script = pulumi.ToSecret(args.Script).(pulumi.StringPtrInput)
 	}
 	if args.SecretAccessKey != nil {
 		args.SecretAccessKey = pulumi.ToSecret(args.SecretAccessKey).(pulumi.StringPtrInput)
@@ -287,6 +296,9 @@ func NewResource(ctx *pulumi.Context,
 	if args.Uri != nil {
 		args.Uri = pulumi.ToSecret(args.Uri).(pulumi.StringPtrInput)
 	}
+	if args.Value != nil {
+		args.Value = pulumi.ToSecret(args.Value).(pulumi.StringPtrInput)
+	}
 	if args.WebhookUrl != nil {
 		args.WebhookUrl = pulumi.ToSecret(args.WebhookUrl).(pulumi.StringPtrInput)
 	}
@@ -309,14 +321,17 @@ func NewResource(ctx *pulumi.Context,
 		"databasePassword",
 		"ddApiKey",
 		"ddAppKey",
+		"fields",
 		"key",
 		"keyFile",
 		"ldapSearchBindPassword",
 		"password",
+		"prestart",
 		"privateKey",
 		"proxysqlAdminPassword",
 		"publicKey",
 		"rootCert",
+		"script",
 		"secretAccessKey",
 		"secretId",
 		"sharedSecret",
@@ -327,6 +342,7 @@ func NewResource(ctx *pulumi.Context,
 		"token",
 		"tokenId",
 		"uri",
+		"value",
 		"webhookUrl",
 	})
 	opts = append(opts, secrets)

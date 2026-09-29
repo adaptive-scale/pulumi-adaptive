@@ -155,9 +155,9 @@ type ResourceArgs struct {
 
 	// Chrome automation
 	AutomationMode *string `pulumi:"automationMode,optional"`
-	Fields         *string `pulumi:"fields,optional"`
-	Script         *string `pulumi:"script,optional"`
-	Prestart       *string `pulumi:"prestart,optional"`
+	Fields         *string `pulumi:"fields,optional" provider:"secret"`
+	Script         *string `pulumi:"script,optional" provider:"secret"`
+	Prestart       *string `pulumi:"prestart,optional" provider:"secret"`
 
 	// Remote desktop sizing (adaptiveremotedesktop)
 	CPU     *string `pulumi:"cpu,optional"`
@@ -169,7 +169,7 @@ type ResourceArgs struct {
 	UseConnectServer    *bool   `pulumi:"useConnectServer,optional"`
 	ConnectServerURL    *string `pulumi:"connectServerUrl,optional"`
 	Targets             *string `pulumi:"targets,optional" provider:"secret"`
-	Value               *string `pulumi:"value,optional"`
+	Value               *string `pulumi:"value,optional" provider:"secret"`
 	LogGroupName        *string `pulumi:"logGroupName,optional"`
 	LogStreamName       *string `pulumi:"logStreamName,optional"`
 	AccessControlMethod *string `pulumi:"accessControlMethod,optional"`

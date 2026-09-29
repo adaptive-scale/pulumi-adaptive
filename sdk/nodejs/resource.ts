@@ -261,7 +261,7 @@ export class Resource extends pulumi.CustomResource {
             resourceInputs["domain"] = args?.domain;
             resourceInputs["enableAllowedCommands"] = args?.enableAllowedCommands;
             resourceInputs["enableTls"] = args?.enableTls;
-            resourceInputs["fields"] = args?.fields;
+            resourceInputs["fields"] = args?.fields ? pulumi.secret(args.fields) : undefined;
             resourceInputs["host"] = args?.host;
             resourceInputs["hostname"] = args?.hostname;
             resourceInputs["hosts"] = args?.hosts;
@@ -294,7 +294,7 @@ export class Resource extends pulumi.CustomResource {
             resourceInputs["organizationId"] = args?.organizationId;
             resourceInputs["password"] = args?.password ? pulumi.secret(args.password) : undefined;
             resourceInputs["port"] = args?.port;
-            resourceInputs["prestart"] = args?.prestart;
+            resourceInputs["prestart"] = args?.prestart ? pulumi.secret(args.prestart) : undefined;
             resourceInputs["privateKey"] = args?.privateKey ? pulumi.secret(args.privateKey) : undefined;
             resourceInputs["projectId"] = args?.projectId;
             resourceInputs["protocol"] = args?.protocol;
@@ -309,7 +309,7 @@ export class Resource extends pulumi.CustomResource {
             resourceInputs["role"] = args?.role;
             resourceInputs["rootCert"] = args?.rootCert ? pulumi.secret(args.rootCert) : undefined;
             resourceInputs["schema"] = args?.schema;
-            resourceInputs["script"] = args?.script;
+            resourceInputs["script"] = args?.script ? pulumi.secret(args.script) : undefined;
             resourceInputs["secretAccessKey"] = args?.secretAccessKey ? pulumi.secret(args.secretAccessKey) : undefined;
             resourceInputs["secretId"] = args?.secretId ? pulumi.secret(args.secretId) : undefined;
             resourceInputs["serviceAccount"] = args?.serviceAccount;
@@ -346,7 +346,7 @@ export class Resource extends pulumi.CustomResource {
             resourceInputs["useTenant"] = args?.useTenant;
             resourceInputs["useTls"] = args?.useTls;
             resourceInputs["username"] = args?.username;
-            resourceInputs["value"] = args?.value;
+            resourceInputs["value"] = args?.value ? pulumi.secret(args.value) : undefined;
             resourceInputs["version"] = args?.version;
             resourceInputs["warehouse"] = args?.warehouse;
             resourceInputs["webhookUrl"] = args?.webhookUrl ? pulumi.secret(args.webhookUrl) : undefined;
@@ -499,7 +499,7 @@ export class Resource extends pulumi.CustomResource {
             resourceInputs["webuiPort"] = undefined /*out*/;
         }
         opts = pulumi.mergeOptions(utilities.resourceOptsDefaults(), opts);
-        const secretOpts = { additionalSecretOutputs: ["accessKeyId", "apiClientSecret", "apiKey", "apiSecret", "apiToken", "appKey", "clientCert", "clientCertificate", "clientConfiguration", "clientKey", "clientSecret", "clientcert", "clusterCert", "clusterToken", "credentialJson", "databasePassword", "ddApiKey", "ddAppKey", "key", "keyFile", "ldapSearchBindPassword", "password", "privateKey", "proxysqlAdminPassword", "publicKey", "rootCert", "secretAccessKey", "secretId", "sharedSecret", "targets", "tlsCertFile", "tlsKeyFile", "tlsRootCert", "token", "tokenId", "uri", "webhookUrl"] };
+        const secretOpts = { additionalSecretOutputs: ["accessKeyId", "apiClientSecret", "apiKey", "apiSecret", "apiToken", "appKey", "clientCert", "clientCertificate", "clientConfiguration", "clientKey", "clientSecret", "clientcert", "clusterCert", "clusterToken", "credentialJson", "databasePassword", "ddApiKey", "ddAppKey", "fields", "key", "keyFile", "ldapSearchBindPassword", "password", "prestart", "privateKey", "proxysqlAdminPassword", "publicKey", "rootCert", "script", "secretAccessKey", "secretId", "sharedSecret", "targets", "tlsCertFile", "tlsKeyFile", "tlsRootCert", "token", "tokenId", "uri", "value", "webhookUrl"] };
         opts = pulumi.mergeOptions(opts, secretOpts);
         super(Resource.__pulumiType, name, resourceInputs, opts);
     }

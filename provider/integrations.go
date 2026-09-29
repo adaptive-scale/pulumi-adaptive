@@ -75,7 +75,7 @@ func buildIntegrationConfig(a ResourceArgs) (any, string, error) {
 	case "sqlserver_aws_secrets_manager":
 		cfg = secretsManagerConfig{Name: a.Name, ARN: sv(a.Arn), Region: sv(a.Region), SecretID: sv(a.SecretID)}
 	case "coralogix":
-		cfg = coralogixConfig{Name: a.Name, Url: sv(a.URI), PrivateKey: sv(a.PrivateKey), ApplicationName: sv(a.ApplicationName), SubSystemName: sv(a.SubSystemName)}
+		cfg = coralogixConfig{Name: a.Name, Url: sv(a.URL), PrivateKey: sv(a.PrivateKey), ApplicationName: sv(a.ApplicationName), SubSystemName: sv(a.SubSystemName)}
 	case "jumpcloud":
 		cfg = jumpCloudConfig{Name: a.Name, ClientID: sv(a.ClientID), ClientSecret: sv(a.ClientSecret), Domain: sv(a.Domain), ApiKey: sv(a.APIToken)}
 	case "msteams":
@@ -97,7 +97,7 @@ func buildIntegrationConfig(a ResourceArgs) (any, string, error) {
 	case "snowflake_aws_secrets_manager":
 		cfg = secretsManagerConfig{Name: a.Name, ARN: sv(a.Arn), Region: sv(a.Region), SecretID: sv(a.SecretID)}
 	case "custom_siem_webhook":
-		cfg = customSIEMWebhookConfig{Name: a.Name, Url: sv(a.URI), SharedSecret: sv(a.SharedSecret)}
+		cfg = customSIEMWebhookConfig{Name: a.Name, Url: sv(a.URL), SharedSecret: sv(a.SharedSecret)}
 	case "aruba_sw":
 		cfg = arubaSWConfig{Version: "1.0", Name: a.Name, Hostname: sv(a.Hostname), Username: sv(a.Username), UsePassword: sv(a.Key) == "", Password: sv(a.Password), Port: sv(a.Port), WebuiPort: sv(a.WebuiPort), SSHKey: sv(a.Key), LoginUrl: sv(a.LoginURL)}
 	case "aruba_instant_on":
@@ -1187,7 +1187,7 @@ func applyIntegrationConfig(a *ResourceArgs, integrationType string, cfg map[str
 		setStr(&a.DdApiKey, cfg, "dd_api_key")
 		setStr(&a.DdAppKey, cfg, "dd_app_key")
 	case "coralogix":
-		setStr(&a.URI, cfg, "url")
+		setStr(&a.URL, cfg, "url")
 		setStr(&a.PrivateKey, cfg, "privateKey")
 		setStr(&a.ApplicationName, cfg, "applicationName")
 		setStr(&a.SubSystemName, cfg, "subSystemName")
@@ -1246,7 +1246,7 @@ func applyIntegrationConfig(a *ResourceArgs, integrationType string, cfg map[str
 		setStr(&a.Clientcert, cfg, "clientcert")
 		setStr(&a.Role, cfg, "role")
 	case "custom_siem_webhook":
-		setStr(&a.URI, cfg, "url")
+		setStr(&a.URL, cfg, "url")
 		setStr(&a.SharedSecret, cfg, "sharedSecret")
 	case "aruba_sw", "aruba_instant_on":
 		setStr(&a.Hostname, cfg, "hostname")

@@ -17,7 +17,7 @@
 | Config key | Write arg | Secret? | Read arg | Notes |
 |---|---|---:|---|---|
 | `name` | `name` | No | — |  |
-| `value` | `value` | No | `value` |  |
+| `value` | `value` | Yes | `value` |  |
 
 ## `adaptiveremotedesktop`
 | Config key | Write arg | Secret? | Read arg | Notes |
@@ -203,10 +203,10 @@
 |---|---|---:|---|---|
 | `name` | `name` | No | — |  |
 | `url` | `url` | No | `url` |  |
-| `prestart` | `prestart` | No | `prestart` |  |
+| `prestart` | `prestart` | Yes | `prestart` |  |
 | `automationMode` | `automationMode` | No | `automationMode` |  |
-| `fields` | `fields` | No | `fields` |  |
-| `script` | `script` | No | `script` |  |
+| `fields` | `fields` | Yes | `fields` |  |
+| `script` | `script` | Yes | `script` |  |
 
 ## `cisco_ngfw`
 | Config key | Write arg | Secret? | Read arg | Notes |
@@ -277,7 +277,7 @@
 | Config key | Write arg | Secret? | Read arg | Notes |
 |---|---|---:|---|---|
 | `name` | `name` | No | — |  |
-| `url` | `uri` | Yes | `uri` |  |
+| `url` | `url` | No | `url` |  |
 | `privateKey` | `privateKey` | Yes | `privateKey` |  |
 | `applicationName` | `applicationName` | No | `applicationName` |  |
 | `subSystemName` | `subSystemName` | No | `subSystemName` |  |
@@ -286,7 +286,7 @@
 | Config key | Write arg | Secret? | Read arg | Notes |
 |---|---|---:|---|---|
 | `name` | `name` | No | — |  |
-| `url` | `uri` | Yes | `uri` |  |
+| `url` | `url` | No | `url` |  |
 | `sharedSecret` | `sharedSecret` | Yes | `sharedSecret` |  |
 
 ## `customintegration`

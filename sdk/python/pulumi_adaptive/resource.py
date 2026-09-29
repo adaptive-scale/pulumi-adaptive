@@ -2144,7 +2144,7 @@ class Resource(pulumi.CustomResource):
             __props__.__dict__["domain"] = domain
             __props__.__dict__["enable_allowed_commands"] = enable_allowed_commands
             __props__.__dict__["enable_tls"] = enable_tls
-            __props__.__dict__["fields"] = fields
+            __props__.__dict__["fields"] = None if fields is None else pulumi.Output.secret(fields)
             __props__.__dict__["host"] = host
             __props__.__dict__["hostname"] = hostname
             __props__.__dict__["hosts"] = hosts
@@ -2179,7 +2179,7 @@ class Resource(pulumi.CustomResource):
             __props__.__dict__["organization_id"] = organization_id
             __props__.__dict__["password"] = None if password is None else pulumi.Output.secret(password)
             __props__.__dict__["port"] = port
-            __props__.__dict__["prestart"] = prestart
+            __props__.__dict__["prestart"] = None if prestart is None else pulumi.Output.secret(prestart)
             __props__.__dict__["private_key"] = None if private_key is None else pulumi.Output.secret(private_key)
             __props__.__dict__["project_id"] = project_id
             __props__.__dict__["protocol"] = protocol
@@ -2194,7 +2194,7 @@ class Resource(pulumi.CustomResource):
             __props__.__dict__["role"] = role
             __props__.__dict__["root_cert"] = None if root_cert is None else pulumi.Output.secret(root_cert)
             __props__.__dict__["schema"] = schema
-            __props__.__dict__["script"] = script
+            __props__.__dict__["script"] = None if script is None else pulumi.Output.secret(script)
             __props__.__dict__["secret_access_key"] = None if secret_access_key is None else pulumi.Output.secret(secret_access_key)
             __props__.__dict__["secret_id"] = None if secret_id is None else pulumi.Output.secret(secret_id)
             __props__.__dict__["service_account"] = service_account
@@ -2233,13 +2233,13 @@ class Resource(pulumi.CustomResource):
             __props__.__dict__["use_tenant"] = use_tenant
             __props__.__dict__["use_tls"] = use_tls
             __props__.__dict__["username"] = username
-            __props__.__dict__["value"] = value
+            __props__.__dict__["value"] = None if value is None else pulumi.Output.secret(value)
             __props__.__dict__["version"] = version
             __props__.__dict__["warehouse"] = warehouse
             __props__.__dict__["webhook_url"] = None if webhook_url is None else pulumi.Output.secret(webhook_url)
             __props__.__dict__["webui_port"] = webui_port
             __props__.__dict__["applied_digests"] = None
-        secret_opts = pulumi.ResourceOptions(additional_secret_outputs=["accessKeyId", "apiClientSecret", "apiKey", "apiSecret", "apiToken", "appKey", "clientCert", "clientCertificate", "clientConfiguration", "clientKey", "clientSecret", "clientcert", "clusterCert", "clusterToken", "credentialJson", "databasePassword", "ddApiKey", "ddAppKey", "key", "keyFile", "ldapSearchBindPassword", "password", "privateKey", "proxysqlAdminPassword", "publicKey", "rootCert", "secretAccessKey", "secretId", "sharedSecret", "targets", "tlsCertFile", "tlsKeyFile", "tlsRootCert", "token", "tokenId", "uri", "webhookUrl"])
+        secret_opts = pulumi.ResourceOptions(additional_secret_outputs=["accessKeyId", "apiClientSecret", "apiKey", "apiSecret", "apiToken", "appKey", "clientCert", "clientCertificate", "clientConfiguration", "clientKey", "clientSecret", "clientcert", "clusterCert", "clusterToken", "credentialJson", "databasePassword", "ddApiKey", "ddAppKey", "fields", "key", "keyFile", "ldapSearchBindPassword", "password", "prestart", "privateKey", "proxysqlAdminPassword", "publicKey", "rootCert", "script", "secretAccessKey", "secretId", "sharedSecret", "targets", "tlsCertFile", "tlsKeyFile", "tlsRootCert", "token", "tokenId", "uri", "value", "webhookUrl"])
         opts = pulumi.ResourceOptions.merge(opts, secret_opts)
         super(Resource, __self__).__init__(
             'adaptive:index:Resource',
