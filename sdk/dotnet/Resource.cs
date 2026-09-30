@@ -22,6 +22,12 @@ namespace AdaptiveScale.Adaptive
         [Output("accessKeyId")]
         public Output<string?> AccessKeyId { get; private set; } = null!;
 
+        [Output("allowFileTransfer")]
+        public Output<bool?> AllowFileTransfer { get; private set; } = null!;
+
+        [Output("allowedCommands")]
+        public Output<string?> AllowedCommands { get; private set; } = null!;
+
         [Output("annotations")]
         public Output<string?> Annotations { get; private set; } = null!;
 
@@ -64,14 +70,38 @@ namespace AdaptiveScale.Adaptive
         [Output("arn")]
         public Output<string?> Arn { get; private set; } = null!;
 
+        [Output("authMode")]
+        public Output<string?> AuthMode { get; private set; } = null!;
+
         [Output("automationMode")]
         public Output<string?> AutomationMode { get; private set; } = null!;
 
         [Output("awsArn")]
         public Output<string?> AwsArn { get; private set; } = null!;
 
+        [Output("awsRegion")]
+        public Output<string?> AwsRegion { get; private set; } = null!;
+
         [Output("awsRegionName")]
         public Output<string?> AwsRegionName { get; private set; } = null!;
+
+        [Output("awsRoleArn")]
+        public Output<string?> AwsRoleArn { get; private set; } = null!;
+
+        [Output("awsServiceAccount")]
+        public Output<string?> AwsServiceAccount { get; private set; } = null!;
+
+        [Output("bootstrapServers")]
+        public Output<string?> BootstrapServers { get; private set; } = null!;
+
+        [Output("caCertificate")]
+        public Output<string?> CaCertificate { get; private set; } = null!;
+
+        [Output("cacheName")]
+        public Output<string?> CacheName { get; private set; } = null!;
+
+        [Output("cacheType")]
+        public Output<string?> CacheType { get; private set; } = null!;
 
         [Output("clientCert")]
         public Output<string?> ClientCert { get; private set; } = null!;
@@ -127,6 +157,9 @@ namespace AdaptiveScale.Adaptive
         [Output("ddApiKey")]
         public Output<string?> DdApiKey { get; private set; } = null!;
 
+        [Output("ddAppKey")]
+        public Output<string?> DdAppKey { get; private set; } = null!;
+
         [Output("ddSite")]
         public Output<string?> DdSite { get; private set; } = null!;
 
@@ -141,6 +174,12 @@ namespace AdaptiveScale.Adaptive
 
         [Output("domain")]
         public Output<string?> Domain { get; private set; } = null!;
+
+        [Output("enableAllowedCommands")]
+        public Output<bool?> EnableAllowedCommands { get; private set; } = null!;
+
+        [Output("enableTls")]
+        public Output<bool?> EnableTls { get; private set; } = null!;
 
         [Output("fields")]
         public Output<string?> Fields { get; private set; } = null!;
@@ -160,6 +199,9 @@ namespace AdaptiveScale.Adaptive
         [Output("index")]
         public Output<string?> Index { get; private set; } = null!;
 
+        [Output("insecureSkipVerify")]
+        public Output<bool?> InsecureSkipVerify { get; private set; } = null!;
+
         [Output("isRedisLabs")]
         public Output<bool?> IsRedisLabs { get; private set; } = null!;
 
@@ -168,6 +210,12 @@ namespace AdaptiveScale.Adaptive
 
         [Output("keyFile")]
         public Output<string?> KeyFile { get; private set; } = null!;
+
+        [Output("keyspace")]
+        public Output<string?> Keyspace { get; private set; } = null!;
+
+        [Output("keyspacesEndpoint")]
+        public Output<string?> KeyspacesEndpoint { get; private set; } = null!;
 
         [Output("ldapEncryptionMethod")]
         public Output<string?> LdapEncryptionMethod { get; private set; } = null!;
@@ -367,8 +415,23 @@ namespace AdaptiveScale.Adaptive
         [Output("useConnectServer")]
         public Output<bool?> UseConnectServer { get; private set; } = null!;
 
+        [Output("useIamAuth")]
+        public Output<bool?> UseIamAuth { get; private set; } = null!;
+
+        [Output("useIrsa")]
+        public Output<bool?> UseIrsa { get; private set; } = null!;
+
+        [Output("useMskIam")]
+        public Output<bool?> UseMskIam { get; private set; } = null!;
+
         [Output("useProxy")]
         public Output<bool?> UseProxy { get; private set; } = null!;
+
+        [Output("useRdsIam")]
+        public Output<bool?> UseRdsIam { get; private set; } = null!;
+
+        [Output("useRoleArn")]
+        public Output<bool?> UseRoleArn { get; private set; } = null!;
 
         [Output("useServiceAccount")]
         public Output<bool?> UseServiceAccount { get; private set; } = null!;
@@ -440,14 +503,18 @@ namespace AdaptiveScale.Adaptive
                     "credentialJson",
                     "databasePassword",
                     "ddApiKey",
+                    "ddAppKey",
+                    "fields",
                     "key",
                     "keyFile",
                     "ldapSearchBindPassword",
                     "password",
+                    "prestart",
                     "privateKey",
                     "proxysqlAdminPassword",
                     "publicKey",
                     "rootCert",
+                    "script",
                     "secretAccessKey",
                     "secretId",
                     "sharedSecret",
@@ -458,6 +525,7 @@ namespace AdaptiveScale.Adaptive
                     "token",
                     "tokenId",
                     "uri",
+                    "value",
                     "webhookUrl",
                 },
             };
@@ -499,6 +567,12 @@ namespace AdaptiveScale.Adaptive
                 _accessKeyId = Output.Tuple<Input<string>?, int>(value, emptySecret).Apply(t => t.Item1);
             }
         }
+
+        [Input("allowFileTransfer")]
+        public Input<bool>? AllowFileTransfer { get; set; }
+
+        [Input("allowedCommands")]
+        public Input<string>? AllowedCommands { get; set; }
 
         [Input("annotations")]
         public Input<string>? Annotations { get; set; }
@@ -581,14 +655,38 @@ namespace AdaptiveScale.Adaptive
         [Input("arn")]
         public Input<string>? Arn { get; set; }
 
+        [Input("authMode")]
+        public Input<string>? AuthMode { get; set; }
+
         [Input("automationMode")]
         public Input<string>? AutomationMode { get; set; }
 
         [Input("awsArn")]
         public Input<string>? AwsArn { get; set; }
 
+        [Input("awsRegion")]
+        public Input<string>? AwsRegion { get; set; }
+
         [Input("awsRegionName")]
         public Input<string>? AwsRegionName { get; set; }
+
+        [Input("awsRoleArn")]
+        public Input<string>? AwsRoleArn { get; set; }
+
+        [Input("awsServiceAccount")]
+        public Input<string>? AwsServiceAccount { get; set; }
+
+        [Input("bootstrapServers")]
+        public Input<string>? BootstrapServers { get; set; }
+
+        [Input("caCertificate")]
+        public Input<string>? CaCertificate { get; set; }
+
+        [Input("cacheName")]
+        public Input<string>? CacheName { get; set; }
+
+        [Input("cacheType")]
+        public Input<string>? CacheType { get; set; }
 
         [Input("clientCert")]
         private Input<string>? _clientCert;
@@ -743,6 +841,18 @@ namespace AdaptiveScale.Adaptive
             }
         }
 
+        [Input("ddAppKey")]
+        private Input<string>? _ddAppKey;
+        public Input<string>? DdAppKey
+        {
+            get => _ddAppKey;
+            set
+            {
+                var emptySecret = Output.CreateSecret(0);
+                _ddAppKey = Output.Tuple<Input<string>?, int>(value, emptySecret).Apply(t => t.Item1);
+            }
+        }
+
         [Input("ddSite")]
         public Input<string>? DdSite { get; set; }
 
@@ -758,8 +868,23 @@ namespace AdaptiveScale.Adaptive
         [Input("domain")]
         public Input<string>? Domain { get; set; }
 
+        [Input("enableAllowedCommands")]
+        public Input<bool>? EnableAllowedCommands { get; set; }
+
+        [Input("enableTls")]
+        public Input<bool>? EnableTls { get; set; }
+
         [Input("fields")]
-        public Input<string>? Fields { get; set; }
+        private Input<string>? _fields;
+        public Input<string>? Fields
+        {
+            get => _fields;
+            set
+            {
+                var emptySecret = Output.CreateSecret(0);
+                _fields = Output.Tuple<Input<string>?, int>(value, emptySecret).Apply(t => t.Item1);
+            }
+        }
 
         [Input("host")]
         public Input<string>? Host { get; set; }
@@ -780,6 +905,9 @@ namespace AdaptiveScale.Adaptive
 
         [Input("index")]
         public Input<string>? Index { get; set; }
+
+        [Input("insecureSkipVerify")]
+        public Input<bool>? InsecureSkipVerify { get; set; }
 
         [Input("isRedisLabs")]
         public Input<bool>? IsRedisLabs { get; set; }
@@ -807,6 +935,12 @@ namespace AdaptiveScale.Adaptive
                 _keyFile = Output.Tuple<Input<string>?, int>(value, emptySecret).Apply(t => t.Item1);
             }
         }
+
+        [Input("keyspace")]
+        public Input<string>? Keyspace { get; set; }
+
+        [Input("keyspacesEndpoint")]
+        public Input<string>? KeyspacesEndpoint { get; set; }
 
         [Input("ldapEncryptionMethod")]
         public Input<string>? LdapEncryptionMethod { get; set; }
@@ -893,7 +1027,16 @@ namespace AdaptiveScale.Adaptive
         public Input<string>? Port { get; set; }
 
         [Input("prestart")]
-        public Input<string>? Prestart { get; set; }
+        private Input<string>? _prestart;
+        public Input<string>? Prestart
+        {
+            get => _prestart;
+            set
+            {
+                var emptySecret = Output.CreateSecret(0);
+                _prestart = Output.Tuple<Input<string>?, int>(value, emptySecret).Apply(t => t.Item1);
+            }
+        }
 
         [Input("privateKey")]
         private Input<string>? _privateKey;
@@ -974,7 +1117,16 @@ namespace AdaptiveScale.Adaptive
         public Input<string>? Schema { get; set; }
 
         [Input("script")]
-        public Input<string>? Script { get; set; }
+        private Input<string>? _script;
+        public Input<string>? Script
+        {
+            get => _script;
+            set
+            {
+                var emptySecret = Output.CreateSecret(0);
+                _script = Output.Tuple<Input<string>?, int>(value, emptySecret).Apply(t => t.Item1);
+            }
+        }
 
         [Input("secretAccessKey")]
         private Input<string>? _secretAccessKey;
@@ -1156,8 +1308,23 @@ namespace AdaptiveScale.Adaptive
         [Input("useConnectServer")]
         public Input<bool>? UseConnectServer { get; set; }
 
+        [Input("useIamAuth")]
+        public Input<bool>? UseIamAuth { get; set; }
+
+        [Input("useIrsa")]
+        public Input<bool>? UseIrsa { get; set; }
+
+        [Input("useMskIam")]
+        public Input<bool>? UseMskIam { get; set; }
+
         [Input("useProxy")]
         public Input<bool>? UseProxy { get; set; }
+
+        [Input("useRdsIam")]
+        public Input<bool>? UseRdsIam { get; set; }
+
+        [Input("useRoleArn")]
+        public Input<bool>? UseRoleArn { get; set; }
 
         [Input("useServiceAccount")]
         public Input<bool>? UseServiceAccount { get; set; }
@@ -1172,7 +1339,16 @@ namespace AdaptiveScale.Adaptive
         public Input<string>? Username { get; set; }
 
         [Input("value")]
-        public Input<string>? Value { get; set; }
+        private Input<string>? _value;
+        public Input<string>? Value
+        {
+            get => _value;
+            set
+            {
+                var emptySecret = Output.CreateSecret(0);
+                _value = Output.Tuple<Input<string>?, int>(value, emptySecret).Apply(t => t.Item1);
+            }
+        }
 
         [Input("version")]
         public Input<string>? Version { get; set; }

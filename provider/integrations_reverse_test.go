@@ -41,6 +41,12 @@ func fillArgs(t *testing.T, typ string) ResourceArgs {
 			t.Fatalf("fillArgs: unhandled kind %s for field %s", f.Type.Kind(), f.Name)
 		}
 	}
+	if typ == "rabbitmq" {
+		// RabbitMQ's server key is "url". The provider used to expose it via
+		// the secret-typed common uri argument; new configs use the non-secret
+		// url argument because credentials live in username/password.
+		a.URI = nil
+	}
 	return a
 }
 

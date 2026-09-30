@@ -23,13 +23,13 @@ func buildIntegrationConfig(a ResourceArgs) (any, string, error) {
 	var cfg any
 	switch t {
 	case "aws":
-		cfg = awsConfig{Name: a.Name, Version: "1.0", AWSRegionName: sv(a.RegionName), AWSAccessKeyID: sv(a.AccessKeyID), AWSSecretAccessKey: sv(a.SecretAccessKey)}
+		cfg = awsConfig{Name: a.Name, Version: "1.0", AWSRegionName: sv(a.RegionName), AWSAccessKeyID: sv(a.AccessKeyID), AWSSecretAccessKey: sv(a.SecretAccessKey), UseRoleARN: bv(a.UseRoleARN), AWSRoleArn: sv(a.AWSRoleARN), UseServiceAccount: bv(a.UseServiceAccount), ServiceAccount: sv(a.ServiceAccount), CreateIfNotExists: bv(a.CreateIfNotExists), EnableAllowedCommands: bv(a.EnableAllowedCommands), AllowedCommands: sv(a.AllowedCommands)}
 	case "azure":
 		cfg = azureConfig{Version: "1.0", Name: a.Name, TenantID: sv(a.TenantID), ApplicationID: sv(a.ApplicationID), ClientSecret: sv(a.ClientSecret)}
 	case "azureactivedirectory":
 		cfg = azureADConfig{Name: a.Name, Domain: sv(a.Domain), ClientID: sv(a.ClientID), ClientSecret: sv(a.ClientSecret), TenantID: sv(a.TenantID), UseTenant: bv(a.UseTenant)}
 	case "awsredshift":
-		cfg = awsRedshiftConfig{Name: a.Name, Username: sv(a.Username), Password: sv(a.Password), DatabaseName: sv(a.DatabaseName), HostName: sv(a.Host), Port: sv(a.Port)}
+		cfg = awsRedshiftConfig{Name: a.Name, Username: sv(a.Username), Password: sv(a.Password), DatabaseName: sv(a.DatabaseName), HostName: sv(a.Host), Port: sv(a.Port), SSLMode: sv(a.SSLMode)}
 	case "cockroachdb":
 		cfg = cockroachConfig{Name: a.Name, Username: sv(a.Username), Password: sv(a.Password), DatabaseName: sv(a.DatabaseName), HostName: sv(a.Host), Port: sv(a.Port), SSLMode: sv(a.SSLMode), RootCert: strings.TrimSpace(sv(a.TLSRootCert))}
 	case "gcp":
@@ -37,25 +37,25 @@ func buildIntegrationConfig(a ResourceArgs) (any, string, error) {
 	case "google":
 		cfg = googleConfig{Version: "1", Name: a.Name, Domain: sv(a.Domain), ClientID: sv(a.ClientID), ClientSecret: sv(a.ClientSecret)}
 	case "mongodb":
-		cfg = mongoConfig{Name: a.Name, URI: sv(a.URI)}
+		cfg = mongoConfig{Name: a.Name, URI: sv(a.URI), ClientCertificate: strings.TrimSpace(sv(a.ClientCertificate)), UseTLS: bv(a.UseTLS)}
 	case "mysql":
-		cfg = mysqlConfig{Name: a.Name, Username: sv(a.Username), Password: sv(a.Password), DatabaseName: sv(a.DatabaseName), HostName: sv(a.Host), Port: sv(a.Port), SSLMode: "require"}
+		cfg = mysqlConfig{Name: a.Name, Username: sv(a.Username), Password: sv(a.Password), DatabaseName: sv(a.DatabaseName), HostName: sv(a.Host), Port: sv(a.Port), SSLMode: "require", RootCert: strings.TrimSpace(sv(a.RootCert)), ClientCert: strings.TrimSpace(sv(a.ClientCert)), ClientKey: strings.TrimSpace(sv(a.ClientKey)), OldVersion: bv(a.OldVersion), UseRDSIAM: bv(a.UseRDSIAM), UseIRSA: bv(a.UseIRSA), AuthMode: sv(a.AuthMode), AWSRegion: sv(a.AWSRegion), AWSRoleARN: sv(a.AWSRoleARN), AWSAccessKeyID: sv(a.AccessKeyID), AWSSecretAccessKey: sv(a.SecretAccessKey), AWSServiceAccount: sv(a.AWSServiceAccount)}
 	case "okta":
 		cfg = oktaConfig{Version: "1.0", Name: a.Name, Domain: sv(a.Domain), ClientID: sv(a.ClientID), ClientSecret: sv(a.ClientSecret)}
 	case "postgres":
-		cfg = postgresConfig{Name: a.Name, Username: sv(a.Username), Password: sv(a.Password), DatabaseName: sv(a.DatabaseName), HostName: sv(a.Host), Port: sv(a.Port), SSLMode: sv(a.SSLMode), TLSRootCert: sv(a.TLSRootCert), TLSCertFile: sv(a.TLSCertFile), TLSKeyFile: sv(a.TLSKeyFile)}
+		cfg = postgresConfig{Name: a.Name, Username: sv(a.Username), Password: sv(a.Password), DatabaseName: sv(a.DatabaseName), HostName: sv(a.Host), Port: sv(a.Port), SSLMode: sv(a.SSLMode), TLSRootCert: sv(a.TLSRootCert), TLSCertFile: sv(a.TLSCertFile), TLSKeyFile: sv(a.TLSKeyFile), UseRDSIAM: bv(a.UseRDSIAM), UseIRSA: bv(a.UseIRSA), AuthMode: sv(a.AuthMode), AWSRegion: sv(a.AWSRegion), AWSRoleARN: sv(a.AWSRoleARN), AWSAccessKeyID: sv(a.AccessKeyID), AWSSecretAccessKey: sv(a.SecretAccessKey), AWSServiceAccount: sv(a.AWSServiceAccount)}
 	case "ssh":
-		cfg = sshConfig{Version: "1.0", Name: a.Name, Username: sv(a.Username), UsePassword: sv(a.Key) == "", Password: sv(a.Key), HostName: sv(a.Host), Port: sv(a.Port), SSHKey: sv(a.Key)}
+		cfg = sshConfig{Version: "1.0", Name: a.Name, Username: sv(a.Username), UsePassword: sv(a.Key) == "", Password: sv(a.Password), HostName: sv(a.Host), Port: sv(a.Port), SSHKey: sv(a.Key)}
 	case "kubernetes":
 		cfg = kubernetesConfig{Name: a.Name, ApiServer: sv(a.ApiServer), ClusterToken: strings.TrimSpace(sv(a.ClusterToken)), ClusterCerts: strings.TrimSpace(sv(a.ClusterCert)), Namespace: sv(a.Namespace), TolerationsBytes: sv(a.Tolerations), AnnotationsBytes: sv(a.Annotations), NodeSelectorBytes: sv(a.NodeSelector), NodeAffinityBytes: sv(a.NodeAffinity)}
 	case "awsdocumentdb":
-		cfg = awsDocumentDBConfig{Name: a.Name, URI: sv(a.URI)}
+		cfg = awsDocumentDBConfig{Name: a.Name, URI: sv(a.URI), TlsEnabled: bv(a.TLSEnabled)}
 	case "zerotier":
 		cfg = zeroTierConfig{Name: a.Name, NetworkID: sv(a.NetworkID), Token: sv(a.APIToken), Version: "1.0"}
 	case "mongodb_atlas":
 		cfg = mongoAtlasConfig{Name: a.Name, URI: sv(a.URI), OrganisationID: sv(a.OrganizationID), PublicKey: sv(a.PublicKey), PrivateKey: sv(a.PrivateKey), ProjectID: sv(a.ProjectID)}
 	case "rdp_windows":
-		cfg = rdpWindowsConfig{Version: "1.0", Name: a.Name, Hostname: sv(a.Hostname), Password: sv(a.Password), Username: sv(a.Username), Port: sv(a.Port)}
+		cfg = rdpWindowsConfig{Version: "1.0", Name: a.Name, Hostname: sv(a.Hostname), Password: sv(a.Password), Username: sv(a.Username), Port: sv(a.Port), AllowFileTransfer: bv(a.AllowFileTransfer)}
 	case "awssecretsmanager":
 		cfg = awsSecretsManagerConfig{Name: a.Name, AWSRegionName: sv(a.AWSRegionName), AWSARN: sv(a.AWSArn)}
 	case "postgres_aws_secrets_manager":
@@ -65,17 +65,17 @@ func buildIntegrationConfig(a ResourceArgs) (any, string, error) {
 	case "mongodb_aws_secrets_manager":
 		cfg = mongoAWSConfig{Name: a.Name, ARN: sv(a.Arn), Region: sv(a.Region), SecretID: sv(a.SecretID), Key: sv(a.Key)}
 	case "sql_server":
-		cfg = sqlServerConfig{Name: a.Name, DatabaseName: sv(a.DatabaseName), Hostname: sv(a.Host), Port: sv(a.Port), Username: sv(a.Username), Password: sv(a.Password)}
+		cfg = sqlServerConfig{Name: a.Name, DatabaseName: sv(a.DatabaseName), Hostname: sv(a.Host), Port: sv(a.Port), Username: sv(a.Username), Password: sv(a.Password), SSLMode: sv(a.SSLMode)}
 	case "azuresqlserver":
-		cfg = azureSQLServerConfig{Name: a.Name, Hostname: sv(a.Hostname), Port: sv(a.Port), Username: sv(a.Username), Password: sv(a.Password), DatabaseName: sv(a.DatabaseName)}
+		cfg = azureSQLServerConfig{Name: a.Name, Hostname: sv(a.Hostname), Port: sv(a.Port), Username: sv(a.Username), Password: sv(a.Password), DatabaseName: sv(a.DatabaseName), SSLMode: sv(a.SSLMode)}
 	case "splunk":
 		cfg = splunkConfig{Name: a.Name, TokenID: sv(a.TokenID), Url: sv(a.URL)}
 	case "datadog":
-		cfg = datadogConfig{Name: a.Name, DdSite: sv(a.DdSite), DdApiKey: sv(a.DdApiKey)}
+		cfg = datadogConfig{Name: a.Name, DdSite: sv(a.DdSite), DdApiKey: sv(a.DdApiKey), DdAppKey: sv(a.DdAppKey)}
 	case "sqlserver_aws_secrets_manager":
 		cfg = secretsManagerConfig{Name: a.Name, ARN: sv(a.Arn), Region: sv(a.Region), SecretID: sv(a.SecretID)}
 	case "coralogix":
-		cfg = coralogixConfig{Name: a.Name, Url: sv(a.URI), PrivateKey: sv(a.PrivateKey), ApplicationName: sv(a.ApplicationName), SubSystemName: sv(a.SubSystemName)}
+		cfg = coralogixConfig{Name: a.Name, Url: sv(a.URL), PrivateKey: sv(a.PrivateKey), ApplicationName: sv(a.ApplicationName), SubSystemName: sv(a.SubSystemName)}
 	case "jumpcloud":
 		cfg = jumpCloudConfig{Name: a.Name, ClientID: sv(a.ClientID), ClientSecret: sv(a.ClientSecret), Domain: sv(a.Domain), ApiKey: sv(a.APIToken)}
 	case "msteams":
@@ -85,39 +85,39 @@ func buildIntegrationConfig(a ResourceArgs) (any, string, error) {
 	case "onelogin":
 		cfg = oneLoginConfig{Name: a.Name, Domain: sv(a.Domain), ClientID: sv(a.ClientID), ClientSecret: sv(a.ClientSecret), ApiClientID: sv(a.ApiClientID), ApiClientSecret: sv(a.ApiClientSecret)}
 	case "elasticsearch":
-		cfg = elasticsearchConfig{Name: a.Name, Url: sv(a.URI), Username: sv(a.Username), Password: sv(a.Password), Index: sv(a.Index)}
+		cfg = elasticsearchConfig{Name: a.Name, Url: sv(a.URL), Username: sv(a.Username), Password: sv(a.Password), Index: sv(a.Index)}
 	case "paloalto_ngfw":
-		cfg = paloAltoConfig{Name: a.Name, Password: sv(a.Password), Username: sv(a.Username), Hostname: sv(a.Hostname), WebuiPort: sv(a.WebuiPort), LoginUrl: sv(a.LoginURL)}
+		cfg = paloAltoConfig{Version: "1.0", Name: a.Name, Password: sv(a.Password), Username: sv(a.Username), UsePassword: sv(a.Key) == "", Hostname: sv(a.Hostname), Port: sv(a.Port), WebuiPort: sv(a.WebuiPort), SSHKey: sv(a.Key), LoginUrl: sv(a.LoginURL)}
 	case "fortinet_ngfw":
-		cfg = ngfwConfig{Name: a.Name, Hostname: sv(a.Hostname), LoginUrl: sv(a.URI), Port: sv(a.Port), Type: "fortinet_ngfw", UseProxy: bv(a.UseProxy), Username: sv(a.Username), Password: sv(a.Password), Version: "1.0", WebuiPort: sv(a.WebuiPort)}
+		cfg = ngfwConfig{Name: a.Name, Hostname: sv(a.Hostname), LoginUrl: sv(a.LoginURL), Port: sv(a.Port), Type: "fortinet_ngfw", UsePassword: sv(a.Key) == "", UseProxy: bv(a.UseProxy), Username: sv(a.Username), Password: sv(a.Password), Version: "1.0", WebuiPort: sv(a.WebuiPort), SSHKey: sv(a.Key)}
 	case "cisco_ngfw":
-		cfg = ngfwConfig{Name: a.Name, Hostname: sv(a.Hostname), LoginUrl: sv(a.URI), Port: sv(a.Port), UseProxy: bv(a.UseProxy), Username: sv(a.Username), Password: sv(a.Password), WebuiPort: sv(a.WebuiPort)}
+		cfg = ngfwConfig{Name: a.Name, Hostname: sv(a.Hostname), LoginUrl: sv(a.LoginURL), Port: sv(a.Port), UsePassword: sv(a.Key) == "", UseProxy: bv(a.UseProxy), Username: sv(a.Username), Password: sv(a.Password), Version: "1.0", WebuiPort: sv(a.WebuiPort), SSHKey: sv(a.Key)}
 	case "snowflake":
 		cfg = snowflakeConfig{Name: a.Name, DatabaseAccount: sv(a.Hostname), DatabaseUsername: sv(a.Username), DatabasePassword: sv(a.Password), DatabaseName: sv(a.DatabaseName), Warehouse: sv(a.Warehouse), Schema: sv(a.Schema), Clientcert: sv(a.Clientcert), Role: sv(a.Role)}
 	case "snowflake_aws_secrets_manager":
 		cfg = secretsManagerConfig{Name: a.Name, ARN: sv(a.Arn), Region: sv(a.Region), SecretID: sv(a.SecretID)}
 	case "custom_siem_webhook":
-		cfg = customSIEMWebhookConfig{Name: a.Name, Url: sv(a.URI), SharedSecret: sv(a.SharedSecret)}
+		cfg = customSIEMWebhookConfig{Name: a.Name, Url: sv(a.URL), SharedSecret: sv(a.SharedSecret)}
 	case "aruba_sw":
-		cfg = arubaSWConfig{Name: a.Name, Hostname: sv(a.Hostname), Username: sv(a.Username), Password: sv(a.Password)}
+		cfg = arubaSWConfig{Version: "1.0", Name: a.Name, Hostname: sv(a.Hostname), Username: sv(a.Username), UsePassword: sv(a.Key) == "", Password: sv(a.Password), Port: sv(a.Port), WebuiPort: sv(a.WebuiPort), SSHKey: sv(a.Key), LoginUrl: sv(a.LoginURL)}
 	case "aruba_instant_on":
-		cfg = arubaInstantOnConfig{Name: a.Name, Host: sv(a.Host), Port: sv(a.Port), Username: sv(a.Username), Password: sv(a.Password), APIToken: sv(a.APIToken)}
+		cfg = arubaInstantOnConfig{Version: "1.0", Name: a.Name, Username: sv(a.Username), Hostname: sv(a.Hostname), UsePassword: sv(a.Key) == "", Password: sv(a.Password), Port: sv(a.Port), WebuiPort: sv(a.WebuiPort), SSHKey: sv(a.Key), LoginUrl: sv(a.LoginURL)}
 	case "hpe_switch":
-		cfg = ngfwConfig{Name: a.Name, Hostname: sv(a.Hostname), LoginUrl: sv(a.URI), Port: sv(a.Port), UseProxy: bv(a.UseProxy), Username: sv(a.Username), Password: sv(a.Password), WebuiPort: sv(a.WebuiPort)}
+		cfg = ngfwConfig{Name: a.Name, Hostname: sv(a.Hostname), LoginUrl: sv(a.LoginURL), Port: sv(a.Port), UsePassword: sv(a.Key) == "", UseProxy: bv(a.UseProxy), Username: sv(a.Username), Password: sv(a.Password), Version: "1.0", WebuiPort: sv(a.WebuiPort), SSHKey: sv(a.Key)}
 	case "syslog":
-		cfg = syslogConfig{Name: a.Name, Hostname: sv(a.Hostname), Port: sv(a.Port), Protocol: sv(a.Protocol)}
+		cfg = syslogConfig{Name: a.Name, Hostname: sv(a.Hostname), Port: sv(a.Port), Protocol: sv(a.Protocol), TlsEnabled: bv(a.TLSEnabled), CACertificate: sv(a.CACertificate), ClientCertificate: sv(a.ClientCertificate), ClientKey: sv(a.ClientKey), InsecureSkipVerify: bv(a.InsecureSkipVerify)}
 	case "customintegration":
 		cfg = customIntegrationConfig{Name: a.Name, Image: sv(a.Image), ServiceAccountName: sv(a.ServiceAccountName)}
 	case "clickhouse":
-		cfg = clickhouseConfig{Name: a.Name, Username: sv(a.Username), Password: sv(a.Password), DatabaseName: sv(a.DatabaseName), HostName: sv(a.Host), Port: sv(a.Port), SSLMode: sv(a.SSLMode)}
+		cfg = clickhouseConfig{Name: a.Name, Username: sv(a.Username), Password: sv(a.Password), DatabaseName: sv(a.DatabaseName), HostName: sv(a.Host), Port: sv(a.Port), UseTLS: bv(a.UseTLS)}
 	case "keyspaces":
-		cfg = keyspacesConfig{UseServiceAccount: bv(a.UseServiceAccount), CreateIfNotExists: bv(a.CreateIfNotExists), Name: a.Name}
+		cfg = keyspacesConfig{UseServiceAccount: bv(a.UseServiceAccount), CreateIfNotExists: bv(a.CreateIfNotExists), Name: a.Name, Keyspace: sv(a.Keyspace), KeyspacesEndpoint: sv(a.KeyspacesEndpoint), Version: "1.0", AWSRegionName: sv(a.AWSRegionName), AWSAccessKeyID: sv(a.AccessKeyID), AWSSecretAccessKey: sv(a.SecretAccessKey), UseRoleARN: bv(a.UseRoleARN), AWSRoleARN: sv(a.AWSRoleARN), ServiceAccount: sv(a.ServiceAccount)}
 	case "rabbitmq":
-		cfg = rabbitMQConfig{Url: sv(a.URI), Name: a.Name, Username: sv(a.Username), Password: sv(a.Password)}
+		cfg = rabbitMQConfig{Url: sv(a.URL), Name: a.Name, Username: sv(a.Username), Password: sv(a.Password)}
 	case "azurecosmosnosql":
-		cfg = azureCosmosConfig{Name: a.Name, Endpoint: sv(a.URI), Key: sv(a.APIToken)}
+		cfg = azureCosmosConfig{Name: a.Name, Endpoint: sv(a.URL), Key: sv(a.APIToken)}
 	case "services":
-		cfg = serviceListConfig{Version: "1", Name: a.Name, URLs: sv(a.URLs)}
+		cfg = serviceListConfig{Version: "1", Name: a.Name, URLs: sv(a.URLs), EnableTLS: bv(a.EnableTLS)}
 	case "serverlist":
 		cfg = serverListConfig{Version: "1", Hosts: strings.Join(a.Hosts, "\n"), DefaultUser: sv(a.DefaultUser), SshKey: sv(a.Key), Password: sv(a.Password)}
 	case "msteams_workflow":
@@ -137,7 +137,7 @@ func buildIntegrationConfig(a ResourceArgs) (any, string, error) {
 	case "awsdocumentdb_aws_secret_manager":
 		cfg = documentDBSecretsManagerConfig{Version: "1.0", Name: a.Name, ARN: sv(a.Arn), Region: sv(a.Region), SecretID: sv(a.SecretID), TlsEnabled: bv(a.TLSEnabled)}
 	case "awselasticcache":
-		cfg = elastiCacheConfig{Version: "1.0", Name: a.Name, Username: sv(a.Username), Password: sv(a.Password), Host: sv(a.Host), Port: sv(a.Port), TlsEnabled: bv(a.TLSEnabled), TlsSkipVerify: bv(a.TLSSkipVerify), AccessControlMethod: sv(a.AccessControlMethod), AccessControlGroupID: sv(a.AccessControlGroup), AWSRegionName: sv(a.AWSRegionName), AWSAccessKeyID: sv(a.AccessKeyID), AWSSecretAccessKey: sv(a.SecretAccessKey)}
+		cfg = elastiCacheConfig{Version: "1.0", Name: a.Name, Username: sv(a.Username), Password: sv(a.Password), Host: sv(a.Host), Port: sv(a.Port), TlsEnabled: bv(a.TLSEnabled), TlsSkipVerify: bv(a.TLSSkipVerify), AccessControlMethod: sv(a.AccessControlMethod), AccessControlGroupID: sv(a.AccessControlGroup), AWSRegionName: sv(a.AWSRegionName), AWSAccessKeyID: sv(a.AccessKeyID), AWSSecretAccessKey: sv(a.SecretAccessKey), UseIAMAuth: a.UseIAMAuth, UseIRSA: a.UseIRSA, AWSRoleARN: sv(a.AWSRoleARN), AWSServiceAccount: sv(a.AWSServiceAccount), CacheName: sv(a.CacheName), CacheType: sv(a.CacheType)}
 	case "azure_documentdb":
 		cfg = azureDocumentDBConfig{Version: "1.0", Name: a.Name, URI: sv(a.URI)}
 	case "big_query":
@@ -157,9 +157,9 @@ func buildIntegrationConfig(a ResourceArgs) (any, string, error) {
 	case "ivanti":
 		cfg = ivantiConfig{Version: "1.0", Name: a.Name, Username: sv(a.Username), UsePassword: sv(a.Key) == "", Password: sv(a.Password), HostName: sv(a.Hostname), Port: sv(a.Port), WebUIPort: sv(a.WebuiPort), LoginURL: sv(a.LoginURL), UseProxy: bv(a.UseProxy), SSHKey: sv(a.Key)}
 	case "juniper_sw", "sophos_fw":
-		cfg = sshApplianceConfig{Version: "1.0", Name: a.Name, Username: sv(a.Username), UsePassword: sv(a.Key) == "", Password: sv(a.Password), HostName: sv(a.Hostname), Port: sv(a.Port), SSHKey: sv(a.Key)}
+		cfg = sshApplianceConfig{Version: "1.0", Name: a.Name, Username: sv(a.Username), UsePassword: sv(a.Key) == "", Password: sv(a.Password), HostName: sv(a.Hostname), Port: sv(a.Port), WebUIPort: sv(a.WebuiPort), LoginURL: sv(a.LoginURL), SSHKey: sv(a.Key)}
 	case "kafka":
-		cfg = kafkaConfig{Name: a.Name, ClientConfiguration: sv(a.ClientConfiguration)}
+		cfg = kafkaConfig{Name: a.Name, ClientConfiguration: sv(a.ClientConfiguration), UseMSKIAM: bv(a.UseMSKIAM), UseIRSA: bv(a.UseIRSA), BootstrapServers: sv(a.BootstrapServers), AWSRegion: sv(a.AWSRegion), AWSRoleARN: sv(a.AWSRoleARN), AWSAccessKeyID: sv(a.AccessKeyID), AWSSecretAccessKey: sv(a.SecretAccessKey), AWSServiceAccount: sv(a.AWSServiceAccount)}
 	case "ldap":
 		cfg = ldapConfig{Name: a.Name, Hostname: sv(a.Hostname), Port: sv(a.Port), EncryptionMethod: sv(a.LdapEncryptionMethod), SearchBindDN: sv(a.LdapSearchBindDN), SearchBindPassword: sv(a.LdapSearchBindPassword), UserNameAttribute: sv(a.LdapUserNameAttribute), UserBaseDN: sv(a.LdapUserBaseDN)}
 	case "mongodb-do":
@@ -221,11 +221,18 @@ func providerType(w string) string {
 // ===========================================================================
 
 type awsConfig struct {
-	Name               string `yaml:"name"`
-	Version            string `yaml:"version"`
-	AWSRegionName      string `yaml:"aws_region_name"`
-	AWSAccessKeyID     string `yaml:"aws_access_key_id"`
-	AWSSecretAccessKey string `yaml:"aws_secret_access_key"`
+	Name                  string `yaml:"name"`
+	Version               string `yaml:"version"`
+	AWSRegionName         string `yaml:"aws_region_name"`
+	AWSAccessKeyID        string `yaml:"aws_access_key_id"`
+	AWSSecretAccessKey    string `yaml:"aws_secret_access_key"`
+	UseRoleARN            bool   `yaml:"use_role_arn"`
+	AWSRoleArn            string `yaml:"aws_role_arn"`
+	UseServiceAccount     bool   `yaml:"use_service_account"`
+	ServiceAccount        string `yaml:"service_account"`
+	CreateIfNotExists     bool   `yaml:"create_if_not_exists"`
+	EnableAllowedCommands bool   `yaml:"enable_allowed_commands"`
+	AllowedCommands       string `yaml:"allowed_commands"`
 }
 
 type msTeamsWorkflowConfig struct {
@@ -288,19 +295,34 @@ type googleConfig struct {
 }
 
 type mongoConfig struct {
-	Name string `yaml:"name"`
-	URI  string `yaml:"uri"`
+	Version           string `yaml:"version"`
+	Name              string `yaml:"name"`
+	URI               string `yaml:"uri"`
+	ClientCertificate string `yaml:"clientCertificate"`
+	UseTLS            bool   `yaml:"useTLS"`
 }
 
 type mysqlConfig struct {
-	Version      string `yaml:"version"`
-	Name         string `yaml:"name"`
-	Username     string `yaml:"username"`
-	Password     string `yaml:"password"`
-	DatabaseName string `yaml:"databaseName"`
-	HostName     string `yaml:"hostname"`
-	Port         string `yaml:"port"`
-	SSLMode      string `yaml:"sslMode"`
+	Version            string `yaml:"version"`
+	Name               string `yaml:"name"`
+	Username           string `yaml:"username"`
+	Password           string `yaml:"password"`
+	DatabaseName       string `yaml:"databaseName"`
+	HostName           string `yaml:"hostname"`
+	Port               string `yaml:"port"`
+	SSLMode            string `yaml:"sslMode"`
+	RootCert           string `yaml:"rootCert"`
+	ClientCert         string `yaml:"clientCert"`
+	ClientKey          string `yaml:"clientKey"`
+	OldVersion         bool   `yaml:"oldVersion"`
+	UseRDSIAM          bool   `yaml:"useRdsIam"`
+	UseIRSA            bool   `yaml:"useIrsa"`
+	AuthMode           string `yaml:"authMode"`
+	AWSRegion          string `yaml:"awsRegion"`
+	AWSRoleARN         string `yaml:"awsRoleArn"`
+	AWSAccessKeyID     string `yaml:"awsAccessKeyId"`
+	AWSSecretAccessKey string `yaml:"awsSecretAccessKey"`
+	AWSServiceAccount  string `yaml:"awsServiceAccount"`
 }
 
 type oktaConfig struct {
@@ -312,16 +334,24 @@ type oktaConfig struct {
 }
 
 type postgresConfig struct {
-	Name         string `yaml:"name"`
-	Username     string `yaml:"username"`
-	Password     string `yaml:"password"`
-	DatabaseName string `yaml:"databaseName"`
-	HostName     string `yaml:"hostname"`
-	Port         string `yaml:"port"`
-	SSLMode      string `yaml:"sslMode"`
-	TLSRootCert  string `yaml:"rootCert"`
-	TLSCertFile  string `yaml:"crtText"`
-	TLSKeyFile   string `yaml:"keyText"`
+	Name               string `yaml:"name"`
+	Username           string `yaml:"username"`
+	Password           string `yaml:"password"`
+	DatabaseName       string `yaml:"databaseName"`
+	HostName           string `yaml:"hostname"`
+	Port               string `yaml:"port"`
+	SSLMode            string `yaml:"sslMode"`
+	TLSRootCert        string `yaml:"rootCert"`
+	TLSCertFile        string `yaml:"crtText"`
+	TLSKeyFile         string `yaml:"keyText"`
+	UseRDSIAM          bool   `yaml:"useRdsIam"`
+	UseIRSA            bool   `yaml:"useIrsa"`
+	AuthMode           string `yaml:"authMode"`
+	AWSRegion          string `yaml:"awsRegion"`
+	AWSRoleARN         string `yaml:"awsRoleArn"`
+	AWSAccessKeyID     string `yaml:"awsAccessKeyId"`
+	AWSSecretAccessKey string `yaml:"awsSecretAccessKey"`
+	AWSServiceAccount  string `yaml:"awsServiceAccount"`
 }
 
 type sshConfig struct {
@@ -348,8 +378,9 @@ type kubernetesConfig struct {
 }
 
 type awsDocumentDBConfig struct {
-	Name string `yaml:"name"`
-	URI  string `yaml:"uri"`
+	Name       string `yaml:"name"`
+	URI        string `yaml:"uri"`
+	TlsEnabled bool   `yaml:"tlsEnabled"`
 }
 
 type zeroTierConfig struct {
@@ -369,12 +400,13 @@ type mongoAtlasConfig struct {
 }
 
 type rdpWindowsConfig struct {
-	Version  string `yaml:"version"`
-	Name     string `yaml:"name"`
-	Hostname string `yaml:"hostname"`
-	Password string `yaml:"password"`
-	Username string `yaml:"username"`
-	Port     string `yaml:"port"`
+	Version           string `yaml:"version"`
+	Name              string `yaml:"name"`
+	Hostname          string `yaml:"hostname"`
+	Password          string `yaml:"password"`
+	Username          string `yaml:"username"`
+	Port              string `yaml:"port"`
+	AllowFileTransfer bool   `yaml:"allowFileTransfer"`
 }
 
 type awsSecretsManagerConfig struct {
@@ -417,6 +449,7 @@ type sqlServerConfig struct {
 	Port         string `yaml:"port"`
 	Username     string `yaml:"username"`
 	Password     string `yaml:"password"`
+	SSLMode      string `yaml:"sslMode"`
 }
 
 type azureSQLServerConfig struct {
@@ -426,6 +459,7 @@ type azureSQLServerConfig struct {
 	Username     string `yaml:"username"`
 	Password     string `yaml:"password"`
 	DatabaseName string `yaml:"databaseName"`
+	SSLMode      string `yaml:"sslMode"`
 }
 
 type splunkConfig struct {
@@ -438,6 +472,7 @@ type datadogConfig struct {
 	Name     string `yaml:"name"`
 	DdSite   string `yaml:"dd_site"`
 	DdApiKey string `yaml:"dd_api_key"`
+	DdAppKey string `yaml:"dd_app_key"`
 }
 
 type coralogixConfig struct {
@@ -491,26 +526,32 @@ type elasticsearchConfig struct {
 }
 
 type paloAltoConfig struct {
-	Name      string `yaml:"name"`
-	Password  string `yaml:"password"`
-	Username  string `yaml:"username"`
-	Hostname  string `yaml:"hostname"`
-	WebuiPort string `yaml:"webui_port"`
-	LoginUrl  string `yaml:"login_url"`
+	Version     string `yaml:"version"`
+	Name        string `yaml:"name"`
+	Username    string `yaml:"username"`
+	UsePassword bool   `yaml:"usePassword"`
+	Password    string `yaml:"password"`
+	Hostname    string `yaml:"hostname"`
+	Port        string `yaml:"port"`
+	WebuiPort   string `yaml:"webui_port"`
+	SSHKey      string `yaml:"sshKey"`
+	LoginUrl    string `yaml:"login_url"`
 }
 
 // ngfwConfig is shared by fortinet_ngfw, cisco_ngfw, and hpe_switch (identical shape).
 type ngfwConfig struct {
-	Name      string `yaml:"name"`
-	Hostname  string `yaml:"hostname"`
-	LoginUrl  string `yaml:"login_url"`
-	Port      string `yaml:"port"`
-	Type      string `yaml:"type"`
-	UseProxy  bool   `yaml:"use_proxy"`
-	Username  string `yaml:"username"`
-	Password  string `yaml:"password"`
-	Version   string `yaml:"version"`
-	WebuiPort string `yaml:"webui_port"`
+	Name        string `yaml:"name"`
+	Hostname    string `yaml:"hostname"`
+	LoginUrl    string `yaml:"login_url"`
+	Port        string `yaml:"port"`
+	Type        string `yaml:"type"`
+	UsePassword bool   `yaml:"usePassword"`
+	UseProxy    bool   `yaml:"use_proxy"`
+	Username    string `yaml:"username"`
+	Password    string `yaml:"password"`
+	Version     string `yaml:"version"`
+	WebuiPort   string `yaml:"webui_port"`
+	SSHKey      string `yaml:"sshKey"`
 }
 
 type snowflakeConfig struct {
@@ -532,26 +573,41 @@ type customSIEMWebhookConfig struct {
 }
 
 type arubaSWConfig struct {
-	Name     string `yaml:"name"`
-	Hostname string `yaml:"hostname"`
-	Username string `yaml:"username"`
-	Password string `yaml:"password"`
+	Version     string `yaml:"version"`
+	Name        string `yaml:"name"`
+	Username    string `yaml:"username"`
+	Hostname    string `yaml:"hostname"`
+	UsePassword bool   `yaml:"usePassword"`
+	Password    string `yaml:"password"`
+	Port        string `yaml:"port"`
+	WebuiPort   string `yaml:"webui_port"`
+	SSHKey      string `yaml:"sshKey"`
+	LoginUrl    string `yaml:"login_url"`
 }
 
 type arubaInstantOnConfig struct {
-	Name     string `yaml:"name"`
-	Host     string `yaml:"host"`
-	Port     string `yaml:"port"`
-	Username string `yaml:"username"`
-	Password string `yaml:"password"`
-	APIToken string `yaml:"apiToken"`
+	Version     string `yaml:"version"`
+	Name        string `yaml:"name"`
+	Username    string `yaml:"username"`
+	Hostname    string `yaml:"hostname"`
+	UsePassword bool   `yaml:"usePassword"`
+	Password    string `yaml:"password"`
+	Port        string `yaml:"port"`
+	WebuiPort   string `yaml:"webui_port"`
+	SSHKey      string `yaml:"sshKey"`
+	LoginUrl    string `yaml:"login_url"`
 }
 
 type syslogConfig struct {
-	Name     string `yaml:"name"`
-	Hostname string `yaml:"hostname"`
-	Port     string `yaml:"port"`
-	Protocol string `yaml:"protocol"`
+	Name               string `yaml:"name"`
+	Hostname           string `yaml:"hostname"`
+	Port               string `yaml:"port"`
+	Protocol           string `yaml:"protocol"`
+	TlsEnabled         bool   `yaml:"tlsEnabled"`
+	CACertificate      string `yaml:"caCertificate"`
+	ClientCertificate  string `yaml:"clientCertificate"`
+	ClientKey          string `yaml:"clientKey"`
+	InsecureSkipVerify bool   `yaml:"insecureSkipVerify"`
 }
 
 type customIntegrationConfig struct {
@@ -564,16 +620,25 @@ type clickhouseConfig struct {
 	Name         string `yaml:"name"`
 	Username     string `yaml:"username"`
 	Password     string `yaml:"password"`
-	DatabaseName string `yaml:"databaseName"`
+	DatabaseName string `yaml:"database"`
 	HostName     string `yaml:"hostname"`
 	Port         string `yaml:"port"`
-	SSLMode      string `yaml:"sslMode"`
+	UseTLS       bool   `yaml:"use-tls"`
 }
 
 type keyspacesConfig struct {
-	UseServiceAccount bool   `yaml:"use_service_account"`
-	CreateIfNotExists bool   `yaml:"create_if_not_exists"`
-	Name              string `yaml:"name"`
+	Keyspace           string `yaml:"keyspace"`
+	KeyspacesEndpoint  string `yaml:"keyspaces_endpoint"`
+	Version            string `yaml:"version"`
+	AWSRegionName      string `yaml:"aws_region_name"`
+	AWSAccessKeyID     string `yaml:"aws_access_key_id"`
+	AWSSecretAccessKey string `yaml:"aws_secret_access_key"`
+	UseRoleARN         bool   `yaml:"use_role_arn"`
+	AWSRoleARN         string `yaml:"aws_role_arn"`
+	UseServiceAccount  bool   `yaml:"use_service_account"`
+	ServiceAccount     string `yaml:"service_account"`
+	CreateIfNotExists  bool   `yaml:"create_if_not_exists"`
+	Name               string `yaml:"name"`
 }
 
 type rabbitMQConfig struct {
@@ -590,9 +655,10 @@ type azureCosmosConfig struct {
 }
 
 type serviceListConfig struct {
-	Name    string `yaml:"name"`
-	Version string `yaml:"version"`
-	URLs    string `yaml:"urls"`
+	Name      string `yaml:"name"`
+	Version   string `yaml:"version"`
+	URLs      string `yaml:"urls"`
+	EnableTLS bool   `yaml:"enableTLS"`
 }
 
 type serverListConfig struct {
@@ -670,6 +736,12 @@ type elastiCacheConfig struct {
 	AWSRegionName        string `yaml:"aws_region_name"`
 	AWSAccessKeyID       string `yaml:"aws_access_key_id"`
 	AWSSecretAccessKey   string `yaml:"aws_secret_access_key"`
+	UseIAMAuth           *bool  `yaml:"useIamAuth,omitempty"`
+	UseIRSA              *bool  `yaml:"useIrsa,omitempty"`
+	AWSRoleARN           string `yaml:"aws_role_arn,omitempty"`
+	AWSServiceAccount    string `yaml:"aws_service_account,omitempty"`
+	CacheName            string `yaml:"cache_name,omitempty"`
+	CacheType            string `yaml:"cache_type,omitempty"`
 }
 
 type azureDocumentDBConfig struct {
@@ -772,12 +844,22 @@ type sshApplianceConfig struct {
 	Password    string `yaml:"password"`
 	HostName    string `yaml:"hostname"`
 	Port        string `yaml:"port"`
+	WebUIPort   string `yaml:"webui_port"`
+	LoginURL    string `yaml:"login_url"`
 	SSHKey      string `yaml:"sshKey"`
 }
 
 type kafkaConfig struct {
 	Name                string `yaml:"name"`
 	ClientConfiguration string `yaml:"client_configuration"`
+	UseMSKIAM           bool   `yaml:"useMskIam"`
+	UseIRSA             bool   `yaml:"useIrsa"`
+	BootstrapServers    string `yaml:"bootstrapServers"`
+	AWSRegion           string `yaml:"awsRegion"`
+	AWSRoleARN          string `yaml:"awsRoleArn"`
+	AWSAccessKeyID      string `yaml:"awsAccessKeyId"`
+	AWSSecretAccessKey  string `yaml:"awsSecretAccessKey"`
+	AWSServiceAccount   string `yaml:"awsServiceAccount"`
 }
 
 type ldapConfig struct {
@@ -950,6 +1032,13 @@ func applyIntegrationConfig(a *ResourceArgs, integrationType string, cfg map[str
 		setStr(&a.RegionName, cfg, "aws_region_name")
 		setStr(&a.AccessKeyID, cfg, "aws_access_key_id")
 		setStr(&a.SecretAccessKey, cfg, "aws_secret_access_key")
+		setBool(&a.UseRoleARN, cfg, "use_role_arn")
+		setStr(&a.AWSRoleARN, cfg, "aws_role_arn")
+		setBool(&a.UseServiceAccount, cfg, "use_service_account")
+		setStr(&a.ServiceAccount, cfg, "service_account")
+		setBool(&a.CreateIfNotExists, cfg, "create_if_not_exists")
+		setBool(&a.EnableAllowedCommands, cfg, "enable_allowed_commands")
+		setStr(&a.AllowedCommands, cfg, "allowed_commands")
 	case "azure":
 		setStr(&a.TenantID, cfg, "tenantID")
 		setStr(&a.ApplicationID, cfg, "applicationID")
@@ -966,6 +1055,7 @@ func applyIntegrationConfig(a *ResourceArgs, integrationType string, cfg map[str
 		setStr(&a.DatabaseName, cfg, "databaseName")
 		setStr(&a.Host, cfg, "hostname")
 		setStr(&a.Port, cfg, "port")
+		setStr(&a.SSLMode, cfg, "sslMode")
 	case "cockroachdb":
 		setStr(&a.Username, cfg, "username")
 		setStr(&a.Password, cfg, "password")
@@ -983,13 +1073,28 @@ func applyIntegrationConfig(a *ResourceArgs, integrationType string, cfg map[str
 		setStr(&a.ClientSecret, cfg, "clientSecret")
 	case "mongodb":
 		setStr(&a.URI, cfg, "uri")
+		setStr(&a.ClientCertificate, cfg, "clientCertificate")
+		setBool(&a.UseTLS, cfg, "useTLS")
 	case "mysql":
-		// sslMode is forced to "require" by the forward mapping; it is not an input.
+		// sslMode is forced to "require" by default, but the server may carry
+		// additional TLS/IAM fields from newer forms.
 		setStr(&a.Username, cfg, "username")
 		setStr(&a.Password, cfg, "password")
 		setStr(&a.DatabaseName, cfg, "databaseName")
 		setStr(&a.Host, cfg, "hostname")
 		setStr(&a.Port, cfg, "port")
+		setStr(&a.RootCert, cfg, "rootCert")
+		setStr(&a.ClientCert, cfg, "clientCert")
+		setStr(&a.ClientKey, cfg, "clientKey")
+		setBool(&a.OldVersion, cfg, "oldVersion")
+		setBool(&a.UseRDSIAM, cfg, "useRdsIam")
+		setBool(&a.UseIRSA, cfg, "useIrsa")
+		setStr(&a.AuthMode, cfg, "authMode")
+		setStr(&a.AWSRegion, cfg, "awsRegion")
+		setStr(&a.AWSRoleARN, cfg, "awsRoleArn")
+		setStr(&a.AccessKeyID, cfg, "awsAccessKeyId")
+		setStr(&a.SecretAccessKey, cfg, "awsSecretAccessKey")
+		setStr(&a.AWSServiceAccount, cfg, "awsServiceAccount")
 	case "okta":
 		setStr(&a.Domain, cfg, "domain")
 		setStr(&a.ClientID, cfg, "clientID")
@@ -1004,9 +1109,19 @@ func applyIntegrationConfig(a *ResourceArgs, integrationType string, cfg map[str
 		setStr(&a.TLSRootCert, cfg, "rootCert")
 		setStr(&a.TLSCertFile, cfg, "crtText")
 		setStr(&a.TLSKeyFile, cfg, "keyText")
+		setBool(&a.UseRDSIAM, cfg, "useRdsIam")
+		setBool(&a.UseIRSA, cfg, "useIrsa")
+		setStr(&a.AuthMode, cfg, "authMode")
+		setStr(&a.AWSRegion, cfg, "awsRegion")
+		setStr(&a.AWSRoleARN, cfg, "awsRoleArn")
+		setStr(&a.AccessKeyID, cfg, "awsAccessKeyId")
+		setStr(&a.SecretAccessKey, cfg, "awsSecretAccessKey")
+		setStr(&a.AWSServiceAccount, cfg, "awsServiceAccount")
 	case "ssh":
-		// usePassword is derived from key, and password mirrors the key.
+		// usePassword is derived from key: a set key selects key auth, otherwise
+		// the integration uses the password field.
 		setStr(&a.Username, cfg, "username")
+		setStr(&a.Password, cfg, "password")
 		setStr(&a.Host, cfg, "hostname")
 		setStr(&a.Port, cfg, "port")
 		setStr(&a.Key, cfg, "sshKey")
@@ -1021,6 +1136,7 @@ func applyIntegrationConfig(a *ResourceArgs, integrationType string, cfg map[str
 		setStr(&a.NodeAffinity, cfg, "affinityBytes")
 	case "awsdocumentdb":
 		setStr(&a.URI, cfg, "uri")
+		setBool(&a.TLSEnabled, cfg, "tlsEnabled")
 	case "zerotier":
 		setStr(&a.NetworkID, cfg, "network_id")
 		setStr(&a.APIToken, cfg, "api_token")
@@ -1035,6 +1151,7 @@ func applyIntegrationConfig(a *ResourceArgs, integrationType string, cfg map[str
 		setStr(&a.Password, cfg, "password")
 		setStr(&a.Username, cfg, "username")
 		setStr(&a.Port, cfg, "port")
+		setBool(&a.AllowFileTransfer, cfg, "allowFileTransfer")
 	case "awssecretsmanager":
 		setStr(&a.AWSRegionName, cfg, "aws_region_name")
 		setStr(&a.AWSArn, cfg, "aws_arn")
@@ -1054,20 +1171,23 @@ func applyIntegrationConfig(a *ResourceArgs, integrationType string, cfg map[str
 		setStr(&a.Port, cfg, "port")
 		setStr(&a.Username, cfg, "username")
 		setStr(&a.Password, cfg, "password")
+		setStr(&a.SSLMode, cfg, "sslMode")
 	case "azuresqlserver":
 		setStr(&a.Hostname, cfg, "hostname")
 		setStr(&a.Port, cfg, "port")
 		setStr(&a.Username, cfg, "username")
 		setStr(&a.Password, cfg, "password")
 		setStr(&a.DatabaseName, cfg, "databaseName")
+		setStr(&a.SSLMode, cfg, "sslMode")
 	case "splunk":
 		setStr(&a.TokenID, cfg, "tokenID")
 		setStr(&a.URL, cfg, "url")
 	case "datadog":
 		setStr(&a.DdSite, cfg, "dd_site")
 		setStr(&a.DdApiKey, cfg, "dd_api_key")
+		setStr(&a.DdAppKey, cfg, "dd_app_key")
 	case "coralogix":
-		setStr(&a.URI, cfg, "url")
+		setStr(&a.URL, cfg, "url")
 		setStr(&a.PrivateKey, cfg, "privateKey")
 		setStr(&a.ApplicationName, cfg, "applicationName")
 		setStr(&a.SubSystemName, cfg, "subSystemName")
@@ -1094,7 +1214,7 @@ func applyIntegrationConfig(a *ResourceArgs, integrationType string, cfg map[str
 		setStr(&a.ApiClientID, cfg, "apiClientID")
 		setStr(&a.ApiClientSecret, cfg, "apiClientSecret")
 	case "elasticsearch":
-		setStr(&a.URI, cfg, "url")
+		setStr(&a.URL, cfg, "url")
 		setStr(&a.Username, cfg, "username")
 		setStr(&a.Password, cfg, "password")
 		setStr(&a.Index, cfg, "index")
@@ -1102,17 +1222,20 @@ func applyIntegrationConfig(a *ResourceArgs, integrationType string, cfg map[str
 		setStr(&a.Password, cfg, "password")
 		setStr(&a.Username, cfg, "username")
 		setStr(&a.Hostname, cfg, "hostname")
+		setStr(&a.Port, cfg, "port")
 		setStr(&a.WebuiPort, cfg, "webui_port")
 		setStr(&a.LoginURL, cfg, "login_url")
+		setStr(&a.Key, cfg, "sshKey")
 	case "fortinet_ngfw", "cisco_ngfw", "hpe_switch":
 		// `type` is a per-case constant of the forward mapping, not an input.
 		setStr(&a.Hostname, cfg, "hostname")
-		setStr(&a.URI, cfg, "login_url")
+		setStr(&a.LoginURL, cfg, "login_url")
 		setStr(&a.Port, cfg, "port")
 		setBool(&a.UseProxy, cfg, "use_proxy")
 		setStr(&a.Username, cfg, "username")
 		setStr(&a.Password, cfg, "password")
 		setStr(&a.WebuiPort, cfg, "webui_port")
+		setStr(&a.Key, cfg, "sshKey")
 	case "snowflake":
 		setStr(&a.Hostname, cfg, "databaseAccount")
 		setStr(&a.Username, cfg, "databaseUsername")
@@ -1123,44 +1246,56 @@ func applyIntegrationConfig(a *ResourceArgs, integrationType string, cfg map[str
 		setStr(&a.Clientcert, cfg, "clientcert")
 		setStr(&a.Role, cfg, "role")
 	case "custom_siem_webhook":
-		setStr(&a.URI, cfg, "url")
+		setStr(&a.URL, cfg, "url")
 		setStr(&a.SharedSecret, cfg, "sharedSecret")
-	case "aruba_sw":
+	case "aruba_sw", "aruba_instant_on":
 		setStr(&a.Hostname, cfg, "hostname")
-		setStr(&a.Username, cfg, "username")
-		setStr(&a.Password, cfg, "password")
-	case "aruba_instant_on":
-		setStr(&a.Host, cfg, "host")
 		setStr(&a.Port, cfg, "port")
 		setStr(&a.Username, cfg, "username")
 		setStr(&a.Password, cfg, "password")
-		setStr(&a.APIToken, cfg, "apiToken")
+		setStr(&a.WebuiPort, cfg, "webui_port")
+		setStr(&a.LoginURL, cfg, "login_url")
+		setStr(&a.Key, cfg, "sshKey")
 	case "syslog":
 		setStr(&a.Hostname, cfg, "hostname")
 		setStr(&a.Port, cfg, "port")
 		setStr(&a.Protocol, cfg, "protocol")
+		setBool(&a.TLSEnabled, cfg, "tlsEnabled")
+		setStr(&a.CACertificate, cfg, "caCertificate")
+		setStr(&a.ClientCertificate, cfg, "clientCertificate")
+		setStr(&a.ClientKey, cfg, "clientKey")
+		setBool(&a.InsecureSkipVerify, cfg, "insecureSkipVerify")
 	case "customintegration":
 		setStr(&a.Image, cfg, "image")
 		setStr(&a.ServiceAccountName, cfg, "service_account_name")
 	case "clickhouse":
 		setStr(&a.Username, cfg, "username")
 		setStr(&a.Password, cfg, "password")
-		setStr(&a.DatabaseName, cfg, "databaseName")
+		setStr(&a.DatabaseName, cfg, "database")
 		setStr(&a.Host, cfg, "hostname")
 		setStr(&a.Port, cfg, "port")
-		setStr(&a.SSLMode, cfg, "sslMode")
+		setBool(&a.UseTLS, cfg, "use-tls")
 	case "keyspaces":
+		setStr(&a.Keyspace, cfg, "keyspace")
+		setStr(&a.KeyspacesEndpoint, cfg, "keyspaces_endpoint")
+		setStr(&a.AWSRegionName, cfg, "aws_region_name")
+		setStr(&a.AccessKeyID, cfg, "aws_access_key_id")
+		setStr(&a.SecretAccessKey, cfg, "aws_secret_access_key")
+		setBool(&a.UseRoleARN, cfg, "use_role_arn")
+		setStr(&a.AWSRoleARN, cfg, "aws_role_arn")
 		setBool(&a.UseServiceAccount, cfg, "use_service_account")
+		setStr(&a.ServiceAccount, cfg, "service_account")
 		setBool(&a.CreateIfNotExists, cfg, "create_if_not_exists")
 	case "rabbitmq":
-		setStr(&a.URI, cfg, "url")
+		setStr(&a.URL, cfg, "url")
 		setStr(&a.Username, cfg, "username")
 		setStr(&a.Password, cfg, "password")
 	case "azurecosmosnosql":
-		setStr(&a.URI, cfg, "endpoint")
+		setStr(&a.URL, cfg, "endpoint")
 		setStr(&a.APIToken, cfg, "key")
 	case "services":
 		setStr(&a.URLs, cfg, "urls")
+		setBool(&a.EnableTLS, cfg, "enableTLS")
 	case "serverlist":
 		setHosts(&a.Hosts, cfg, "hosts")
 		setStr(&a.DefaultUser, cfg, "user")
@@ -1205,6 +1340,12 @@ func applyIntegrationConfig(a *ResourceArgs, integrationType string, cfg map[str
 		setStr(&a.AWSRegionName, cfg, "aws_region_name")
 		setStr(&a.AccessKeyID, cfg, "aws_access_key_id")
 		setStr(&a.SecretAccessKey, cfg, "aws_secret_access_key")
+		setBool(&a.UseIAMAuth, cfg, "useIamAuth")
+		setBool(&a.UseIRSA, cfg, "useIrsa")
+		setStr(&a.AWSRoleARN, cfg, "aws_role_arn")
+		setStr(&a.AWSServiceAccount, cfg, "aws_service_account")
+		setStr(&a.CacheName, cfg, "cache_name")
+		setStr(&a.CacheType, cfg, "cache_type")
 	case "azure_documentdb":
 		setStr(&a.URI, cfg, "uri")
 	case "big_query":
@@ -1261,9 +1402,19 @@ func applyIntegrationConfig(a *ResourceArgs, integrationType string, cfg map[str
 		setStr(&a.Password, cfg, "password")
 		setStr(&a.Hostname, cfg, "hostname")
 		setStr(&a.Port, cfg, "port")
+		setStr(&a.WebuiPort, cfg, "webui_port")
+		setStr(&a.LoginURL, cfg, "login_url")
 		setStr(&a.Key, cfg, "sshKey")
 	case "kafka":
 		setStr(&a.ClientConfiguration, cfg, "client_configuration")
+		setBool(&a.UseMSKIAM, cfg, "useMskIam")
+		setBool(&a.UseIRSA, cfg, "useIrsa")
+		setStr(&a.BootstrapServers, cfg, "bootstrapServers")
+		setStr(&a.AWSRegion, cfg, "awsRegion")
+		setStr(&a.AWSRoleARN, cfg, "awsRoleArn")
+		setStr(&a.AccessKeyID, cfg, "awsAccessKeyId")
+		setStr(&a.SecretAccessKey, cfg, "awsSecretAccessKey")
+		setStr(&a.AWSServiceAccount, cfg, "awsServiceAccount")
 	case "ldap":
 		setStr(&a.Hostname, cfg, "hostname")
 		setStr(&a.Port, cfg, "port")

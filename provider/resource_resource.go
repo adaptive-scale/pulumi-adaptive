@@ -53,14 +53,20 @@ type ResourceArgs struct {
 	NodeAffinity *string `pulumi:"nodeAffinity,optional"`
 
 	// AWS
-	RegionName      *string `pulumi:"regionName,optional"`
-	AccessKeyID     *string `pulumi:"accessKeyId,optional" provider:"secret"`
-	SecretAccessKey *string `pulumi:"secretAccessKey,optional" provider:"secret"`
-	Arn             *string `pulumi:"arn,optional"`
-	Region          *string `pulumi:"region,optional"`
-	SecretID        *string `pulumi:"secretId,optional" provider:"secret"`
-	AWSArn          *string `pulumi:"awsArn,optional"`
-	AWSRegionName   *string `pulumi:"awsRegionName,optional"`
+	RegionName            *string `pulumi:"regionName,optional"`
+	AccessKeyID           *string `pulumi:"accessKeyId,optional" provider:"secret"`
+	SecretAccessKey       *string `pulumi:"secretAccessKey,optional" provider:"secret"`
+	UseRoleARN            *bool   `pulumi:"useRoleArn,optional"`
+	AWSRoleARN            *string `pulumi:"awsRoleArn,optional"`
+	AWSRegion             *string `pulumi:"awsRegion,optional"`
+	AWSServiceAccount     *string `pulumi:"awsServiceAccount,optional"`
+	EnableAllowedCommands *bool   `pulumi:"enableAllowedCommands,optional"`
+	AllowedCommands       *string `pulumi:"allowedCommands,optional"`
+	Arn                   *string `pulumi:"arn,optional"`
+	Region                *string `pulumi:"region,optional"`
+	SecretID              *string `pulumi:"secretId,optional" provider:"secret"`
+	AWSArn                *string `pulumi:"awsArn,optional"`
+	AWSRegionName         *string `pulumi:"awsRegionName,optional"`
 
 	// Azure
 	TenantID        *string `pulumi:"tenantId,optional"`
@@ -103,6 +109,7 @@ type ResourceArgs struct {
 	ServiceAccountName *string `pulumi:"serviceAccountName,optional"`
 	DdSite             *string `pulumi:"ddSite,optional"`
 	DdApiKey           *string `pulumi:"ddApiKey,optional" provider:"secret"`
+	DdAppKey           *string `pulumi:"ddAppKey,optional" provider:"secret"`
 	Index              *string `pulumi:"index,optional"`
 	UseProxy           *bool   `pulumi:"useProxy,optional"`
 	WebuiPort          *string `pulumi:"webuiPort,optional"`
@@ -120,12 +127,15 @@ type ResourceArgs struct {
 	WebhookURL         *string `pulumi:"webhookUrl,optional" provider:"secret"`
 
 	// TLS toggles (redis, elasticache, documentdb secrets manager, mongodb36)
-	TLSEnabled    *bool   `pulumi:"tlsEnabled,optional"`
-	TLSSkipVerify *bool   `pulumi:"tlsSkipVerify,optional"`
-	UseTLS        *bool   `pulumi:"useTls,optional"`
-	TLSCACert     *string `pulumi:"tlsCaCert,optional"`
-	ClientCert    *string `pulumi:"clientCert,optional" provider:"secret"`
-	ClientKey     *string `pulumi:"clientKey,optional" provider:"secret"`
+	TLSEnabled         *bool   `pulumi:"tlsEnabled,optional"`
+	TLSSkipVerify      *bool   `pulumi:"tlsSkipVerify,optional"`
+	UseTLS             *bool   `pulumi:"useTls,optional"`
+	EnableTLS          *bool   `pulumi:"enableTls,optional"`
+	InsecureSkipVerify *bool   `pulumi:"insecureSkipVerify,optional"`
+	TLSCACert          *string `pulumi:"tlsCaCert,optional"`
+	CACertificate      *string `pulumi:"caCertificate,optional"`
+	ClientCert         *string `pulumi:"clientCert,optional" provider:"secret"`
+	ClientKey          *string `pulumi:"clientKey,optional" provider:"secret"`
 
 	// LDAP (ldap, rdpldap)
 	LdapHostname           *string `pulumi:"ldapHostname,optional"`
@@ -145,9 +155,9 @@ type ResourceArgs struct {
 
 	// Chrome automation
 	AutomationMode *string `pulumi:"automationMode,optional"`
-	Fields         *string `pulumi:"fields,optional"`
-	Script         *string `pulumi:"script,optional"`
-	Prestart       *string `pulumi:"prestart,optional"`
+	Fields         *string `pulumi:"fields,optional" provider:"secret"`
+	Script         *string `pulumi:"script,optional" provider:"secret"`
+	Prestart       *string `pulumi:"prestart,optional" provider:"secret"`
 
 	// Remote desktop sizing (adaptiveremotedesktop)
 	CPU     *string `pulumi:"cpu,optional"`
@@ -159,7 +169,7 @@ type ResourceArgs struct {
 	UseConnectServer    *bool   `pulumi:"useConnectServer,optional"`
 	ConnectServerURL    *string `pulumi:"connectServerUrl,optional"`
 	Targets             *string `pulumi:"targets,optional" provider:"secret"`
-	Value               *string `pulumi:"value,optional"`
+	Value               *string `pulumi:"value,optional" provider:"secret"`
 	LogGroupName        *string `pulumi:"logGroupName,optional"`
 	LogStreamName       *string `pulumi:"logStreamName,optional"`
 	AccessControlMethod *string `pulumi:"accessControlMethod,optional"`
@@ -172,6 +182,17 @@ type ResourceArgs struct {
 	ClientConfiguration *string `pulumi:"clientConfiguration,optional" provider:"secret"`
 	ClientCertificate   *string `pulumi:"clientCertificate,optional" provider:"secret"`
 	ServiceName         *string `pulumi:"serviceName,optional"`
+	UseIAMAuth          *bool   `pulumi:"useIamAuth,optional"`
+	UseIRSA             *bool   `pulumi:"useIrsa,optional"`
+	UseRDSIAM           *bool   `pulumi:"useRdsIam,optional"`
+	UseMSKIAM           *bool   `pulumi:"useMskIam,optional"`
+	AuthMode            *string `pulumi:"authMode,optional"`
+	CacheName           *string `pulumi:"cacheName,optional"`
+	CacheType           *string `pulumi:"cacheType,optional"`
+	BootstrapServers    *string `pulumi:"bootstrapServers,optional"`
+	Keyspace            *string `pulumi:"keyspace,optional"`
+	KeyspacesEndpoint   *string `pulumi:"keyspacesEndpoint,optional"`
+	AllowFileTransfer   *bool   `pulumi:"allowFileTransfer,optional"`
 	IsRedisLabs         *bool   `pulumi:"isRedisLabs,optional"`
 }
 
@@ -391,10 +412,9 @@ func (*Resource) Read(ctx context.Context, req infer.ReadRequest[ResourceArgs, R
 				setArg(&inputs, field, r.RedactedDigests[k])
 			}
 		}
-		// The dotted and indexed paths the server emits for nested secrets, and
-		// the config keys that mirror another (ssh writes the key material to
-		// both sshKey and password, and the read arm reconciles via sshKey).
-		// Reporting them by name keeps the drift visible rather than dropping it.
+		// The dotted and indexed paths the server emits for nested secrets cannot
+		// be mapped to one flat Pulumi argument. Reporting them by name keeps the
+		// drift visible rather than dropping it.
 		if len(unmapped) > 0 {
 			p.GetLogger(ctx).Warningf(
 				"resource %q: the secret behind %s changed outside this program, but it maps "+
