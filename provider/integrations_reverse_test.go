@@ -152,6 +152,30 @@ func TestApplyIntegrationConfigRedaction(t *testing.T) {
 	}
 }
 
+func TestApplyIntegrationConfigClearsEmptyTLSSecrets(t *testing.T) {
+	empty := ""
+	a := ResourceArgs{
+		Type:        "postgres",
+		TLSRootCert: &empty,
+		TLSCertFile: &empty,
+		TLSKeyFile:  &empty,
+	}
+	applyIntegrationConfig(&a, "postgres", map[string]any{
+		"rootCert": "",
+		"crtText":  "",
+		"keyText":  "",
+	})
+	for prop, got := range map[string]*string{
+		"tlsRootCert": a.TLSRootCert,
+		"tlsCertFile": a.TLSCertFile,
+		"tlsKeyFile":  a.TLSKeyFile,
+	} {
+		if got != nil {
+			t.Errorf("%s = %q, want nil so empty Adaptive values can be omitted from Pulumi", prop, *got)
+		}
+	}
+}
+
 // TestWireTypeMapping pins the two wire-name rewrites and their inverses.
 func TestWireTypeMapping(t *testing.T) {
 	cases := map[string]string{"services": "servicelist", "zerotier": "zero_tier", "postgres": "postgres"}
