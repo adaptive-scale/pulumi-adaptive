@@ -345,7 +345,7 @@ func TestResourceConfigBidirectionalSync(t *testing.T) {
 	harness.AssertRefreshClean(t, stack)
 }
 
-func TestResourceConfigEmptyTLSSecretsConvergeWithKubernetesCluster(t *testing.T) {
+func TestResourceConfigOmittedTLSSecretsConvergeWithKubernetesCluster(t *testing.T) {
 	cfg := harness.RequireProviderConfig(t)
 
 	spec := &syncPgSpec{
@@ -364,14 +364,12 @@ func TestResourceConfigEmptyTLSSecretsConvergeWithKubernetesCluster(t *testing.T
 	require.NotEmpty(t, before["crtText"])
 	require.NotEmpty(t, before["keyText"])
 
-	// This mirrors the customer report: a Postgres resource running through a
-	// Kubernetes default cluster has TLS secret fields explicitly set to empty.
-	// The server echoes empty unsafe values in configuration instead of reporting
-	// secret digests for them. Refresh must preserve the program's explicit empty
-	// strings, not collapse them to nil and then preview a perpetual secret diff.
-	spec.TLSRootCert = strPtr("")
-	spec.TLSCertFile = strPtr("")
-	spec.TLSKeyFile = strPtr("")
+	// This mirrors the customer report, but asserts the preferred steady state:
+	// when Adaptive stores these TLS secret fields empty, the Pulumi program can
+	// omit them entirely. No explicit empty-string workaround should be required.
+	spec.TLSRootCert = nil
+	spec.TLSCertFile = nil
+	spec.TLSKeyFile = nil
 	harness.Up(t, stack)
 
 	after := serverDigests(t, cfg, id)
@@ -379,7 +377,7 @@ func TestResourceConfigEmptyTLSSecretsConvergeWithKubernetesCluster(t *testing.T
 	assert.NotContains(t, after, "crtText")
 	assert.NotContains(t, after, "keyText")
 	harness.AssertRefreshClean(t, stack)
-	assert.Zero(t, harness.Preview(t, stack)["update"], "empty TLS secret fields should converge without perpetual diffs")
+	assert.Zero(t, harness.Preview(t, stack)["update"], "omitted TLS secret fields should converge when Adaptive stores them empty")
 }
 
 // Script bodies drift too, through a different mechanism that had no coverage.
