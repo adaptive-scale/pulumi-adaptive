@@ -234,9 +234,12 @@ func TestSecretDriftQuietWhenNothingChanged(t *testing.T) {
 }
 
 type syncPgSpec struct {
-	Name     string
-	Host     string
-	Password string
+	Name        string
+	Host        string
+	Password    string
+	TLSRootCert *string
+	TLSCertFile *string
+	TLSKeyFile  *string
 }
 
 func (s *syncPgSpec) declare(ctx *pulumi.Context) error {
@@ -251,7 +254,7 @@ func (s *syncPgSpec) declare(ctx *pulumi.Context) error {
 	if err != nil {
 		return err
 	}
-	db, err := adaptive.NewResource(ctx, "db", &adaptive.ResourceArgs{
+	args := &adaptive.ResourceArgs{
 		Name:           pulumi.String(s.Name),
 		Type:           pulumi.String("postgres"),
 		DefaultCluster: pulumi.String(clusterName),
@@ -260,13 +263,25 @@ func (s *syncPgSpec) declare(ctx *pulumi.Context) error {
 		Username:       pulumi.String("admin"),
 		Password:       pulumi.String(s.Password),
 		SslMode:        pulumi.String("require"),
-	}, pulumi.DependsOn([]pulumi.Resource{cluster}))
+	}
+	if s.TLSRootCert != nil {
+		args.TlsRootCert = pulumi.String(*s.TLSRootCert)
+	}
+	if s.TLSCertFile != nil {
+		args.TlsCertFile = pulumi.String(*s.TLSCertFile)
+	}
+	if s.TLSKeyFile != nil {
+		args.TlsKeyFile = pulumi.String(*s.TLSKeyFile)
+	}
+	db, err := adaptive.NewResource(ctx, "db", args, pulumi.DependsOn([]pulumi.Resource{cluster}))
 	if err != nil {
 		return err
 	}
 	ctx.Export("id", db.ID())
 	return nil
 }
+
+func strPtr(s string) *string { return &s }
 
 func updatePostgresOutOfBand(t *testing.T, cfg harness.Config, id, name, clusterName, host, password string) {
 	t.Helper()
@@ -328,6 +343,43 @@ func TestResourceConfigBidirectionalSync(t *testing.T) {
 	require.Equal(t, "db-local.example.com", postgresHost(t, cfg, id))
 	assert.NotEqual(t, beforeLocal, serverDigests(t, cfg, id)["password"])
 	harness.AssertRefreshClean(t, stack)
+}
+
+func TestResourceConfigEmptyTLSSecretsConvergeWithKubernetesCluster(t *testing.T) {
+	cfg := harness.RequireProviderConfig(t)
+
+	spec := &syncPgSpec{
+		Name:        uniqueName("pulumi-it-empty-tls"),
+		Host:        "db-tls.example.com",
+		Password:    "pw-tls",
+		TLSRootCert: strPtr("-----BEGIN CERTIFICATE-----\nroot\n-----END CERTIFICATE-----"),
+		TLSCertFile: strPtr("-----BEGIN CERTIFICATE-----\nclient\n-----END CERTIFICATE-----"),
+		TLSKeyFile:  strPtr("-----BEGIN PRIVATE KEY-----\nclient-key\n-----END PRIVATE KEY-----"),
+	}
+	outs, stack := harness.DeployStack(t, cfg, stackName("empty-tls"), spec.declare)
+	id := harness.StringOutput(t, outs, "id")
+
+	before := serverDigests(t, cfg, id)
+	require.NotEmpty(t, before["rootCert"])
+	require.NotEmpty(t, before["crtText"])
+	require.NotEmpty(t, before["keyText"])
+
+	// This mirrors the customer report: a Postgres resource running through a
+	// Kubernetes default cluster has TLS secret fields explicitly set to empty.
+	// The server echoes empty unsafe values in configuration instead of reporting
+	// secret digests for them. Refresh must preserve the program's explicit empty
+	// strings, not collapse them to nil and then preview a perpetual secret diff.
+	spec.TLSRootCert = strPtr("")
+	spec.TLSCertFile = strPtr("")
+	spec.TLSKeyFile = strPtr("")
+	harness.Up(t, stack)
+
+	after := serverDigests(t, cfg, id)
+	assert.NotContains(t, after, "rootCert")
+	assert.NotContains(t, after, "crtText")
+	assert.NotContains(t, after, "keyText")
+	harness.AssertRefreshClean(t, stack)
+	assert.Zero(t, harness.Preview(t, stack)["update"], "empty TLS secret fields should converge without perpetual diffs")
 }
 
 // Script bodies drift too, through a different mechanism that had no coverage.

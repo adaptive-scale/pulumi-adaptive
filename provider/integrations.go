@@ -1604,17 +1604,17 @@ func setArg(a *ResourceArgs, field int, value string) {
 }
 
 // setStr reconciles one optional string argument against the server value. An
-// absent key (a stripped secret) leaves the argument alone; an empty value
-// clears it only when the program had set it.
+// absent key (a stripped secret) leaves the argument alone. An empty value is
+// adopted only when the program had set the argument already; preserving the
+// explicit empty string matters for secret fields that users intentionally clear
+// (for example tlsRootCert/tlsCertFile/tlsKeyFile). Collapsing that empty value
+// back to nil makes the next preview re-add it forever.
 func setStr(dst **string, cfg map[string]any, key string) {
 	s, ok := getStr(cfg, key)
 	if !ok {
 		return
 	}
-	if s == "" {
-		if *dst != nil {
-			*dst = nil
-		}
+	if s == "" && *dst == nil {
 		return
 	}
 	v := s
