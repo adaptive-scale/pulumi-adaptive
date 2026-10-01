@@ -290,11 +290,15 @@ func (*Resource) Update(ctx context.Context, req infer.UpdateRequest[ResourceArg
 	if req.DryRun {
 		return out, nil
 	}
-	if err := validateHeldArguments(req.Inputs, req.Inputs.Type, req.State.AppliedDigests); err != nil {
-		return out, err
-	}
 	c, err := clientFromConfig(ctx)
 	if err != nil {
+		return out, err
+	}
+	effectiveAppliedDigests := req.State.AppliedDigests
+	if r, rerr := c.ReadResource(ctx, req.ID); rerr == nil && r != nil {
+		effectiveAppliedDigests = pruneClearedSecretDigests(effectiveAppliedDigests, r.Configuration)
+	}
+	if err := validateHeldArguments(req.Inputs, req.Inputs.Type, effectiveAppliedDigests); err != nil {
 		return out, err
 	}
 	cfgObj, effType, err := buildIntegrationConfig(req.Inputs)
@@ -312,7 +316,7 @@ func (*Resource) Update(ctx context.Context, req infer.UpdateRequest[ResourceArg
 	// drift this update just reconciled stops being reported. A failed read
 	// leaves the previous fingerprints in place and the next refresh re-reports
 	// the same drift — see the note in Create.
-	out.Output.AppliedDigests = req.State.AppliedDigests
+	out.Output.AppliedDigests = effectiveAppliedDigests
 	if r, rerr := c.ReadResource(ctx, req.ID); rerr == nil && r != nil {
 		out.Output.AppliedDigests = r.RedactedDigests
 	}
@@ -367,6 +371,8 @@ func (*Resource) Read(ctx context.Context, req infer.ReadRequest[ResourceArgs, R
 	appliedDigests := req.State.AppliedDigests
 	if len(appliedDigests) == 0 {
 		appliedDigests = r.RedactedDigests
+	} else {
+		appliedDigests = pruneClearedSecretDigests(appliedDigests, r.Configuration)
 	}
 
 	// Secret drift: the server withholds secret values but returns an opaque
@@ -508,6 +514,33 @@ func driftedDigestKeys(applied, current map[string]string) []string {
 	}
 	sort.Strings(drifted)
 	return drifted
+}
+
+// pruneClearedSecretDigests drops baselines for server-held secrets the server
+// now reports as explicit empty strings. This is the convergence path for
+// optional secret fields that were cleared in Adaptive: after refresh, a Pulumi
+// program may omit them instead of setting each one to "" just to satisfy the
+// update-time guard against accidentally clearing still-held credentials.
+func pruneClearedSecretDigests(applied map[string]string, cfg map[string]any) map[string]string {
+	if len(applied) == 0 || len(cfg) == 0 {
+		return applied
+	}
+	var out map[string]string
+	for k := range applied {
+		if s, ok := getStr(cfg, k); ok && s == "" {
+			if out == nil {
+				out = make(map[string]string, len(applied))
+				for copiedK, copiedV := range applied {
+					out[copiedK] = copiedV
+				}
+			}
+			delete(out, k)
+		}
+	}
+	if out != nil {
+		return out
+	}
+	return applied
 }
 
 func (*Resource) Delete(ctx context.Context, req infer.DeleteRequest[ResourceState]) (infer.DeleteResponse, error) {

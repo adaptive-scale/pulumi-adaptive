@@ -12,6 +12,25 @@ import (
 	"gopkg.in/yaml.v2"
 )
 
+func TestPruneClearedSecretDigests(t *testing.T) {
+	applied := map[string]string{
+		"rootCert": "root-digest",
+		"crtText":  "crt-digest",
+		"keyText":  "key-digest",
+		"password": "password-digest",
+	}
+	got := pruneClearedSecretDigests(applied, map[string]any{
+		"rootCert": "",
+		"crtText":  "",
+		"keyText":  "",
+		// A stripped/absent password is still server-held and must keep its guard.
+	})
+	assert.Equal(t, map[string]string{"password": "password-digest"}, got)
+	assert.Equal(t, "root-digest", applied["rootCert"], "input map must not be mutated")
+
+	assert.Equal(t, applied, pruneClearedSecretDigests(applied, map[string]any{"hostname": "db"}))
+}
+
 func TestDriftedDigestKeys(t *testing.T) {
 	cases := []struct {
 		name    string
