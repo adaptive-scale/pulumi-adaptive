@@ -115,7 +115,8 @@ func TestIntegrationConfigRoundTrip(t *testing.T) {
 
 // TestApplyIntegrationConfigRedaction pins the refresh semantics around
 // server-side secret stripping: absent keys never clear prior values, present
-// keys update them, and empty values clear only previously-set fields.
+// keys update them, and empty values are preserved only for previously-set
+// fields.
 func TestApplyIntegrationConfigRedaction(t *testing.T) {
 	prior := ResourceArgs{
 		Type: "postgres", Name: "db",
@@ -141,14 +142,40 @@ func TestApplyIntegrationConfigRedaction(t *testing.T) {
 		t.Errorf("hostname drift missed: %q", sv(prior.Host))
 	}
 
-	// Empty values: clear a set field, never populate an unset one.
+	// Empty values: preserve an explicit empty for a set field, never populate an
+	// unset one. This is what keeps intentionally-cleared secret fields from
+	// diffing forever after the server echoes them back as empty strings.
 	a := ResourceArgs{Type: "postgres", SSLMode: strp("require")}
 	applyIntegrationConfig(&a, "postgres", map[string]any{"sslMode": "", "port": ""})
-	if a.SSLMode != nil {
-		t.Errorf("empty server value should clear a set field, got %q", sv(a.SSLMode))
+	if a.SSLMode == nil || sv(a.SSLMode) != "" {
+		t.Errorf("empty server value should preserve an explicit empty for a set field, got %q", sv(a.SSLMode))
 	}
 	if a.Port != nil {
 		t.Errorf("empty server value populated an unset field: %q", sv(a.Port))
+	}
+}
+
+func TestApplyIntegrationConfigPreservesClearedTLSSecrets(t *testing.T) {
+	empty := ""
+	a := ResourceArgs{
+		Type:        "postgres",
+		TLSRootCert: &empty,
+		TLSCertFile: &empty,
+		TLSKeyFile:  &empty,
+	}
+	applyIntegrationConfig(&a, "postgres", map[string]any{
+		"rootCert": "",
+		"crtText":  "",
+		"keyText":  "",
+	})
+	for prop, got := range map[string]*string{
+		"tlsRootCert": a.TLSRootCert,
+		"tlsCertFile": a.TLSCertFile,
+		"tlsKeyFile":  a.TLSKeyFile,
+	} {
+		if got == nil || *got != "" {
+			t.Errorf("%s = %v, want explicit empty string", prop, got)
+		}
 	}
 }
 
