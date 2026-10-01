@@ -364,18 +364,26 @@ func TestResourceConfigOmittedTLSSecretsConvergeWithKubernetesCluster(t *testing
 	require.NotEmpty(t, before["crtText"])
 	require.NotEmpty(t, before["keyText"])
 
-	// This mirrors the customer report, but asserts the preferred steady state:
-	// when Adaptive stores these TLS secret fields empty, the Pulumi program can
-	// omit them entirely. No explicit empty-string workaround should be required.
-	spec.TLSRootCert = nil
-	spec.TLSCertFile = nil
-	spec.TLSKeyFile = nil
+	// First clear the values explicitly. Omitting a non-empty server-held secret
+	// must remain blocked; otherwise a program typo could erase credentials.
+	spec.TLSRootCert = strPtr("")
+	spec.TLSCertFile = strPtr("")
+	spec.TLSKeyFile = strPtr("")
 	harness.Up(t, stack)
 
 	after := serverDigests(t, cfg, id)
 	assert.NotContains(t, after, "rootCert")
 	assert.NotContains(t, after, "crtText")
 	assert.NotContains(t, after, "keyText")
+
+	// Now that Adaptive stores these TLS secret fields empty, the preferred
+	// steady state is to omit them from Pulumi entirely. This is the import/sync
+	// scenario customers hit: empty in Adaptive must not force explicit empty
+	// strings in the Pulumi program forever.
+	spec.TLSRootCert = nil
+	spec.TLSCertFile = nil
+	spec.TLSKeyFile = nil
+	harness.Up(t, stack)
 	harness.AssertRefreshClean(t, stack)
 	assert.Zero(t, harness.Preview(t, stack)["update"], "omitted TLS secret fields should converge when Adaptive stores them empty")
 }
