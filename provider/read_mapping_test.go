@@ -25,14 +25,16 @@ func TestApplyEndpointReadTypeEquivalence(t *testing.T) {
 }
 
 func TestApplyEndpointReadServerDefaults(t *testing.T) {
-	// Unset idleTimeout reading back the server default is not drift.
+	// Unset idleTimeout/cluster/memory/cpu reading back server defaults is not
+	// drift. Other user-managed fields adopt server values so preview can show
+	// their removal when the program omits them.
 	got := applyEndpointRead(EndpointArgs{Name: "ep", Resource: "db"},
 		&SessionReadResponse{Name: "ep", Resource: "db", SessionType: "cli", IdleTimeout: "15m", Memory: "512Mi", CPU: "0.5", Cluster: "default"}, false)
 	if got.IdleTimeout != nil {
 		t.Errorf("idleTimeout adopted server default: %v", sv(got.IdleTimeout))
 	}
 	if got.Memory != nil || got.CPU != nil || got.Cluster != nil {
-		t.Errorf("unset optional inputs adopted server defaults: mem=%v cpu=%v cluster=%v",
+		t.Errorf("unset server-defaulted inputs adopted drift: mem=%v cpu=%v cluster=%v",
 			sv(got.Memory), sv(got.CPU), sv(got.Cluster))
 	}
 	// A previously-set idleTimeout does track drift.
@@ -116,12 +118,10 @@ func TestApplyTeamRead(t *testing.T) {
 	if got.Name != "g2" || sv(got.SlackChannelID) != "C2" {
 		t.Errorf("team mapping wrong: %+v", got)
 	}
-	// endpoints was unset in the program, so a server-side value is NOT adopted.
-	// This case used to assert the opposite, which is the bug: the program will
-	// never contain that value, so writing it into state produces a diff on
-	// every preview that no apply can settle.
-	if got.Endpoints != nil {
-		t.Errorf("server endpoints adopted into an unset input: %v", got.Endpoints)
+	// endpoints was unset in the program, so a server-side value is adopted into
+	// state. Preview can then show that the program's omitted field will remove it.
+	if !reflect.DeepEqual(got.Endpoints, []string{"ep"}) {
+		t.Errorf("server endpoints were not adopted into an unset input: %v", got.Endpoints)
 	}
 
 	// A list the program does set still reports real drift.
@@ -142,18 +142,20 @@ func TestApplyTeamRead(t *testing.T) {
 	}
 }
 
-// The regression test for the perpetual diff this policy exists to prevent: the
-// platform seeds an endpoint's session users with its creator, so a program that
-// never set `users` would otherwise adopt that on the first refresh and show an
-// unresolvable update on every preview afterwards.
-func TestApplyEndpointReadDoesNotAdoptServerSeededUsers(t *testing.T) {
+func TestApplyEndpointReadAdoptsServerUsersWhenUnset(t *testing.T) {
 	got := applyEndpointRead(EndpointArgs{Name: "ep", Resource: "db"},
 		&SessionReadResponse{
 			Name: "ep", Resource: "db", SessionType: "cli",
-			SessionUsers: []string{"creator@x.co"},
+			SessionUsers:    []string{"creator@x.co"},
+			Groups:          []string{"admins"},
+			AccessApprovers: []string{"approver@x.co"},
+			UserTags:        []string{"env=dev"},
 		}, false)
-	if got.Users != nil {
-		t.Errorf("server-seeded users adopted into an unset input: %v", got.Users)
+	if !reflect.DeepEqual(got.Users, []string{"creator@x.co"}) ||
+		!reflect.DeepEqual(got.Groups, []string{"admins"}) ||
+		!reflect.DeepEqual(got.JitApprovers, []string{"approver@x.co"}) ||
+		!reflect.DeepEqual(got.Tags, []string{"env=dev"}) {
+		t.Errorf("unset endpoint membership/tag fields should adopt server drift: %+v", got)
 	}
 }
 
@@ -202,5 +204,18 @@ func TestApplyScheduleReadNormalization(t *testing.T) {
 	}, false)
 	if !reflect.DeepEqual(got.Weekdays, []string{"friday"}) {
 		t.Errorf("weekday drift missed: %v", got.Weekdays)
+	}
+
+	// Unset user-managed targets adopt server values so preview can show removal.
+	got = applyScheduleRead(ScheduleArgs{Name: "s", ScheduleType: "custom"}, &ScheduleReadResponse{
+		Name: "s", ScheduleType: "custom",
+		Users: []string{"u@example.com"}, Teams: []string{"team"}, Endpoints: []string{"endpoint"},
+		Description: "desc", AllDay: true, StartHour: 9, EndHour: 17, Timezone: "UTC",
+	}, false)
+	if !reflect.DeepEqual(got.Users, []string{"u@example.com"}) ||
+		!reflect.DeepEqual(got.Teams, []string{"team"}) ||
+		!reflect.DeepEqual(got.Endpoints, []string{"endpoint"}) ||
+		sv(got.Description) != "desc" || !bv(got.AllDay) || iv(got.StartHour) != 9 || iv(got.EndHour) != 17 || sv(got.Timezone) != "UTC" {
+		t.Errorf("schedule drift on unset user-managed fields was not adopted: %+v", got)
 	}
 }
