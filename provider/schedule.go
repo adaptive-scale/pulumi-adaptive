@@ -179,7 +179,7 @@ func applyScheduleRead(prior ScheduleArgs, r *ScheduleReadResponse, isImport boo
 	}
 	a.Name = r.Name
 	a.ScheduleType = r.ScheduleType
-	a.Description = strOpt(prior.Description, r.Description, isImport)
+	a.Description = strOptAdopt(prior.Description, r.Description, isImport)
 
 	// IsActive defaults to true server-side; an unset input reading back true
 	// is not drift.
@@ -194,11 +194,11 @@ func applyScheduleRead(prior ScheduleArgs, r *ScheduleReadResponse, isImport boo
 		}
 	}
 
-	a.AllDay = boolOpt(prior.AllDay, r.AllDay, isImport)
-	a.StartHour = intOpt(prior.StartHour, r.StartHour, isImport)
-	a.StartMinute = intOpt(prior.StartMinute, r.StartMinute, isImport)
-	a.EndHour = intOpt(prior.EndHour, r.EndHour, isImport)
-	a.EndMinute = intOpt(prior.EndMinute, r.EndMinute, isImport)
+	a.AllDay = boolOptAdopt(prior.AllDay, r.AllDay, isImport)
+	a.StartHour = intOptAdopt(prior.StartHour, r.StartHour, isImport)
+	a.StartMinute = intOptAdopt(prior.StartMinute, r.StartMinute, isImport)
+	a.EndHour = intOptAdopt(prior.EndHour, r.EndHour, isImport)
+	a.EndMinute = intOptAdopt(prior.EndMinute, r.EndMinute, isImport)
 
 	// The server lowercases weekday names; keep the user's casing when the
 	// sets match case-insensitively.
@@ -208,8 +208,8 @@ func applyScheduleRead(prior ScheduleArgs, r *ScheduleReadResponse, isImport boo
 		a.Weekdays = r.Weekdays
 	}
 
-	a.StartDay = intOpt(prior.StartDay, r.StartDay, isImport)
-	a.EndDay = intOpt(prior.EndDay, r.EndDay, isImport)
+	a.StartDay = intOptAdopt(prior.StartDay, r.StartDay, isImport)
+	a.EndDay = intOptAdopt(prior.EndDay, r.EndDay, isImport)
 
 	// The server returns dates normalized to UTC RFC3339; keep the user's
 	// spelling when the instants match.
@@ -226,14 +226,14 @@ func applyScheduleRead(prior ScheduleArgs, r *ScheduleReadResponse, isImport boo
 	if !isImport && prior.ExpiresAt != nil && sameInstant(*prior.ExpiresAt, r.ExpiresAt) {
 		a.ExpiresAt = prior.ExpiresAt
 	} else {
-		a.ExpiresAt = strOpt(prior.ExpiresAt, r.ExpiresAt, isImport)
+		a.ExpiresAt = strOptAdopt(prior.ExpiresAt, r.ExpiresAt, isImport)
 	}
 
 	a.MaxAccessTime = r.MaxAccessTime
 	if !isImport && prior.MaxAccessTime == nil && r.MaxAccessTime == nil {
 		a.MaxAccessTime = nil
 	}
-	a.Timezone = strOpt(prior.Timezone, r.Timezone, isImport)
+	a.Timezone = strOptAdopt(prior.Timezone, r.Timezone, isImport)
 
 	// operationType defaults to autoapprove; keep the user's (possibly unset)
 	// value when it resolves to what the server has.

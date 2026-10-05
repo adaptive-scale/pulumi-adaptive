@@ -130,6 +130,57 @@ func TestRefreshDetectsDrift(t *testing.T) {
 	assert.GreaterOrEqual(t, changes["update"], 1, "refresh should record the TTL drift (changes: %v)", changes)
 }
 
+func TestRefreshEndpointUsersDriftPlansRemoval(t *testing.T) {
+	cfg := harness.RequireProviderConfig(t)
+	resName := uniqueName("pulumi-it-users-drift-res")
+	epName := uniqueName("pulumi-it-users-drift-ep")
+
+	outs, stack := harness.DeployStack(t, cfg, stackName("users-drift"), func(ctx *pulumi.Context) error {
+		db, err := adaptive.NewResource(ctx, "db", &adaptive.ResourceArgs{
+			Name:     pulumi.String(resName),
+			Type:     pulumi.String("postgres"),
+			Host:     pulumi.String("db.example.com"),
+			Port:     pulumi.String("5432"),
+			Username: pulumi.String("admin"),
+			Password: pulumi.String("not-a-real-password"),
+			SslMode:  pulumi.String("require"),
+		})
+		if err != nil {
+			return err
+		}
+		ep, err := adaptive.NewEndpoint(ctx, "ep", &adaptive.EndpointArgs{
+			Name:     pulumi.String(epName),
+			Resource: db.Name,
+			Ttl:      pulumi.String("8h"),
+			// users deliberately omitted: Pulumi's desired state is no users.
+		})
+		if err != nil {
+			return err
+		}
+		ctx.Export("id", ep.ID())
+		return nil
+	})
+	id := harness.StringOutput(t, outs, "id")
+
+	// Adaptive seeds endpoint users with the creator/token owner. That real user
+	// always exists and exercises the same drift path as adding a user in the UI:
+	// Pulumi omitted users, but the server has a non-empty list.
+	got := terraformRead(t, cfg, "session", id)
+	seededUsers, ok := got["sessionUsers"].([]any)
+	require.True(t, ok, "session read did not include sessionUsers: %v", got)
+	require.NotEmpty(t, seededUsers, "server did not seed endpoint users; cannot test omitted-user drift: %v", got)
+
+	changes := harness.Refresh(t, stack)
+	assert.GreaterOrEqual(t, changes["update"], 1, "refresh should record endpoint user drift (changes: %v)", changes)
+	preview := harness.Preview(t, stack)
+	assert.GreaterOrEqual(t, preview["update"], 1, "preview should show users will be removed (changes: %v)", preview)
+
+	harness.Up(t, stack)
+	got = terraformRead(t, cfg, "session", id)
+	assert.Empty(t, got["sessionUsers"], "up should reconcile omitted users by clearing out-of-band additions: %v", got)
+	harness.AssertRefreshClean(t, stack)
+}
+
 // TestImportEndpoint creates a Resource + Endpoint out-of-band via the raw
 // API, then imports the endpoint into a fresh stack by ID.
 func TestImportEndpoint(t *testing.T) {

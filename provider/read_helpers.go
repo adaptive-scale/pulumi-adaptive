@@ -11,7 +11,9 @@ import "fmt"
 // always taken from the server. On import, inputs are built entirely from the
 // server response.
 
-// strOpt reconciles an optional string input against the server value.
+// strOpt reconciles an optional string input against the server value while
+// preserving an unset program input. Use this for server defaults/normalizations
+// that should not become managed by a refresh.
 func strOpt(prior *string, server string, isImport bool) *string {
 	if isImport {
 		if server == "" {
@@ -31,7 +33,23 @@ func strOpt(prior *string, server string, isImport bool) *string {
 	return &server
 }
 
-// boolOpt reconciles an optional bool input against the server value.
+// strOptAdopt reconciles an optional string input and adopts non-empty server
+// values even when the program left the input unset. This makes refresh surface
+// out-of-band changes so the next preview can show that Pulumi would remove
+// them.
+func strOptAdopt(prior *string, server string, isImport bool) *string {
+	if server == "" {
+		return nil
+	}
+	if !isImport && prior != nil && *prior == server {
+		return prior
+	}
+	return &server
+}
+
+// boolOpt reconciles an optional bool input against the server value while
+// preserving an unset program input. Use this for effective values that may be
+// forced by workspace defaults/settings.
 func boolOpt(prior *bool, server bool, isImport bool) *bool {
 	if isImport {
 		if !server {
@@ -40,12 +58,26 @@ func boolOpt(prior *bool, server bool, isImport bool) *bool {
 		return &server
 	}
 	if prior == nil {
-		// Never adopt a server-side true into an unset input: for several
-		// endpoint toggles the effective value can be forced by workspace
-		// settings, and unset must stay unset to avoid perpetual diffs.
 		return nil
 	}
 	if *prior == server {
+		return prior
+	}
+	return &server
+}
+
+// boolOptAdopt is boolOpt with Option-B semantics: a true server value is
+// adopted even when the program left the input unset, so preview can show that
+// omitting the field will clear it. False remains nil when unset because nil and
+// false have the same write behavior for these optional booleans.
+func boolOptAdopt(prior *bool, server bool, isImport bool) *bool {
+	if !server {
+		if !isImport && prior != nil && *prior == server {
+			return prior
+		}
+		return nil
+	}
+	if !isImport && prior != nil && *prior == server {
 		return prior
 	}
 	return &server
@@ -77,36 +109,23 @@ func sameSet(a, b []string) bool {
 }
 
 // setList reconciles a set-valued input against the server value: when the sets
-// are equal the user's ordering is kept, otherwise the server value wins.
-//
-// An input the program left unset is the exception, and it is the same rule
-// strOpt and boolOpt already follow: the server populates several of these
-// itself — an endpoint's session users default to its creator — and writing that
-// back produces a diff on every preview that no apply can settle, because the
-// program will never contain the value. Import is the other exception: there
-// are no prior inputs to preserve, so the server view is the only one there is.
-//
-// The cost is that a list the program does not manage no longer reports
-// out-of-band membership changes. That is the trade this file's policy already
-// makes for every other optional input, and a silent diff nobody can resolve is
-// worse than a change nobody asked to track.
+// are equal the user's ordering is kept, otherwise the server value wins. Unlike
+// strOpt, a non-empty server list is adopted even when the program left the
+// input unset. That makes out-of-band membership changes visible on refresh and
+// lets preview show the removal Pulumi will perform if the program continues to
+// omit the field.
 func setList(prior, server []string, isImport bool) []string {
-	if isImport {
-		if len(server) == 0 {
-			return nil
-		}
-		return server
-	}
-	if sameSet(prior, server) {
-		return prior
-	}
-	if len(prior) == 0 || len(server) == 0 {
+	if len(server) == 0 {
 		return nil
+	}
+	if !isImport && sameSet(prior, server) {
+		return prior
 	}
 	return server
 }
 
-// intOpt reconciles an optional int input against the server value.
+// intOpt reconciles an optional int input against the server value while
+// preserving an unset program input.
 func intOpt(prior *int, server int, isImport bool) *int {
 	if isImport {
 		if server == 0 {
@@ -118,6 +137,19 @@ func intOpt(prior *int, server int, isImport bool) *int {
 		return nil
 	}
 	if *prior == server {
+		return prior
+	}
+	return &server
+}
+
+// intOptAdopt is intOpt with Option-B semantics: a non-zero server value is
+// adopted even when the program left the input unset, so preview can show that
+// omitting the field will clear it.
+func intOptAdopt(prior *int, server int, isImport bool) *int {
+	if server == 0 {
+		return nil
+	}
+	if !isImport && prior != nil && *prior == server {
 		return prior
 	}
 	return &server
@@ -164,8 +196,10 @@ func applyEndpointRead(prior EndpointArgs, r *SessionReadResponse, isImport bool
 		a.Type = strPtrOrNil(r.SessionType)
 	}
 
-	a.TTL = strOpt(prior.TTL, r.TTL, isImport)
-	a.Authorization = strOpt(prior.Authorization, r.Authorization, isImport)
+	a.TTL = strOptAdopt(prior.TTL, r.TTL, isImport)
+	a.Authorization = strOptAdopt(prior.Authorization, r.Authorization, isImport)
+	// Cluster can be supplied by the server as a default; do not adopt it into an
+	// omitted program input or refresh/up will never settle.
 	a.Cluster = strOpt(prior.Cluster, r.Cluster, isImport)
 
 	// The server normalizes an unset idle timeout to its default "15m"; an
@@ -178,21 +212,23 @@ func applyEndpointRead(prior EndpointArgs, r *SessionReadResponse, isImport bool
 
 	a.Users = setList(prior.Users, r.SessionUsers, isImport)
 	a.Groups = setList(prior.Groups, r.Groups, isImport)
-	a.IsJitEnabled = boolOpt(prior.IsJitEnabled, r.IsJITEnabled, isImport)
+	a.IsJitEnabled = boolOptAdopt(prior.IsJitEnabled, r.IsJITEnabled, isImport)
 	a.JitApprovers = setList(prior.JitApprovers, r.AccessApprovers, isImport)
-	a.PauseTimeout = strOpt(prior.PauseTimeout, r.PauseTimeout, isImport)
+	a.PauseTimeout = strOptAdopt(prior.PauseTimeout, r.PauseTimeout, isImport)
+	// CPU and memory are server-defaulted for endpoint pods; adopting defaults
+	// into omitted inputs would create perpetual diffs.
 	a.Memory = strOpt(prior.Memory, r.Memory, isImport)
 	a.CPU = strOpt(prior.CPU, r.CPU, isImport)
-	a.ScriptOnlyAccess = boolOpt(prior.ScriptOnlyAccess, r.ScriptOnlyAccess, isImport)
+	a.ScriptOnlyAccess = boolOptAdopt(prior.ScriptOnlyAccess, r.ScriptOnlyAccess, isImport)
 	a.Tags = setList(prior.Tags, r.UserTags, isImport)
 	a.DisableOutputCapture = boolOpt(prior.DisableOutputCapture, r.DisableOutputCapture, isImport)
 	a.DisableDataStudio = boolOpt(prior.DisableDataStudio, r.DisableDataStudio, isImport)
 	a.DisableWebCli = boolOpt(prior.DisableWebCli, r.DisableWebCLI, isImport)
-	a.JitMode = strOpt(prior.JitMode, r.JITMode, isImport)
-	a.AutoApproval = boolOpt(prior.AutoApproval, r.AutoApproval, isImport)
-	a.JitMultiApprover = boolOpt(prior.JitMultiApprover, r.JITMultiApprover, isImport)
-	a.JitTotalApprovers = intOpt(prior.JitTotalApprovers, r.JITTotalApprovers, isImport)
-	a.MaxJitRequestDuration = strOpt(prior.MaxJitRequestDuration, r.MaxJITRequestDuration, isImport)
+	a.JitMode = strOptAdopt(prior.JitMode, r.JITMode, isImport)
+	a.AutoApproval = boolOptAdopt(prior.AutoApproval, r.AutoApproval, isImport)
+	a.JitMultiApprover = boolOptAdopt(prior.JitMultiApprover, r.JITMultiApprover, isImport)
+	a.JitTotalApprovers = intOptAdopt(prior.JitTotalApprovers, r.JITTotalApprovers, isImport)
+	a.MaxJitRequestDuration = strOptAdopt(prior.MaxJitRequestDuration, r.MaxJITRequestDuration, isImport)
 	return a
 }
 
