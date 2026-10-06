@@ -372,7 +372,11 @@ func (*Group) Create(ctx context.Context, req infer.CreateRequest[GroupArgs]) (i
 	// The create route does not accept a Slack channel; set it via update.
 	if sv(req.Inputs.SlackChannelID) != "" {
 		if err := c.UpdateTeam(ctx, resp.ID, req.Inputs.Name, req.Inputs.Members, req.Inputs.Endpoints, sv(req.Inputs.SlackChannelID)); err != nil {
-			return out, fmt.Errorf("group %s created but setting slackChannelId failed: %w", req.Inputs.Name, err)
+			// Keep the created group in state so initialization can be retried.
+			out.Output.SlackChannelID = nil
+			return out, infer.ResourceInitFailedError{Reasons: []string{
+				fmt.Sprintf("group %s created but setting slackChannelId failed: %v", req.Inputs.Name, err),
+			}}
 		}
 	}
 	return out, nil
