@@ -161,6 +161,32 @@ pulumi up
 > sqlserver, …) and kubernetes, `permissions` must be structured YAML — a bare
 > value like `"SELECT"` is rejected by the API. See `examples/go/main.go`.
 
+## Google Workspace SSO
+
+Use `adaptive.Resource` with `type: "google"`. In Python, the optional directory
+API inputs are `service_account` and `admin_email`; in TypeScript/JavaScript they
+are `serviceAccount` and `adminEmail` (Go: `ServiceAccount` and `AdminEmail`).
+These map to the backend configuration keys `serviceAccount` and `adminEmail`.
+
+`service_account` takes the **JSON credentials document as a string**, not a file
+path or service account email. It is marked secret in the schema. Both inputs
+are optional so existing OAuth-only configurations continue to work.
+
+```python
+cfg = pulumi.Config()
+google = adaptive.Resource("google-sso",
+    name="google-sso",
+    type="google",
+    domain="https://accounts.google.com",
+    client_id=cfg.require("googleClientId"),
+    client_secret=cfg.require_secret("googleClientSecret"),
+    service_account=cfg.require_secret("googleServiceAccount"),
+    admin_email="admin@example.com")
+```
+
+The `serviceAccount` input is shared with other integration types, so it is
+secret-typed for all of them; its wire key and meaning remain integration-specific.
+
 ## Secrets
 
 Credential-bearing fields (`password`, `secretAccessKey`, `clientSecret`, SSH

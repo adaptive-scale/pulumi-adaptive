@@ -77,11 +77,12 @@ type ResourceArgs struct {
 	UseTenant       *bool   `pulumi:"useTenant,optional"`
 
 	// GCP / Google / OAuth identity
-	ProjectID *string `pulumi:"projectId,optional"`
-	KeyFile   *string `pulumi:"keyFile,optional" provider:"secret"`
-	Domain    *string `pulumi:"domain,optional"`
-	ClientID  *string `pulumi:"clientId,optional"`
-	LoginURL  *string `pulumi:"loginUrl,optional"`
+	ProjectID  *string `pulumi:"projectId,optional"`
+	KeyFile    *string `pulumi:"keyFile,optional" provider:"secret"`
+	Domain     *string `pulumi:"domain,optional"`
+	AdminEmail *string `pulumi:"adminEmail,optional"`
+	ClientID   *string `pulumi:"clientId,optional"`
+	LoginURL   *string `pulumi:"loginUrl,optional"`
 
 	// Snowflake
 	Warehouse  *string `pulumi:"warehouse,optional"`
@@ -165,7 +166,7 @@ type ResourceArgs struct {
 	Storage *string `pulumi:"storage,optional"`
 
 	// Remaining per-integration fields
-	ServiceAccount      *string `pulumi:"serviceAccount,optional"`
+	ServiceAccount      *string `pulumi:"serviceAccount,optional" provider:"secret"`
 	UseConnectServer    *bool   `pulumi:"useConnectServer,optional"`
 	ConnectServerURL    *string `pulumi:"connectServerUrl,optional"`
 	Targets             *string `pulumi:"targets,optional" provider:"secret"`
@@ -245,6 +246,8 @@ func (r *ResourceArgs) Annotate(a infer.Annotator) {
 	a.Describe(&r.Name, "Name of the Adaptive resource.")
 	a.Describe(&r.Tags, "Optional tags.")
 	a.Describe(&r.DefaultCluster, "The default cluster the resource is deployed to.")
+	a.Describe(&r.AdminEmail, "Optional Google Workspace admin email used for directory API access by the Google SSO integration.")
+	a.Describe(&r.ServiceAccount, "Service account configuration for the selected integration. For Google SSO, provide the JSON credentials document, not a file path or account email.")
 }
 
 func (r *ResourceState) Annotate(a infer.Annotator) {

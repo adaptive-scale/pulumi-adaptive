@@ -24,6 +24,7 @@ class ResourceArgs:
                  access_control_group: Optional[pulumi.Input[_builtins.str]] = None,
                  access_control_method: Optional[pulumi.Input[_builtins.str]] = None,
                  access_key_id: Optional[pulumi.Input[_builtins.str]] = None,
+                 admin_email: Optional[pulumi.Input[_builtins.str]] = None,
                  allow_file_transfer: Optional[pulumi.Input[_builtins.bool]] = None,
                  allowed_commands: Optional[pulumi.Input[_builtins.str]] = None,
                  annotations: Optional[pulumi.Input[_builtins.str]] = None,
@@ -167,7 +168,9 @@ class ResourceArgs:
 
         :param pulumi.Input[_builtins.str] name: Name of the Adaptive resource.
         :param pulumi.Input[_builtins.str] type: Type of the Adaptive resource (integration), e.g. postgres, mysql, mongodb, ssh, kubernetes, aws, gcp, azure, snowflake.
+        :param pulumi.Input[_builtins.str] admin_email: Optional Google Workspace admin email used for directory API access by the Google SSO integration.
         :param pulumi.Input[_builtins.str] default_cluster: The default cluster the resource is deployed to.
+        :param pulumi.Input[_builtins.str] service_account: Service account configuration for the selected integration. For Google SSO, provide the JSON credentials document, not a file path or account email.
         :param pulumi.Input[Sequence[pulumi.Input[_builtins.str]]] tags: Optional tags.
         """
         pulumi.set(__self__, "name", name)
@@ -178,6 +181,8 @@ class ResourceArgs:
             pulumi.set(__self__, "access_control_method", access_control_method)
         if access_key_id is not None:
             pulumi.set(__self__, "access_key_id", access_key_id)
+        if admin_email is not None:
+            pulumi.set(__self__, "admin_email", admin_email)
         if allow_file_transfer is not None:
             pulumi.set(__self__, "allow_file_transfer", allow_file_transfer)
         if allowed_commands is not None:
@@ -505,6 +510,18 @@ class ResourceArgs:
     @access_key_id.setter
     def access_key_id(self, value: Optional[pulumi.Input[_builtins.str]]):
         pulumi.set(self, "access_key_id", value)
+
+    @_builtins.property
+    @pulumi.getter(name="adminEmail")
+    def admin_email(self) -> Optional[pulumi.Input[_builtins.str]]:
+        """
+        Optional Google Workspace admin email used for directory API access by the Google SSO integration.
+        """
+        return pulumi.get(self, "admin_email")
+
+    @admin_email.setter
+    def admin_email(self, value: Optional[pulumi.Input[_builtins.str]]):
+        pulumi.set(self, "admin_email", value)
 
     @_builtins.property
     @pulumi.getter(name="allowFileTransfer")
@@ -1412,6 +1429,9 @@ class ResourceArgs:
     @_builtins.property
     @pulumi.getter(name="serviceAccount")
     def service_account(self) -> Optional[pulumi.Input[_builtins.str]]:
+        """
+        Service account configuration for the selected integration. For Google SSO, provide the JSON credentials document, not a file path or account email.
+        """
         return pulumi.get(self, "service_account")
 
     @service_account.setter
@@ -1764,6 +1784,7 @@ class Resource(pulumi.CustomResource):
                  access_control_group: Optional[pulumi.Input[_builtins.str]] = None,
                  access_control_method: Optional[pulumi.Input[_builtins.str]] = None,
                  access_key_id: Optional[pulumi.Input[_builtins.str]] = None,
+                 admin_email: Optional[pulumi.Input[_builtins.str]] = None,
                  allow_file_transfer: Optional[pulumi.Input[_builtins.bool]] = None,
                  allowed_commands: Optional[pulumi.Input[_builtins.str]] = None,
                  annotations: Optional[pulumi.Input[_builtins.str]] = None,
@@ -1910,8 +1931,10 @@ class Resource(pulumi.CustomResource):
 
         :param str resource_name: The name of the resource.
         :param pulumi.ResourceOptions opts: Options for the resource.
+        :param pulumi.Input[_builtins.str] admin_email: Optional Google Workspace admin email used for directory API access by the Google SSO integration.
         :param pulumi.Input[_builtins.str] default_cluster: The default cluster the resource is deployed to.
         :param pulumi.Input[_builtins.str] name: Name of the Adaptive resource.
+        :param pulumi.Input[_builtins.str] service_account: Service account configuration for the selected integration. For Google SSO, provide the JSON credentials document, not a file path or account email.
         :param pulumi.Input[Sequence[pulumi.Input[_builtins.str]]] tags: Optional tags.
         :param pulumi.Input[_builtins.str] type: Type of the Adaptive resource (integration), e.g. postgres, mysql, mongodb, ssh, kubernetes, aws, gcp, azure, snowflake.
         """
@@ -1942,6 +1965,7 @@ class Resource(pulumi.CustomResource):
                  access_control_group: Optional[pulumi.Input[_builtins.str]] = None,
                  access_control_method: Optional[pulumi.Input[_builtins.str]] = None,
                  access_key_id: Optional[pulumi.Input[_builtins.str]] = None,
+                 admin_email: Optional[pulumi.Input[_builtins.str]] = None,
                  allow_file_transfer: Optional[pulumi.Input[_builtins.bool]] = None,
                  allowed_commands: Optional[pulumi.Input[_builtins.str]] = None,
                  annotations: Optional[pulumi.Input[_builtins.str]] = None,
@@ -2094,6 +2118,7 @@ class Resource(pulumi.CustomResource):
             __props__.__dict__["access_control_group"] = access_control_group
             __props__.__dict__["access_control_method"] = access_control_method
             __props__.__dict__["access_key_id"] = None if access_key_id is None else pulumi.Output.secret(access_key_id)
+            __props__.__dict__["admin_email"] = admin_email
             __props__.__dict__["allow_file_transfer"] = allow_file_transfer
             __props__.__dict__["allowed_commands"] = allowed_commands
             __props__.__dict__["annotations"] = annotations
@@ -2197,7 +2222,7 @@ class Resource(pulumi.CustomResource):
             __props__.__dict__["script"] = None if script is None else pulumi.Output.secret(script)
             __props__.__dict__["secret_access_key"] = None if secret_access_key is None else pulumi.Output.secret(secret_access_key)
             __props__.__dict__["secret_id"] = None if secret_id is None else pulumi.Output.secret(secret_id)
-            __props__.__dict__["service_account"] = service_account
+            __props__.__dict__["service_account"] = None if service_account is None else pulumi.Output.secret(service_account)
             __props__.__dict__["service_account_name"] = service_account_name
             __props__.__dict__["service_name"] = service_name
             __props__.__dict__["shared_secret"] = None if shared_secret is None else pulumi.Output.secret(shared_secret)
@@ -2239,7 +2264,7 @@ class Resource(pulumi.CustomResource):
             __props__.__dict__["webhook_url"] = None if webhook_url is None else pulumi.Output.secret(webhook_url)
             __props__.__dict__["webui_port"] = webui_port
             __props__.__dict__["applied_digests"] = None
-        secret_opts = pulumi.ResourceOptions(additional_secret_outputs=["accessKeyId", "apiClientSecret", "apiKey", "apiSecret", "apiToken", "appKey", "clientCert", "clientCertificate", "clientConfiguration", "clientKey", "clientSecret", "clientcert", "clusterCert", "clusterToken", "credentialJson", "databasePassword", "ddApiKey", "ddAppKey", "fields", "key", "keyFile", "ldapSearchBindPassword", "password", "prestart", "privateKey", "proxysqlAdminPassword", "publicKey", "rootCert", "script", "secretAccessKey", "secretId", "sharedSecret", "targets", "tlsCertFile", "tlsKeyFile", "tlsRootCert", "token", "tokenId", "uri", "value", "webhookUrl"])
+        secret_opts = pulumi.ResourceOptions(additional_secret_outputs=["accessKeyId", "apiClientSecret", "apiKey", "apiSecret", "apiToken", "appKey", "clientCert", "clientCertificate", "clientConfiguration", "clientKey", "clientSecret", "clientcert", "clusterCert", "clusterToken", "credentialJson", "databasePassword", "ddApiKey", "ddAppKey", "fields", "key", "keyFile", "ldapSearchBindPassword", "password", "prestart", "privateKey", "proxysqlAdminPassword", "publicKey", "rootCert", "script", "secretAccessKey", "secretId", "serviceAccount", "sharedSecret", "targets", "tlsCertFile", "tlsKeyFile", "tlsRootCert", "token", "tokenId", "uri", "value", "webhookUrl"])
         opts = pulumi.ResourceOptions.merge(opts, secret_opts)
         super(Resource, __self__).__init__(
             'adaptive:index:Resource',
@@ -2266,6 +2291,7 @@ class Resource(pulumi.CustomResource):
         __props__.__dict__["access_control_group"] = None
         __props__.__dict__["access_control_method"] = None
         __props__.__dict__["access_key_id"] = None
+        __props__.__dict__["admin_email"] = None
         __props__.__dict__["allow_file_transfer"] = None
         __props__.__dict__["allowed_commands"] = None
         __props__.__dict__["annotations"] = None
@@ -2423,6 +2449,14 @@ class Resource(pulumi.CustomResource):
     @pulumi.getter(name="accessKeyId")
     def access_key_id(self) -> pulumi.Output[Optional[_builtins.str]]:
         return pulumi.get(self, "access_key_id")
+
+    @_builtins.property
+    @pulumi.getter(name="adminEmail")
+    def admin_email(self) -> pulumi.Output[Optional[_builtins.str]]:
+        """
+        Optional Google Workspace admin email used for directory API access by the Google SSO integration.
+        """
+        return pulumi.get(self, "admin_email")
 
     @_builtins.property
     @pulumi.getter(name="allowFileTransfer")
@@ -2946,6 +2980,9 @@ class Resource(pulumi.CustomResource):
     @_builtins.property
     @pulumi.getter(name="serviceAccount")
     def service_account(self) -> pulumi.Output[Optional[_builtins.str]]:
+        """
+        Service account configuration for the selected integration. For Google SSO, provide the JSON credentials document, not a file path or account email.
+        """
         return pulumi.get(self, "service_account")
 
     @_builtins.property

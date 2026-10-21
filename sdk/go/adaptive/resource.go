@@ -18,19 +18,21 @@ type Resource struct {
 	AccessControlGroup  pulumi.StringPtrOutput `pulumi:"accessControlGroup"`
 	AccessControlMethod pulumi.StringPtrOutput `pulumi:"accessControlMethod"`
 	AccessKeyId         pulumi.StringPtrOutput `pulumi:"accessKeyId"`
-	AllowFileTransfer   pulumi.BoolPtrOutput   `pulumi:"allowFileTransfer"`
-	AllowedCommands     pulumi.StringPtrOutput `pulumi:"allowedCommands"`
-	Annotations         pulumi.StringPtrOutput `pulumi:"annotations"`
-	ApiClientId         pulumi.StringPtrOutput `pulumi:"apiClientId"`
-	ApiClientSecret     pulumi.StringPtrOutput `pulumi:"apiClientSecret"`
-	ApiKey              pulumi.StringPtrOutput `pulumi:"apiKey"`
-	ApiSecret           pulumi.StringPtrOutput `pulumi:"apiSecret"`
-	ApiServer           pulumi.StringPtrOutput `pulumi:"apiServer"`
-	ApiToken            pulumi.StringPtrOutput `pulumi:"apiToken"`
-	AppId               pulumi.StringPtrOutput `pulumi:"appId"`
-	AppKey              pulumi.StringPtrOutput `pulumi:"appKey"`
-	ApplicationId       pulumi.StringPtrOutput `pulumi:"applicationId"`
-	ApplicationName     pulumi.StringPtrOutput `pulumi:"applicationName"`
+	// Optional Google Workspace admin email used for directory API access by the Google SSO integration.
+	AdminEmail        pulumi.StringPtrOutput `pulumi:"adminEmail"`
+	AllowFileTransfer pulumi.BoolPtrOutput   `pulumi:"allowFileTransfer"`
+	AllowedCommands   pulumi.StringPtrOutput `pulumi:"allowedCommands"`
+	Annotations       pulumi.StringPtrOutput `pulumi:"annotations"`
+	ApiClientId       pulumi.StringPtrOutput `pulumi:"apiClientId"`
+	ApiClientSecret   pulumi.StringPtrOutput `pulumi:"apiClientSecret"`
+	ApiKey            pulumi.StringPtrOutput `pulumi:"apiKey"`
+	ApiSecret         pulumi.StringPtrOutput `pulumi:"apiSecret"`
+	ApiServer         pulumi.StringPtrOutput `pulumi:"apiServer"`
+	ApiToken          pulumi.StringPtrOutput `pulumi:"apiToken"`
+	AppId             pulumi.StringPtrOutput `pulumi:"appId"`
+	AppKey            pulumi.StringPtrOutput `pulumi:"appKey"`
+	ApplicationId     pulumi.StringPtrOutput `pulumi:"applicationId"`
+	ApplicationName   pulumi.StringPtrOutput `pulumi:"applicationName"`
 	// Opaque server fingerprints of the write-only secret fields as of the last write by this provider, used to detect out-of-band secret changes on refresh. Not comparable across resources or workspaces.
 	AppliedDigests      pulumi.StringMapOutput `pulumi:"appliedDigests"`
 	Arn                 pulumi.StringPtrOutput `pulumi:"arn"`
@@ -123,13 +125,14 @@ type Resource struct {
 	Script                pulumi.StringPtrOutput `pulumi:"script"`
 	SecretAccessKey       pulumi.StringPtrOutput `pulumi:"secretAccessKey"`
 	SecretId              pulumi.StringPtrOutput `pulumi:"secretId"`
-	ServiceAccount        pulumi.StringPtrOutput `pulumi:"serviceAccount"`
-	ServiceAccountName    pulumi.StringPtrOutput `pulumi:"serviceAccountName"`
-	ServiceName           pulumi.StringPtrOutput `pulumi:"serviceName"`
-	SharedSecret          pulumi.StringPtrOutput `pulumi:"sharedSecret"`
-	SslMode               pulumi.StringPtrOutput `pulumi:"sslMode"`
-	Storage               pulumi.StringPtrOutput `pulumi:"storage"`
-	SubSystemName         pulumi.StringPtrOutput `pulumi:"subSystemName"`
+	// Service account configuration for the selected integration. For Google SSO, provide the JSON credentials document, not a file path or account email.
+	ServiceAccount     pulumi.StringPtrOutput `pulumi:"serviceAccount"`
+	ServiceAccountName pulumi.StringPtrOutput `pulumi:"serviceAccountName"`
+	ServiceName        pulumi.StringPtrOutput `pulumi:"serviceName"`
+	SharedSecret       pulumi.StringPtrOutput `pulumi:"sharedSecret"`
+	SslMode            pulumi.StringPtrOutput `pulumi:"sslMode"`
+	Storage            pulumi.StringPtrOutput `pulumi:"storage"`
+	SubSystemName      pulumi.StringPtrOutput `pulumi:"subSystemName"`
 	// Optional tags.
 	Tags          pulumi.StringArrayOutput `pulumi:"tags"`
 	Targets       pulumi.StringPtrOutput   `pulumi:"targets"`
@@ -272,6 +275,9 @@ func NewResource(ctx *pulumi.Context,
 	if args.SecretId != nil {
 		args.SecretId = pulumi.ToSecret(args.SecretId).(pulumi.StringPtrInput)
 	}
+	if args.ServiceAccount != nil {
+		args.ServiceAccount = pulumi.ToSecret(args.ServiceAccount).(pulumi.StringPtrInput)
+	}
 	if args.SharedSecret != nil {
 		args.SharedSecret = pulumi.ToSecret(args.SharedSecret).(pulumi.StringPtrInput)
 	}
@@ -334,6 +340,7 @@ func NewResource(ctx *pulumi.Context,
 		"script",
 		"secretAccessKey",
 		"secretId",
+		"serviceAccount",
 		"sharedSecret",
 		"targets",
 		"tlsCertFile",
@@ -382,6 +389,8 @@ type resourceArgs struct {
 	AccessControlGroup  *string `pulumi:"accessControlGroup"`
 	AccessControlMethod *string `pulumi:"accessControlMethod"`
 	AccessKeyId         *string `pulumi:"accessKeyId"`
+	// Optional Google Workspace admin email used for directory API access by the Google SSO integration.
+	AdminEmail          *string `pulumi:"adminEmail"`
 	AllowFileTransfer   *bool   `pulumi:"allowFileTransfer"`
 	AllowedCommands     *string `pulumi:"allowedCommands"`
 	Annotations         *string `pulumi:"annotations"`
@@ -485,13 +494,14 @@ type resourceArgs struct {
 	Script                *string `pulumi:"script"`
 	SecretAccessKey       *string `pulumi:"secretAccessKey"`
 	SecretId              *string `pulumi:"secretId"`
-	ServiceAccount        *string `pulumi:"serviceAccount"`
-	ServiceAccountName    *string `pulumi:"serviceAccountName"`
-	ServiceName           *string `pulumi:"serviceName"`
-	SharedSecret          *string `pulumi:"sharedSecret"`
-	SslMode               *string `pulumi:"sslMode"`
-	Storage               *string `pulumi:"storage"`
-	SubSystemName         *string `pulumi:"subSystemName"`
+	// Service account configuration for the selected integration. For Google SSO, provide the JSON credentials document, not a file path or account email.
+	ServiceAccount     *string `pulumi:"serviceAccount"`
+	ServiceAccountName *string `pulumi:"serviceAccountName"`
+	ServiceName        *string `pulumi:"serviceName"`
+	SharedSecret       *string `pulumi:"sharedSecret"`
+	SslMode            *string `pulumi:"sslMode"`
+	Storage            *string `pulumi:"storage"`
+	SubSystemName      *string `pulumi:"subSystemName"`
 	// Optional tags.
 	Tags          []string `pulumi:"tags"`
 	Targets       *string  `pulumi:"targets"`
@@ -533,6 +543,8 @@ type ResourceArgs struct {
 	AccessControlGroup  pulumi.StringPtrInput
 	AccessControlMethod pulumi.StringPtrInput
 	AccessKeyId         pulumi.StringPtrInput
+	// Optional Google Workspace admin email used for directory API access by the Google SSO integration.
+	AdminEmail          pulumi.StringPtrInput
 	AllowFileTransfer   pulumi.BoolPtrInput
 	AllowedCommands     pulumi.StringPtrInput
 	Annotations         pulumi.StringPtrInput
@@ -636,13 +648,14 @@ type ResourceArgs struct {
 	Script                pulumi.StringPtrInput
 	SecretAccessKey       pulumi.StringPtrInput
 	SecretId              pulumi.StringPtrInput
-	ServiceAccount        pulumi.StringPtrInput
-	ServiceAccountName    pulumi.StringPtrInput
-	ServiceName           pulumi.StringPtrInput
-	SharedSecret          pulumi.StringPtrInput
-	SslMode               pulumi.StringPtrInput
-	Storage               pulumi.StringPtrInput
-	SubSystemName         pulumi.StringPtrInput
+	// Service account configuration for the selected integration. For Google SSO, provide the JSON credentials document, not a file path or account email.
+	ServiceAccount     pulumi.StringPtrInput
+	ServiceAccountName pulumi.StringPtrInput
+	ServiceName        pulumi.StringPtrInput
+	SharedSecret       pulumi.StringPtrInput
+	SslMode            pulumi.StringPtrInput
+	Storage            pulumi.StringPtrInput
+	SubSystemName      pulumi.StringPtrInput
 	// Optional tags.
 	Tags          pulumi.StringArrayInput
 	Targets       pulumi.StringPtrInput
@@ -776,6 +789,11 @@ func (o ResourceOutput) AccessControlMethod() pulumi.StringPtrOutput {
 
 func (o ResourceOutput) AccessKeyId() pulumi.StringPtrOutput {
 	return o.ApplyT(func(v *Resource) pulumi.StringPtrOutput { return v.AccessKeyId }).(pulumi.StringPtrOutput)
+}
+
+// Optional Google Workspace admin email used for directory API access by the Google SSO integration.
+func (o ResourceOutput) AdminEmail() pulumi.StringPtrOutput {
+	return o.ApplyT(func(v *Resource) pulumi.StringPtrOutput { return v.AdminEmail }).(pulumi.StringPtrOutput)
 }
 
 func (o ResourceOutput) AllowFileTransfer() pulumi.BoolPtrOutput {
@@ -1189,6 +1207,7 @@ func (o ResourceOutput) SecretId() pulumi.StringPtrOutput {
 	return o.ApplyT(func(v *Resource) pulumi.StringPtrOutput { return v.SecretId }).(pulumi.StringPtrOutput)
 }
 
+// Service account configuration for the selected integration. For Google SSO, provide the JSON credentials document, not a file path or account email.
 func (o ResourceOutput) ServiceAccount() pulumi.StringPtrOutput {
 	return o.ApplyT(func(v *Resource) pulumi.StringPtrOutput { return v.ServiceAccount }).(pulumi.StringPtrOutput)
 }

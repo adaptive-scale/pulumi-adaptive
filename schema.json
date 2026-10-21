@@ -509,6 +509,10 @@
           "type": "string",
           "secret": true
         },
+        "adminEmail": {
+          "type": "string",
+          "description": "Optional Google Workspace admin email used for directory API access by the Google SSO integration."
+        },
         "allowFileTransfer": {
           "type": "boolean"
         },
@@ -855,7 +859,9 @@
           "secret": true
         },
         "serviceAccount": {
-          "type": "string"
+          "type": "string",
+          "description": "Service account configuration for the selected integration. For Google SSO, provide the JSON credentials document, not a file path or account email.",
+          "secret": true
         },
         "serviceAccountName": {
           "type": "string"
@@ -1001,6 +1007,10 @@
         "accessKeyId": {
           "type": "string",
           "secret": true
+        },
+        "adminEmail": {
+          "type": "string",
+          "description": "Optional Google Workspace admin email used for directory API access by the Google SSO integration."
         },
         "allowFileTransfer": {
           "type": "boolean"
@@ -1341,7 +1351,9 @@
           "secret": true
         },
         "serviceAccount": {
-          "type": "string"
+          "type": "string",
+          "description": "Service account configuration for the selected integration. For Google SSO, provide the JSON credentials document, not a file path or account email.",
+          "secret": true
         },
         "serviceAccountName": {
           "type": "string"

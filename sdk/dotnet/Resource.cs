@@ -22,6 +22,12 @@ namespace AdaptiveScale.Adaptive
         [Output("accessKeyId")]
         public Output<string?> AccessKeyId { get; private set; } = null!;
 
+        /// <summary>
+        /// Optional Google Workspace admin email used for directory API access by the Google SSO integration.
+        /// </summary>
+        [Output("adminEmail")]
+        public Output<string?> AdminEmail { get; private set; } = null!;
+
         [Output("allowFileTransfer")]
         public Output<bool?> AllowFileTransfer { get; private set; } = null!;
 
@@ -337,6 +343,9 @@ namespace AdaptiveScale.Adaptive
         [Output("secretId")]
         public Output<string?> SecretId { get; private set; } = null!;
 
+        /// <summary>
+        /// Service account configuration for the selected integration. For Google SSO, provide the JSON credentials document, not a file path or account email.
+        /// </summary>
         [Output("serviceAccount")]
         public Output<string?> ServiceAccount { get; private set; } = null!;
 
@@ -517,6 +526,7 @@ namespace AdaptiveScale.Adaptive
                     "script",
                     "secretAccessKey",
                     "secretId",
+                    "serviceAccount",
                     "sharedSecret",
                     "targets",
                     "tlsCertFile",
@@ -567,6 +577,12 @@ namespace AdaptiveScale.Adaptive
                 _accessKeyId = Output.Tuple<Input<string>?, int>(value, emptySecret).Apply(t => t.Item1);
             }
         }
+
+        /// <summary>
+        /// Optional Google Workspace admin email used for directory API access by the Google SSO integration.
+        /// </summary>
+        [Input("adminEmail")]
+        public Input<string>? AdminEmail { get; set; }
 
         [Input("allowFileTransfer")]
         public Input<bool>? AllowFileTransfer { get; set; }
@@ -1153,7 +1169,20 @@ namespace AdaptiveScale.Adaptive
         }
 
         [Input("serviceAccount")]
-        public Input<string>? ServiceAccount { get; set; }
+        private Input<string>? _serviceAccount;
+
+        /// <summary>
+        /// Service account configuration for the selected integration. For Google SSO, provide the JSON credentials document, not a file path or account email.
+        /// </summary>
+        public Input<string>? ServiceAccount
+        {
+            get => _serviceAccount;
+            set
+            {
+                var emptySecret = Output.CreateSecret(0);
+                _serviceAccount = Output.Tuple<Input<string>?, int>(value, emptySecret).Apply(t => t.Item1);
+            }
+        }
 
         [Input("serviceAccountName")]
         public Input<string>? ServiceAccountName { get; set; }
