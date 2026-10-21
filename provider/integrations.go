@@ -35,7 +35,7 @@ func buildIntegrationConfig(a ResourceArgs) (any, string, error) {
 	case "gcp":
 		cfg = gcpConfig{Version: "1", Name: a.Name, ProjectID: sv(a.ProjectID), KeyFile: strings.TrimSpace(sv(a.KeyFile))}
 	case "google":
-		cfg = googleConfig{Version: "1", Name: a.Name, Domain: sv(a.Domain), ClientID: sv(a.ClientID), ClientSecret: sv(a.ClientSecret)}
+		cfg = googleConfig{Version: "1", Name: a.Name, Domain: sv(a.Domain), ClientID: sv(a.ClientID), ClientSecret: sv(a.ClientSecret), ServiceAccount: sv(a.ServiceAccount), AdminEmail: sv(a.AdminEmail)}
 	case "mongodb":
 		cfg = mongoConfig{Name: a.Name, URI: sv(a.URI), ClientCertificate: strings.TrimSpace(sv(a.ClientCertificate)), UseTLS: bv(a.UseTLS)}
 	case "mysql":
@@ -287,11 +287,13 @@ type gcpConfig struct {
 }
 
 type googleConfig struct {
-	Version      string `yaml:"Version"`
-	Name         string `yaml:"name"`
-	Domain       string `yaml:"domain"`
-	ClientID     string `yaml:"clientID"`
-	ClientSecret string `yaml:"clientSecret"`
+	Version        string `yaml:"Version"`
+	Name           string `yaml:"name"`
+	Domain         string `yaml:"domain"`
+	ClientID       string `yaml:"clientID"`
+	ClientSecret   string `yaml:"clientSecret"`
+	ServiceAccount string `yaml:"serviceAccount"`
+	AdminEmail     string `yaml:"adminEmail"`
 }
 
 type mongoConfig struct {
@@ -1071,6 +1073,8 @@ func applyIntegrationConfig(a *ResourceArgs, integrationType string, cfg map[str
 		setStr(&a.Domain, cfg, "domain")
 		setStr(&a.ClientID, cfg, "clientID")
 		setStr(&a.ClientSecret, cfg, "clientSecret")
+		setStr(&a.ServiceAccount, cfg, "serviceAccount")
+		setStr(&a.AdminEmail, cfg, "adminEmail")
 	case "mongodb":
 		setStr(&a.URI, cfg, "uri")
 		setStr(&a.ClientCertificate, cfg, "clientCertificate")

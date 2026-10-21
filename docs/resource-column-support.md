@@ -2,7 +2,7 @@
 | Config key | Write arg | Secret? | Read arg | Notes |
 |---|---|---:|---|---|
 | `name` | `name` | No | — |  |
-| `service_account` | `serviceAccount` | No | `serviceAccount` |  |
+| `service_account` | `serviceAccount` | Yes | `serviceAccount` |  |
 | `use_connect_server` | `useConnectServer` | No | `useConnectServer` |  |
 | `connect_server_url` | `connectServerUrl` | No | `connectServerUrl` |  |
 
@@ -74,7 +74,7 @@
 | `use_role_arn` | `useRoleArn` | No | `useRoleArn` |  |
 | `aws_role_arn` | `awsRoleArn` | No | `awsRoleArn` |  |
 | `use_service_account` | `useServiceAccount` | No | `useServiceAccount` |  |
-| `service_account` | `serviceAccount` | No | `serviceAccount` |  |
+| `service_account` | `serviceAccount` | Yes | `serviceAccount` |  |
 | `create_if_not_exists` | `createIfNotExists` | No | `createIfNotExists` |  |
 | `enable_allowed_commands` | `enableAllowedCommands` | No | `enableAllowedCommands` |  |
 | `allowed_commands` | `allowedCommands` | No | `allowedCommands` |  |
@@ -380,6 +380,8 @@
 | `domain` | `domain` | No | `domain` |  |
 | `clientID` | `clientId` | No | `clientId` |  |
 | `clientSecret` | `clientSecret` | Yes | `clientSecret` |  |
+| `serviceAccount` | `serviceAccount` | Yes | `serviceAccount` | Optional JSON credentials document for Google directory access. |
+| `adminEmail` | `adminEmail` | No | `adminEmail` | Optional Google Workspace admin email for directory access. |
 
 ## `heroku`
 | Config key | Write arg | Secret? | Read arg | Notes |
@@ -470,7 +472,7 @@
 | `aws_secret_access_key` | `secretAccessKey` | Yes | `secretAccessKey` |  |
 | `use_role_arn` | `useRoleArn` | No | `useRoleArn` |  |
 | `aws_role_arn` | `awsRoleArn` | No | `awsRoleArn` |  |
-| `service_account` | `serviceAccount` | No | `serviceAccount` |  |
+| `service_account` | `serviceAccount` | Yes | `serviceAccount` |  |
 
 ## `kubernetes`
 | Config key | Write arg | Secret? | Read arg | Notes |

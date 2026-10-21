@@ -34,6 +34,10 @@ export class Resource extends pulumi.CustomResource {
     declare public readonly accessControlGroup: pulumi.Output<string | undefined>;
     declare public readonly accessControlMethod: pulumi.Output<string | undefined>;
     declare public readonly accessKeyId: pulumi.Output<string | undefined>;
+    /**
+     * Optional Google Workspace admin email used for directory API access by the Google SSO integration.
+     */
+    declare public readonly adminEmail: pulumi.Output<string | undefined>;
     declare public readonly allowFileTransfer: pulumi.Output<boolean | undefined>;
     declare public readonly allowedCommands: pulumi.Output<string | undefined>;
     declare public readonly annotations: pulumi.Output<string | undefined>;
@@ -145,6 +149,9 @@ export class Resource extends pulumi.CustomResource {
     declare public readonly script: pulumi.Output<string | undefined>;
     declare public readonly secretAccessKey: pulumi.Output<string | undefined>;
     declare public readonly secretId: pulumi.Output<string | undefined>;
+    /**
+     * Service account configuration for the selected integration. For Google SSO, provide the JSON credentials document, not a file path or account email.
+     */
     declare public readonly serviceAccount: pulumi.Output<string | undefined>;
     declare public readonly serviceAccountName: pulumi.Output<string | undefined>;
     declare public readonly serviceName: pulumi.Output<string | undefined>;
@@ -211,6 +218,7 @@ export class Resource extends pulumi.CustomResource {
             resourceInputs["accessControlGroup"] = args?.accessControlGroup;
             resourceInputs["accessControlMethod"] = args?.accessControlMethod;
             resourceInputs["accessKeyId"] = args?.accessKeyId ? pulumi.secret(args.accessKeyId) : undefined;
+            resourceInputs["adminEmail"] = args?.adminEmail;
             resourceInputs["allowFileTransfer"] = args?.allowFileTransfer;
             resourceInputs["allowedCommands"] = args?.allowedCommands;
             resourceInputs["annotations"] = args?.annotations;
@@ -312,7 +320,7 @@ export class Resource extends pulumi.CustomResource {
             resourceInputs["script"] = args?.script ? pulumi.secret(args.script) : undefined;
             resourceInputs["secretAccessKey"] = args?.secretAccessKey ? pulumi.secret(args.secretAccessKey) : undefined;
             resourceInputs["secretId"] = args?.secretId ? pulumi.secret(args.secretId) : undefined;
-            resourceInputs["serviceAccount"] = args?.serviceAccount;
+            resourceInputs["serviceAccount"] = args?.serviceAccount ? pulumi.secret(args.serviceAccount) : undefined;
             resourceInputs["serviceAccountName"] = args?.serviceAccountName;
             resourceInputs["serviceName"] = args?.serviceName;
             resourceInputs["sharedSecret"] = args?.sharedSecret ? pulumi.secret(args.sharedSecret) : undefined;
@@ -356,6 +364,7 @@ export class Resource extends pulumi.CustomResource {
             resourceInputs["accessControlGroup"] = undefined /*out*/;
             resourceInputs["accessControlMethod"] = undefined /*out*/;
             resourceInputs["accessKeyId"] = undefined /*out*/;
+            resourceInputs["adminEmail"] = undefined /*out*/;
             resourceInputs["allowFileTransfer"] = undefined /*out*/;
             resourceInputs["allowedCommands"] = undefined /*out*/;
             resourceInputs["annotations"] = undefined /*out*/;
@@ -499,7 +508,7 @@ export class Resource extends pulumi.CustomResource {
             resourceInputs["webuiPort"] = undefined /*out*/;
         }
         opts = pulumi.mergeOptions(utilities.resourceOptsDefaults(), opts);
-        const secretOpts = { additionalSecretOutputs: ["accessKeyId", "apiClientSecret", "apiKey", "apiSecret", "apiToken", "appKey", "clientCert", "clientCertificate", "clientConfiguration", "clientKey", "clientSecret", "clientcert", "clusterCert", "clusterToken", "credentialJson", "databasePassword", "ddApiKey", "ddAppKey", "fields", "key", "keyFile", "ldapSearchBindPassword", "password", "prestart", "privateKey", "proxysqlAdminPassword", "publicKey", "rootCert", "script", "secretAccessKey", "secretId", "sharedSecret", "targets", "tlsCertFile", "tlsKeyFile", "tlsRootCert", "token", "tokenId", "uri", "value", "webhookUrl"] };
+        const secretOpts = { additionalSecretOutputs: ["accessKeyId", "apiClientSecret", "apiKey", "apiSecret", "apiToken", "appKey", "clientCert", "clientCertificate", "clientConfiguration", "clientKey", "clientSecret", "clientcert", "clusterCert", "clusterToken", "credentialJson", "databasePassword", "ddApiKey", "ddAppKey", "fields", "key", "keyFile", "ldapSearchBindPassword", "password", "prestart", "privateKey", "proxysqlAdminPassword", "publicKey", "rootCert", "script", "secretAccessKey", "secretId", "serviceAccount", "sharedSecret", "targets", "tlsCertFile", "tlsKeyFile", "tlsRootCert", "token", "tokenId", "uri", "value", "webhookUrl"] };
         opts = pulumi.mergeOptions(opts, secretOpts);
         super(Resource.__pulumiType, name, resourceInputs, opts);
     }
@@ -512,6 +521,10 @@ export interface ResourceArgs {
     accessControlGroup?: pulumi.Input<string>;
     accessControlMethod?: pulumi.Input<string>;
     accessKeyId?: pulumi.Input<string>;
+    /**
+     * Optional Google Workspace admin email used for directory API access by the Google SSO integration.
+     */
+    adminEmail?: pulumi.Input<string>;
     allowFileTransfer?: pulumi.Input<boolean>;
     allowedCommands?: pulumi.Input<string>;
     annotations?: pulumi.Input<string>;
@@ -619,6 +632,9 @@ export interface ResourceArgs {
     script?: pulumi.Input<string>;
     secretAccessKey?: pulumi.Input<string>;
     secretId?: pulumi.Input<string>;
+    /**
+     * Service account configuration for the selected integration. For Google SSO, provide the JSON credentials document, not a file path or account email.
+     */
     serviceAccount?: pulumi.Input<string>;
     serviceAccountName?: pulumi.Input<string>;
     serviceName?: pulumi.Input<string>;
