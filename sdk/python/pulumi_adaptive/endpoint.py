@@ -31,6 +31,7 @@ class EndpointArgs:
                  groups: Optional[pulumi.Input[Sequence[pulumi.Input[_builtins.str]]]] = None,
                  idle_timeout: Optional[pulumi.Input[_builtins.str]] = None,
                  is_jit_enabled: Optional[pulumi.Input[_builtins.bool]] = None,
+                 jit_approver_groups: Optional[pulumi.Input[Sequence[pulumi.Input[_builtins.str]]]] = None,
                  jit_approvers: Optional[pulumi.Input[Sequence[pulumi.Input[_builtins.str]]]] = None,
                  jit_mode: Optional[pulumi.Input[_builtins.str]] = None,
                  jit_multi_approver: Optional[pulumi.Input[_builtins.bool]] = None,
@@ -54,6 +55,7 @@ class EndpointArgs:
         :param pulumi.Input[_builtins.bool] disable_output_capture: Do not retain terminal output for this endpoint. The effective value is OR'd with the workspace-level setting: an endpoint cannot re-enable capture that the workspace disabled.
         :param pulumi.Input[_builtins.bool] disable_web_cli: Hide 'Connect via Web CLI' for this endpoint (cli endpoints only).
         :param pulumi.Input[_builtins.bool] is_jit_enabled: Whether Just-In-Time access approval is enabled.
+        :param pulumi.Input[Sequence[pulumi.Input[_builtins.str]]] jit_approver_groups: Workspace group names whose eligible members may approve JIT requests. Omit to preserve groups managed elsewhere; [] clears them. Requires server group support.
         :param pulumi.Input[Sequence[pulumi.Input[_builtins.str]]] jit_approvers: Emails of users who can approve Just-In-Time access requests.
         :param pulumi.Input[_builtins.str] jit_mode: Which access paths require Just-In-Time approval: session, script, or both.
         :param pulumi.Input[_builtins.bool] jit_multi_approver: Require multiple approvers for Just-In-Time access requests.
@@ -85,6 +87,8 @@ class EndpointArgs:
             pulumi.set(__self__, "idle_timeout", idle_timeout)
         if is_jit_enabled is not None:
             pulumi.set(__self__, "is_jit_enabled", is_jit_enabled)
+        if jit_approver_groups is not None:
+            pulumi.set(__self__, "jit_approver_groups", jit_approver_groups)
         if jit_approvers is not None:
             pulumi.set(__self__, "jit_approvers", jit_approvers)
         if jit_mode is not None:
@@ -245,6 +249,18 @@ class EndpointArgs:
         pulumi.set(self, "is_jit_enabled", value)
 
     @_builtins.property
+    @pulumi.getter(name="jitApproverGroups")
+    def jit_approver_groups(self) -> Optional[pulumi.Input[Sequence[pulumi.Input[_builtins.str]]]]:
+        """
+        Workspace group names whose eligible members may approve JIT requests. Omit to preserve groups managed elsewhere; [] clears them. Requires server group support.
+        """
+        return pulumi.get(self, "jit_approver_groups")
+
+    @jit_approver_groups.setter
+    def jit_approver_groups(self, value: Optional[pulumi.Input[Sequence[pulumi.Input[_builtins.str]]]]):
+        pulumi.set(self, "jit_approver_groups", value)
+
+    @_builtins.property
     @pulumi.getter(name="jitApprovers")
     def jit_approvers(self) -> Optional[pulumi.Input[Sequence[pulumi.Input[_builtins.str]]]]:
         """
@@ -393,6 +409,7 @@ class Endpoint(pulumi.CustomResource):
                  groups: Optional[pulumi.Input[Sequence[pulumi.Input[_builtins.str]]]] = None,
                  idle_timeout: Optional[pulumi.Input[_builtins.str]] = None,
                  is_jit_enabled: Optional[pulumi.Input[_builtins.bool]] = None,
+                 jit_approver_groups: Optional[pulumi.Input[Sequence[pulumi.Input[_builtins.str]]]] = None,
                  jit_approvers: Optional[pulumi.Input[Sequence[pulumi.Input[_builtins.str]]]] = None,
                  jit_mode: Optional[pulumi.Input[_builtins.str]] = None,
                  jit_multi_approver: Optional[pulumi.Input[_builtins.bool]] = None,
@@ -419,6 +436,7 @@ class Endpoint(pulumi.CustomResource):
         :param pulumi.Input[_builtins.bool] disable_output_capture: Do not retain terminal output for this endpoint. The effective value is OR'd with the workspace-level setting: an endpoint cannot re-enable capture that the workspace disabled.
         :param pulumi.Input[_builtins.bool] disable_web_cli: Hide 'Connect via Web CLI' for this endpoint (cli endpoints only).
         :param pulumi.Input[_builtins.bool] is_jit_enabled: Whether Just-In-Time access approval is enabled.
+        :param pulumi.Input[Sequence[pulumi.Input[_builtins.str]]] jit_approver_groups: Workspace group names whose eligible members may approve JIT requests. Omit to preserve groups managed elsewhere; [] clears them. Requires server group support.
         :param pulumi.Input[Sequence[pulumi.Input[_builtins.str]]] jit_approvers: Emails of users who can approve Just-In-Time access requests.
         :param pulumi.Input[_builtins.str] jit_mode: Which access paths require Just-In-Time approval: session, script, or both.
         :param pulumi.Input[_builtins.bool] jit_multi_approver: Require multiple approvers for Just-In-Time access requests.
@@ -464,6 +482,7 @@ class Endpoint(pulumi.CustomResource):
                  groups: Optional[pulumi.Input[Sequence[pulumi.Input[_builtins.str]]]] = None,
                  idle_timeout: Optional[pulumi.Input[_builtins.str]] = None,
                  is_jit_enabled: Optional[pulumi.Input[_builtins.bool]] = None,
+                 jit_approver_groups: Optional[pulumi.Input[Sequence[pulumi.Input[_builtins.str]]]] = None,
                  jit_approvers: Optional[pulumi.Input[Sequence[pulumi.Input[_builtins.str]]]] = None,
                  jit_mode: Optional[pulumi.Input[_builtins.str]] = None,
                  jit_multi_approver: Optional[pulumi.Input[_builtins.bool]] = None,
@@ -497,6 +516,7 @@ class Endpoint(pulumi.CustomResource):
             __props__.__dict__["groups"] = groups
             __props__.__dict__["idle_timeout"] = idle_timeout
             __props__.__dict__["is_jit_enabled"] = is_jit_enabled
+            __props__.__dict__["jit_approver_groups"] = jit_approver_groups
             __props__.__dict__["jit_approvers"] = jit_approvers
             __props__.__dict__["jit_mode"] = jit_mode
             __props__.__dict__["jit_multi_approver"] = jit_multi_approver
@@ -556,6 +576,7 @@ class Endpoint(pulumi.CustomResource):
         __props__.__dict__["groups"] = None
         __props__.__dict__["idle_timeout"] = None
         __props__.__dict__["is_jit_enabled"] = None
+        __props__.__dict__["jit_approver_groups"] = None
         __props__.__dict__["jit_approvers"] = None
         __props__.__dict__["jit_mode"] = None
         __props__.__dict__["jit_multi_approver"] = None
@@ -664,6 +685,14 @@ class Endpoint(pulumi.CustomResource):
         Whether Just-In-Time access approval is enabled.
         """
         return pulumi.get(self, "is_jit_enabled")
+
+    @_builtins.property
+    @pulumi.getter(name="jitApproverGroups")
+    def jit_approver_groups(self) -> pulumi.Output[Optional[Sequence[_builtins.str]]]:
+        """
+        Workspace group names whose eligible members may approve JIT requests. Omit to preserve groups managed elsewhere; [] clears them. Requires server group support.
+        """
+        return pulumi.get(self, "jit_approver_groups")
 
     @_builtins.property
     @pulumi.getter(name="jitApprovers")

@@ -353,3 +353,17 @@ No SDK is published to a package registry, so no publishing secrets are needed.
 Early/experimental. The provider compiles, emits a valid schema, and the
 generated SDKs (Go, TypeScript, Python, .NET) build; the Go SDK is exercised
 end-to-end by the integration tests (see `examples/go` and `tests/integration`).
+
+### JIT approver groups
+
+Set `jitApproverGroups: ["Database on-call"]` on an endpoint to select existing
+workspace groups by name, alongside `jitApprovers` (individual email addresses).
+Members must have enabled accounts and the approver or admin role. Groups do not
+grant endpoint access; overlapping members count once toward the existing quorum.
+
+Omit `jitApproverGroups` to leave externally configured groups unmanaged. An
+explicit empty list clears only groups. Refresh preserves unmanaged fields and
+import adopts the server's group selection. The provider rejects unsupported
+servers before mutation. Deploy group-aware API and worker versions and enable
+`JIT_APPROVER_GROUPS_ENABLED=true` before setting groups. Group-only changes do not
+restart endpoints.

@@ -80,6 +80,12 @@ namespace AdaptiveScale.Adaptive
         public Output<bool?> IsJitEnabled { get; private set; } = null!;
 
         /// <summary>
+        /// Workspace group names whose eligible members may approve JIT requests. Omit to preserve groups managed elsewhere; [] clears them. Requires server group support.
+        /// </summary>
+        [Output("jitApproverGroups")]
+        public Output<ImmutableArray<string>> JitApproverGroups { get; private set; } = null!;
+
+        /// <summary>
         /// Emails of users who can approve Just-In-Time access requests.
         /// </summary>
         [Output("jitApprovers")]
@@ -255,6 +261,18 @@ namespace AdaptiveScale.Adaptive
         /// </summary>
         [Input("isJitEnabled")]
         public Input<bool>? IsJitEnabled { get; set; }
+
+        [Input("jitApproverGroups")]
+        private InputList<string>? _jitApproverGroups;
+
+        /// <summary>
+        /// Workspace group names whose eligible members may approve JIT requests. Omit to preserve groups managed elsewhere; [] clears them. Requires server group support.
+        /// </summary>
+        public InputList<string> JitApproverGroups
+        {
+            get => _jitApproverGroups ?? (_jitApproverGroups = new InputList<string>());
+            set => _jitApproverGroups = value;
+        }
 
         [Input("jitApprovers")]
         private InputList<string>? _jitApprovers;

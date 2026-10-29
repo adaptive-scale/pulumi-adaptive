@@ -72,6 +72,10 @@ export class Endpoint extends pulumi.CustomResource {
      */
     declare public readonly isJitEnabled: pulumi.Output<boolean | undefined>;
     /**
+     * Workspace group names whose eligible members may approve JIT requests. Omit to preserve groups managed elsewhere; [] clears them. Requires server group support.
+     */
+    declare public readonly jitApproverGroups: pulumi.Output<string[] | undefined>;
+    /**
      * Emails of users who can approve Just-In-Time access requests.
      */
     declare public readonly jitApprovers: pulumi.Output<string[] | undefined>;
@@ -147,6 +151,7 @@ export class Endpoint extends pulumi.CustomResource {
             resourceInputs["groups"] = args?.groups;
             resourceInputs["idleTimeout"] = args?.idleTimeout;
             resourceInputs["isJitEnabled"] = args?.isJitEnabled;
+            resourceInputs["jitApproverGroups"] = args?.jitApproverGroups;
             resourceInputs["jitApprovers"] = args?.jitApprovers;
             resourceInputs["jitMode"] = args?.jitMode;
             resourceInputs["jitMultiApprover"] = args?.jitMultiApprover;
@@ -179,6 +184,7 @@ export class Endpoint extends pulumi.CustomResource {
             resourceInputs["groups"] = undefined /*out*/;
             resourceInputs["idleTimeout"] = undefined /*out*/;
             resourceInputs["isJitEnabled"] = undefined /*out*/;
+            resourceInputs["jitApproverGroups"] = undefined /*out*/;
             resourceInputs["jitApprovers"] = undefined /*out*/;
             resourceInputs["jitMode"] = undefined /*out*/;
             resourceInputs["jitMultiApprover"] = undefined /*out*/;
@@ -232,6 +238,10 @@ export interface EndpointArgs {
      * Whether Just-In-Time access approval is enabled.
      */
     isJitEnabled?: pulumi.Input<boolean>;
+    /**
+     * Workspace group names whose eligible members may approve JIT requests. Omit to preserve groups managed elsewhere; [] clears them. Requires server group support.
+     */
+    jitApproverGroups?: pulumi.Input<pulumi.Input<string>[]>;
     /**
      * Emails of users who can approve Just-In-Time access requests.
      */

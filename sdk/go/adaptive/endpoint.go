@@ -37,6 +37,8 @@ type Endpoint struct {
 	IdleTimeout pulumi.StringPtrOutput   `pulumi:"idleTimeout"`
 	// Whether Just-In-Time access approval is enabled.
 	IsJitEnabled pulumi.BoolPtrOutput `pulumi:"isJitEnabled"`
+	// Workspace group names whose eligible members may approve JIT requests. Omit to preserve groups managed elsewhere; [] clears them. Requires server group support.
+	JitApproverGroups pulumi.StringArrayOutput `pulumi:"jitApproverGroups"`
 	// Emails of users who can approve Just-In-Time access requests.
 	JitApprovers pulumi.StringArrayOutput `pulumi:"jitApprovers"`
 	// Which access paths require Just-In-Time approval: session, script, or both.
@@ -130,6 +132,8 @@ type endpointArgs struct {
 	IdleTimeout   *string  `pulumi:"idleTimeout"`
 	// Whether Just-In-Time access approval is enabled.
 	IsJitEnabled *bool `pulumi:"isJitEnabled"`
+	// Workspace group names whose eligible members may approve JIT requests. Omit to preserve groups managed elsewhere; [] clears them. Requires server group support.
+	JitApproverGroups []string `pulumi:"jitApproverGroups"`
 	// Emails of users who can approve Just-In-Time access requests.
 	JitApprovers []string `pulumi:"jitApprovers"`
 	// Which access paths require Just-In-Time approval: session, script, or both.
@@ -174,6 +178,8 @@ type EndpointArgs struct {
 	IdleTimeout   pulumi.StringPtrInput
 	// Whether Just-In-Time access approval is enabled.
 	IsJitEnabled pulumi.BoolPtrInput
+	// Workspace group names whose eligible members may approve JIT requests. Omit to preserve groups managed elsewhere; [] clears them. Requires server group support.
+	JitApproverGroups pulumi.StringArrayInput
 	// Emails of users who can approve Just-In-Time access requests.
 	JitApprovers pulumi.StringArrayInput
 	// Which access paths require Just-In-Time approval: session, script, or both.
@@ -346,6 +352,11 @@ func (o EndpointOutput) IdleTimeout() pulumi.StringPtrOutput {
 // Whether Just-In-Time access approval is enabled.
 func (o EndpointOutput) IsJitEnabled() pulumi.BoolPtrOutput {
 	return o.ApplyT(func(v *Endpoint) pulumi.BoolPtrOutput { return v.IsJitEnabled }).(pulumi.BoolPtrOutput)
+}
+
+// Workspace group names whose eligible members may approve JIT requests. Omit to preserve groups managed elsewhere; [] clears them. Requires server group support.
+func (o EndpointOutput) JitApproverGroups() pulumi.StringArrayOutput {
+	return o.ApplyT(func(v *Endpoint) pulumi.StringArrayOutput { return v.JitApproverGroups }).(pulumi.StringArrayOutput)
 }
 
 // Emails of users who can approve Just-In-Time access requests.

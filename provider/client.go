@@ -88,22 +88,23 @@ type IDResponse struct {
 }
 
 type CreateSessionRequest struct {
-	SessionName       string   `json:"sessionName"`
-	ResourceName      string   `json:"resourceName"`
-	ClusterName       string   `json:"clusterName,omitempty"`
-	AuthorizationName string   `json:"authorizationName,omitempty"`
-	SessionTTL        string   `json:"sessionTTL,omitempty"`
-	SessionType       string   `json:"sessionType"`
-	SessionUsers      []string `json:"sessionUsers,omitempty"`
-	IsJITEnabled      bool     `json:"is_jit_enabled"`
-	AccessApprovers   []string `json:"access_approvers"`
-	Memory            string   `json:"memory"`
-	CPU               string   `json:"cpu"`
-	UsersTags         []string `json:"usertags"`
-	PauseTimeout      string   `json:"pause_timeout,omitempty"`
-	Groups            []string `json:"groups,omitempty"`
-	IdleTimeout       string   `json:"idle_timeout,omitempty"`
-	ScriptOnlyAccess  bool     `json:"script_only_access"`
+	SessionName          string    `json:"sessionName"`
+	ResourceName         string    `json:"resourceName"`
+	ClusterName          string    `json:"clusterName,omitempty"`
+	AuthorizationName    string    `json:"authorizationName,omitempty"`
+	SessionTTL           string    `json:"sessionTTL,omitempty"`
+	SessionType          string    `json:"sessionType"`
+	SessionUsers         []string  `json:"sessionUsers,omitempty"`
+	IsJITEnabled         bool      `json:"is_jit_enabled"`
+	AccessApprovers      []string  `json:"access_approvers"`
+	AccessApproverGroups *[]string `json:"access_approver_groups,omitempty"`
+	Memory               string    `json:"memory"`
+	CPU                  string    `json:"cpu"`
+	UsersTags            []string  `json:"usertags"`
+	PauseTimeout         string    `json:"pause_timeout,omitempty"`
+	Groups               []string  `json:"groups,omitempty"`
+	IdleTimeout          string    `json:"idle_timeout,omitempty"`
+	ScriptOnlyAccess     bool      `json:"script_only_access"`
 
 	DisableOutputCapture  bool    `json:"disable_output_capture"`
 	DisableDataStudio     bool    `json:"disable_data_studio"`
@@ -223,6 +224,7 @@ type SessionReadResponse struct {
 	AutoApproval          bool     `json:"autoApproval"`
 	SessionUsers          []string `json:"sessionUsers"`
 	AccessApprovers       []string `json:"accessApprovers"`
+	AccessApproverGroups  []string `json:"accessApproverGroups"`
 	Groups                []string `json:"groups"`
 	UserTags              []string `json:"userTags"`
 	ScriptOnlyAccess      bool     `json:"scriptOnlyAccess"`
@@ -384,6 +386,12 @@ func (c *Client) DeleteResource(ctx context.Context, resourceID, resourceName st
 // ---------------------------------------------------------------------------
 
 func (c *Client) CreateSession(ctx context.Context, req CreateSessionRequest) (*IDResponse, error) {
+	if req.AccessApproverGroups != nil {
+		if err := c.requireJITApproverGroups(ctx, len(*req.AccessApproverGroups) > 0); err != nil {
+			return nil, err
+		}
+	}
+
 	body, err := encode(req)
 	if err != nil {
 		return nil, err
@@ -409,6 +417,12 @@ func (c *Client) CreateSession(ctx context.Context, req CreateSessionRequest) (*
 }
 
 func (c *Client) UpdateSession(ctx context.Context, sessionID string, req CreateSessionRequest) (*IDResponse, error) {
+	if req.AccessApproverGroups != nil {
+		if err := c.requireJITApproverGroups(ctx, len(*req.AccessApproverGroups) > 0); err != nil {
+			return nil, err
+		}
+	}
+
 	body, err := encode(req)
 	if err != nil {
 		return nil, err
