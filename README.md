@@ -363,7 +363,9 @@ grant endpoint access; overlapping members count once toward the existing quorum
 
 Omit `jitApproverGroups` to leave externally configured groups unmanaged. An
 explicit empty list clears only groups. Refresh preserves unmanaged fields and
-import adopts the server's group selection. The provider rejects unsupported
+import adopts the server's group selection. If groups are managed, refresh fails
+when the server omits the group field, rather than recording an empty selection.
+User-only programs still refresh against older servers. The provider rejects unsupported
 servers before mutation. Deploy group-aware API and worker versions and enable
 `JIT_APPROVER_GROUPS_ENABLED=true` before setting groups. Group-only changes do not
 restart endpoints.

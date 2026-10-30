@@ -8,6 +8,8 @@ import (
 	"reflect"
 	"strings"
 	"testing"
+
+	"github.com/pulumi/pulumi-go-provider/infer"
 )
 
 func TestJITGroupPresenceAndRefresh(t *testing.T) {
@@ -45,6 +47,48 @@ func TestJITGroupPresenceAndRefresh(t *testing.T) {
 	}
 	if got := applyEndpointRead(EndpointArgs{JitApproverGroups: []string{"old"}}, server, false); !reflect.DeepEqual(got.JitApproverGroups, server.AccessApproverGroups) {
 		t.Fatal("refresh lost drift")
+	}
+}
+
+func TestJITGroupRefreshMissingFieldCompatibility(t *testing.T) {
+	for _, tc := range []struct {
+		name    string
+		groups  []string
+		body    string
+		wantErr bool
+	}{
+		{"legacy server unmanaged", nil, `{"id":"ep","name":"prod"}`, false},
+		{"legacy server managed", []string{"On call"}, `{"id":"ep","name":"prod"}`, true},
+		{"null managed", []string{"On call"}, `{"id":"ep","name":"prod","accessApproverGroups":null}`, true},
+		{"clear on legacy server", []string{}, `{"id":"ep","name":"prod"}`, true},
+		{"cleared on server", []string{"On call"}, `{"id":"ep","name":"prod","accessApproverGroups":[]}`, false},
+	} {
+		t.Run(tc.name, func(t *testing.T) {
+			api := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+				if r.Method != http.MethodGet {
+					t.Error("refresh must not mutate the endpoint")
+				}
+				_, _ = w.Write([]byte(tc.body))
+			}))
+			defer api.Close()
+			t.Setenv("ADAPTIVE_URL", api.URL)
+			t.Setenv("ADAPTIVE_SVC_TOKEN", "test-token")
+			result, err := (&Endpoint{}).Read(context.Background(), infer.ReadRequest[EndpointArgs, EndpointState]{
+				ID: "ep", Inputs: EndpointArgs{Name: "prod", Resource: "database", JitApproverGroups: tc.groups},
+			})
+			if tc.wantErr {
+				if err == nil || !strings.Contains(err.Error(), "omitted JIT approver groups") {
+					t.Fatalf("missing group readback must fail rather than clear managed state: %v", err)
+				}
+				return
+			}
+			if err != nil {
+				t.Fatal(err)
+			}
+			if result.ID != "ep" || (tc.groups == nil) != (result.Inputs.JitApproverGroups == nil) || len(result.Inputs.JitApproverGroups) != 0 {
+				t.Fatalf("unexpected refresh result: %#v", result)
+			}
+		})
 	}
 }
 

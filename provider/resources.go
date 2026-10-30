@@ -218,6 +218,12 @@ func (*Endpoint) Read(ctx context.Context, req infer.ReadRequest[EndpointArgs, E
 	if isImport && r.Name == "" {
 		return infer.ReadResponse[EndpointArgs, EndpointState]{}, notFoundOnImport("endpoint", req.ID)
 	}
+	// A group-unaware server cannot tell us whether managed groups were cleared.
+	// Keep legacy refresh/import working, but never overwrite managed state
+	// with an invented empty selection when the field is missing or null.
+	if req.Inputs.JitApproverGroups != nil && r.AccessApproverGroups == nil {
+		return infer.ReadResponse[EndpointArgs, EndpointState]{}, fmt.Errorf("server omitted JIT approver groups; upgrade the server before refreshing this field")
+	}
 	inputs := applyEndpointRead(req.Inputs, r, isImport)
 	state := EndpointState{EndpointArgs: inputs}
 	fillEndpointOutputs(&state, r)
