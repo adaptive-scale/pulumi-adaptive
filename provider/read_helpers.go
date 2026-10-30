@@ -214,6 +214,13 @@ func applyEndpointRead(prior EndpointArgs, r *SessionReadResponse, isImport bool
 	a.Groups = setList(prior.Groups, r.Groups, isImport)
 	a.IsJitEnabled = boolOptAdopt(prior.IsJitEnabled, r.IsJITEnabled, isImport)
 	a.JitApprovers = setList(prior.JitApprovers, r.AccessApprovers, isImport)
+	// Unset means unmanaged, even if another control surface configured groups.
+	if prior.JitApproverGroups != nil || isImport {
+		a.JitApproverGroups = setList(prior.JitApproverGroups, r.AccessApproverGroups, isImport)
+		if prior.JitApproverGroups != nil && len(r.AccessApproverGroups) == 0 {
+			a.JitApproverGroups = []string{}
+		}
+	}
 	a.PauseTimeout = strOptAdopt(prior.PauseTimeout, r.PauseTimeout, isImport)
 	// CPU and memory are server-defaulted for endpoint pods; adopting defaults
 	// into omitted inputs would create perpetual diffs.

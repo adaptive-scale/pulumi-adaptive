@@ -262,6 +262,13 @@
           "type": "boolean",
           "description": "Whether Just-In-Time access approval is enabled."
         },
+        "jitApproverGroups": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          },
+          "description": "Workspace group names whose eligible members may approve JIT requests. Omit to preserve groups managed elsewhere; [] clears them. Requires server group support."
+        },
         "jitApprovers": {
           "type": "array",
           "items": {
@@ -372,6 +379,13 @@
         "isJitEnabled": {
           "type": "boolean",
           "description": "Whether Just-In-Time access approval is enabled."
+        },
+        "jitApproverGroups": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          },
+          "description": "Workspace group names whose eligible members may approve JIT requests. Omit to preserve groups managed elsewhere; [] clears them. Requires server group support."
         },
         "jitApprovers": {
           "type": "array",

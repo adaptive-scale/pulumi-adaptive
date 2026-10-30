@@ -15,22 +15,23 @@ import (
 type Endpoint struct{}
 
 type EndpointArgs struct {
-	Name             string   `pulumi:"name"`
-	Resource         string   `pulumi:"resource"`
-	Type             *string  `pulumi:"type,optional"`
-	TTL              *string  `pulumi:"ttl,optional"`
-	Authorization    *string  `pulumi:"authorization,optional"`
-	Cluster          *string  `pulumi:"cluster,optional"`
-	IdleTimeout      *string  `pulumi:"idleTimeout,optional"`
-	Users            []string `pulumi:"users,optional"`
-	Groups           []string `pulumi:"groups,optional"`
-	IsJitEnabled     *bool    `pulumi:"isJitEnabled,optional"`
-	JitApprovers     []string `pulumi:"jitApprovers,optional"`
-	PauseTimeout     *string  `pulumi:"pauseTimeout,optional"`
-	Memory           *string  `pulumi:"memory,optional"`
-	CPU              *string  `pulumi:"cpu,optional"`
-	ScriptOnlyAccess *bool    `pulumi:"scriptOnlyAccess,optional"`
-	Tags             []string `pulumi:"tags,optional"`
+	Name              string   `pulumi:"name"`
+	Resource          string   `pulumi:"resource"`
+	Type              *string  `pulumi:"type,optional"`
+	TTL               *string  `pulumi:"ttl,optional"`
+	Authorization     *string  `pulumi:"authorization,optional"`
+	Cluster           *string  `pulumi:"cluster,optional"`
+	IdleTimeout       *string  `pulumi:"idleTimeout,optional"`
+	Users             []string `pulumi:"users,optional"`
+	Groups            []string `pulumi:"groups,optional"`
+	IsJitEnabled      *bool    `pulumi:"isJitEnabled,optional"`
+	JitApprovers      []string `pulumi:"jitApprovers,optional"`
+	JitApproverGroups []string `pulumi:"jitApproverGroups,optional"`
+	PauseTimeout      *string  `pulumi:"pauseTimeout,optional"`
+	Memory            *string  `pulumi:"memory,optional"`
+	CPU               *string  `pulumi:"cpu,optional"`
+	ScriptOnlyAccess  *bool    `pulumi:"scriptOnlyAccess,optional"`
+	Tags              []string `pulumi:"tags,optional"`
 
 	DisableOutputCapture  *bool   `pulumi:"disableOutputCapture,optional"`
 	DisableDataStudio     *bool   `pulumi:"disableDataStudio,optional"`
@@ -58,6 +59,7 @@ func (e *EndpointArgs) Annotate(a infer.Annotator) {
 	a.Describe(&e.TTL, "Time-to-live for the endpoint, e.g. 8h, 7d, 90d.")
 	a.Describe(&e.Authorization, "The authorization (by name) to apply to this endpoint.")
 	a.Describe(&e.IsJitEnabled, "Whether Just-In-Time access approval is enabled.")
+	a.Describe(&e.JitApproverGroups, "Workspace group names whose eligible members may approve JIT requests. Omit to preserve groups managed elsewhere; [] clears them. Requires server group support.")
 	a.Describe(&e.JitApprovers, "Emails of users who can approve Just-In-Time access requests.")
 	a.Describe(&e.ScriptOnlyAccess, "Whether the endpoint is only accessible via script.")
 	a.Describe(&e.DisableOutputCapture, "Do not retain terminal output for this endpoint. "+
@@ -98,22 +100,23 @@ func (a EndpointArgs) toSessionRequest() (CreateSessionRequest, error) {
 		return CreateSessionRequest{}, fmt.Errorf("invalid session type: %s", sv(a.Type))
 	}
 	return CreateSessionRequest{
-		SessionName:       a.Name,
-		ResourceName:      a.Resource,
-		AuthorizationName: sv(a.Authorization),
-		ClusterName:       sv(a.Cluster),
-		SessionTTL:        sv(a.TTL),
-		SessionType:       st,
-		SessionUsers:      a.Users,
-		IsJITEnabled:      bv(a.IsJitEnabled),
-		AccessApprovers:   a.JitApprovers,
-		PauseTimeout:      sv(a.PauseTimeout),
-		Memory:            sv(a.Memory),
-		CPU:               sv(a.CPU),
-		UsersTags:         a.Tags,
-		Groups:            a.Groups,
-		IdleTimeout:       sv(a.IdleTimeout),
-		ScriptOnlyAccess:  bv(a.ScriptOnlyAccess),
+		SessionName:          a.Name,
+		ResourceName:         a.Resource,
+		AuthorizationName:    sv(a.Authorization),
+		ClusterName:          sv(a.Cluster),
+		SessionTTL:           sv(a.TTL),
+		SessionType:          st,
+		SessionUsers:         a.Users,
+		IsJITEnabled:         bv(a.IsJitEnabled),
+		AccessApprovers:      a.JitApprovers,
+		AccessApproverGroups: optionalGroupList(a.JitApproverGroups),
+		PauseTimeout:         sv(a.PauseTimeout),
+		Memory:               sv(a.Memory),
+		CPU:                  sv(a.CPU),
+		UsersTags:            a.Tags,
+		Groups:               a.Groups,
+		IdleTimeout:          sv(a.IdleTimeout),
+		ScriptOnlyAccess:     bv(a.ScriptOnlyAccess),
 
 		DisableOutputCapture:  bv(a.DisableOutputCapture),
 		DisableDataStudio:     bv(a.DisableDataStudio),
@@ -214,6 +217,12 @@ func (*Endpoint) Read(ctx context.Context, req infer.ReadRequest[EndpointArgs, E
 	// lose.
 	if isImport && r.Name == "" {
 		return infer.ReadResponse[EndpointArgs, EndpointState]{}, notFoundOnImport("endpoint", req.ID)
+	}
+	// A group-unaware server cannot tell us whether managed groups were cleared.
+	// Keep legacy refresh/import working, but never overwrite managed state
+	// with an invented empty selection when the field is missing or null.
+	if req.Inputs.JitApproverGroups != nil && r.AccessApproverGroups == nil {
+		return infer.ReadResponse[EndpointArgs, EndpointState]{}, fmt.Errorf("server omitted JIT approver groups; upgrade the server before refreshing this field")
 	}
 	inputs := applyEndpointRead(req.Inputs, r, isImport)
 	state := EndpointState{EndpointArgs: inputs}
