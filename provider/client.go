@@ -995,3 +995,131 @@ func resolveToken() (string, string, error) {
 	// raw string
 	return strings.TrimSpace(serviceToken), workspaceURL, nil
 }
+
+// ---------------------------------------------------------------------------
+// Workspace settings and SSO sync
+// ---------------------------------------------------------------------------
+
+func (c *Client) workspaceSettingsAPI() string {
+	return c.workspaceURL + "/terraform/workspace/settings"
+}
+func (c *Client) ssoSyncAPI() string { return c.workspaceURL + "/terraform/sso-sync" }
+
+// WorkspaceSettingsBody is both the partial-update request and the read model of
+// the workspace settings endpoints. Every field is a pointer: nil is omitted from
+// requests (the server leaves it untouched), and a non-nil zero value is an
+// explicit set, including the empty string.
+type WorkspaceSettingsBody struct {
+	DefaultCluster                     *string `json:"defaultCluster,omitempty"`
+	DefaultLoginEnabled                *bool   `json:"defaultLoginEnabled,omitempty"`
+	MfaEnabled                         *bool   `json:"mfaEnabled,omitempty"`
+	MfaOtpRequiredOnAccess             *bool   `json:"mfaOtpRequiredOnAccess,omitempty"`
+	RequireCommentsOnAccessRequests    *bool   `json:"requireCommentsOnAccessRequests,omitempty"`
+	DisableNewAccessRequest            *bool   `json:"disableNewAccessRequest,omitempty"`
+	MaxJitRequestDuration              *string `json:"maxJitRequestDuration,omitempty"`
+	PendingRequestExpiry               *string `json:"pendingRequestExpiry,omitempty"`
+	Timezone                           *string `json:"timezone,omitempty"`
+	ExpirationNotificationsEnabled     *bool   `json:"expirationNotificationsEnabled,omitempty"`
+	SsoSyncEnabled                     *bool   `json:"ssoSyncEnabled,omitempty"`
+	SsoSyncInterval                    *string `json:"ssoSyncInterval,omitempty"`
+	RemoveSsoDeletedUsersFromEndpoints *bool   `json:"removeSsoDeletedUsersFromEndpoints,omitempty"`
+	DefaultChatProviderId              *string `json:"defaultChatProviderId,omitempty"`
+	DefaultTicketProviderId            *string `json:"defaultTicketProviderId,omitempty"`
+	DefaultLogForwarder                *string `json:"defaultLogForwarder,omitempty"`
+	SessionTimeout                     *string `json:"sessionTimeout,omitempty"`
+	EndpointSleepTimeout               *string `json:"endpointSleepTimeout,omitempty"`
+	IntegrationProbeInterval           *string `json:"integrationProbeInterval,omitempty"`
+	DefaultCpu                         *string `json:"defaultCpu,omitempty"`
+	DefaultMemory                      *string `json:"defaultMemory,omitempty"`
+}
+
+func (c *Client) ReadWorkspaceSettings(ctx context.Context) (*WorkspaceSettingsBody, error) {
+	return readTyped[WorkspaceSettingsBody](c, ctx, c.workspaceSettingsAPI()+"/read", "workspace settings", "workspace-settings")
+}
+
+func (c *Client) UpdateWorkspaceSettings(ctx context.Context, req WorkspaceSettingsBody) (*WorkspaceSettingsBody, error) {
+	body, err := encode(req)
+	if err != nil {
+		return nil, err
+	}
+	resp, err := c.do(ctx, mustReq("POST", c.workspaceSettingsAPI()+"/update", body))
+	if err != nil {
+		return nil, err
+	}
+	defer resp.Body.Close()
+	if resp.StatusCode != http.StatusOK {
+		return nil, fmt.Errorf("error updating workspace settings: %s", readBody(resp))
+	}
+	var out WorkspaceSettingsBody
+	if err := json.NewDecoder(resp.Body).Decode(&out); err != nil {
+		return nil, err
+	}
+	return &out, nil
+}
+
+type SsoSyncGroup struct {
+	ID   string `json:"id"`
+	Name string `json:"name"`
+}
+
+type SsoSyncReadResponse struct {
+	ProviderID      string         `json:"providerId"`
+	ProviderType    string         `json:"providerType"`
+	LoginEnabled    bool           `json:"loginEnabled"`
+	AutoSyncEnabled bool           `json:"autoSyncEnabled"`
+	RoleSyncEnabled bool           `json:"roleSyncEnabled"`
+	Groups          []SsoSyncGroup `json:"groups"`
+}
+
+func (r *SsoSyncReadResponse) readID() string { return r.ProviderID }
+
+type SsoSyncUpdateRequest struct {
+	LoginEnabled    *bool    `json:"loginEnabled,omitempty"`
+	AutoSyncEnabled *bool    `json:"autoSyncEnabled,omitempty"`
+	RoleSyncEnabled *bool    `json:"roleSyncEnabled,omitempty"`
+	Groups          []string `json:"groups"`
+	SyncNow         bool     `json:"syncNow"`
+}
+
+func (c *Client) ReadSsoSync(ctx context.Context, providerID string) (*SsoSyncReadResponse, error) {
+	return readTyped[SsoSyncReadResponse](c, ctx, fmt.Sprintf("%s/read/%s", c.ssoSyncAPI(), providerID), "sso sync", providerID)
+}
+
+func (c *Client) UpdateSsoSync(ctx context.Context, providerID string, req SsoSyncUpdateRequest) (*SsoSyncReadResponse, error) {
+	if req.Groups == nil {
+		req.Groups = []string{}
+	}
+	body, err := encode(req)
+	if err != nil {
+		return nil, err
+	}
+	resp, err := c.do(ctx, mustReq("POST", fmt.Sprintf("%s/update/%s", c.ssoSyncAPI(), providerID), body))
+	if err != nil {
+		return nil, err
+	}
+	defer resp.Body.Close()
+	if resp.StatusCode != http.StatusOK {
+		return nil, fmt.Errorf("error updating sso sync %s: %s", providerID, readBody(resp))
+	}
+	var out SsoSyncReadResponse
+	if err := json.NewDecoder(resp.Body).Decode(&out); err != nil {
+		return nil, err
+	}
+	return &out, nil
+}
+
+// DeleteSsoSync clears the persisted group list. A 404 means it is already gone.
+func (c *Client) DeleteSsoSync(ctx context.Context, providerID string) error {
+	resp, err := c.do(ctx, mustReq("POST", fmt.Sprintf("%s/delete/%s", c.ssoSyncAPI(), providerID), nil))
+	if err != nil {
+		return err
+	}
+	defer resp.Body.Close()
+	if resp.StatusCode == http.StatusNotFound {
+		return nil
+	}
+	if resp.StatusCode != http.StatusOK {
+		return fmt.Errorf("error deleting sso sync %s: %s", providerID, readBody(resp))
+	}
+	return nil
+}
