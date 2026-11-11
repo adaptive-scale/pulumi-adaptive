@@ -210,6 +210,13 @@ db = adaptive.Resource("db",
     password=cfg.require_secret("dbPassword"))
 ```
 
+Optional resource string inputs distinguish omission from an explicit empty
+string. If Adaptive reports an empty value, refresh keeps an omitted input
+omitted and an explicitly empty input empty. For example, a Snowflake resource
+with `password=""` does not continually re-add that empty password after refresh.
+A previously nonempty value cleared in Adaptive is still reconciled as cleared;
+this does not suppress actual secret drift or bypass held-value update guards.
+
 **Secret drift detection.** The Adaptive API never returns secret values, but
 it returns an opaque server-side fingerprint per secret field
 (`appliedDigests` on resources, `commandDigest` on scripts). The provider
