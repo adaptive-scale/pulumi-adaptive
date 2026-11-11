@@ -32,7 +32,6 @@ class WorkspaceSettingsArgs:
                  integration_probe_interval: Optional[pulumi.Input[_builtins.str]] = None,
                  max_jit_request_duration: Optional[pulumi.Input[_builtins.str]] = None,
                  mfa_enabled: Optional[pulumi.Input[_builtins.bool]] = None,
-                 mfa_otp_required_on_access: Optional[pulumi.Input[_builtins.bool]] = None,
                  pending_request_expiry: Optional[pulumi.Input[_builtins.str]] = None,
                  remove_sso_deleted_users_from_endpoints: Optional[pulumi.Input[_builtins.bool]] = None,
                  require_comments_on_access_requests: Optional[pulumi.Input[_builtins.bool]] = None,
@@ -43,27 +42,26 @@ class WorkspaceSettingsArgs:
         """
         The set of arguments for constructing a WorkspaceSettings resource.
 
-        :param pulumi.Input[_builtins.str] default_chat_provider_id: Id of the default chat (e.g. Slack) integration.
-        :param pulumi.Input[_builtins.str] default_cluster: Default cluster for new endpoints.
-        :param pulumi.Input[_builtins.str] default_cpu: Default CPU for endpoint pods.
-        :param pulumi.Input[_builtins.str] default_log_forwarder: Default log forwarder.
+        :param pulumi.Input[_builtins.str] default_chat_provider_id: Id of the default Slack/Teams integration. Set to an empty string to clear.
+        :param pulumi.Input[_builtins.str] default_cluster: Default cluster for new endpoints: "0", "1" or a Kubernetes resource id.
+        :param pulumi.Input[_builtins.str] default_cpu: Default CPU for endpoint pods, a Kubernetes quantity (e.g. 0.5, 500m).
+        :param pulumi.Input[_builtins.str] default_log_forwarder: Id of the default logger integration (a JSON array string for several). Set to an empty string to clear.
         :param pulumi.Input[_builtins.bool] default_login_enabled: Whether password/default login is enabled. Setting false while no SSO login method is enabled is rejected by the server (lock-out guard).
-        :param pulumi.Input[_builtins.str] default_memory: Default memory for endpoint pods.
-        :param pulumi.Input[_builtins.str] default_ticket_provider_id: Id of the default ticketing integration.
+        :param pulumi.Input[_builtins.str] default_memory: Default memory for endpoint pods (e.g. 500Mi, 2Gi).
+        :param pulumi.Input[_builtins.str] default_ticket_provider_id: Id of the default FreshService integration. Set to an empty string to clear.
         :param pulumi.Input[_builtins.bool] disable_new_access_request: Whether new access requests are disabled.
         :param pulumi.Input[_builtins.str] endpoint_sleep_timeout: Idle time before endpoints are put to sleep.
         :param pulumi.Input[_builtins.bool] expiration_notifications_enabled: Whether access-expiration notifications are sent.
         :param pulumi.Input[_builtins.str] integration_probe_interval: Interval between integration health probes.
-        :param pulumi.Input[_builtins.str] max_jit_request_duration: Maximum duration of a just-in-time access request (e.g. 8h).
-        :param pulumi.Input[_builtins.bool] mfa_enabled: Whether multi-factor authentication is enabled.
-        :param pulumi.Input[_builtins.bool] mfa_otp_required_on_access: Whether an OTP is required each time access is used.
-        :param pulumi.Input[_builtins.str] pending_request_expiry: How long a pending access request lives before it expires (e.g. 24h).
+        :param pulumi.Input[_builtins.str] max_jit_request_duration: Maximum duration of a just-in-time access request (e.g. 8h, 1d). Set to an empty string to clear the limit.
+        :param pulumi.Input[_builtins.bool] mfa_enabled: Whether multi-factor authentication is enabled (also sets MFA on access, as in the UI).
+        :param pulumi.Input[_builtins.str] pending_request_expiry: How long a pending access request lives before it expires (e.g. 24h). Set to an empty string to clear.
         :param pulumi.Input[_builtins.bool] remove_sso_deleted_users_from_endpoints: Whether users deleted at the IdP are removed from endpoints.
         :param pulumi.Input[_builtins.bool] require_comments_on_access_requests: Whether access requests must include a comment.
         :param pulumi.Input[_builtins.str] session_timeout: Web session timeout.
         :param pulumi.Input[_builtins.bool] sso_sync_enabled: Whether automatic SSO user/group sync is enabled.
         :param pulumi.Input[_builtins.str] sso_sync_interval: Interval of the automatic SSO sync.
-        :param pulumi.Input[_builtins.str] timezone: Workspace IANA timezone.
+        :param pulumi.Input[_builtins.str] timezone: Workspace IANA timezone. Set to an empty string to use the server zone.
         """
         if default_chat_provider_id is not None:
             pulumi.set(__self__, "default_chat_provider_id", default_chat_provider_id)
@@ -91,8 +89,6 @@ class WorkspaceSettingsArgs:
             pulumi.set(__self__, "max_jit_request_duration", max_jit_request_duration)
         if mfa_enabled is not None:
             pulumi.set(__self__, "mfa_enabled", mfa_enabled)
-        if mfa_otp_required_on_access is not None:
-            pulumi.set(__self__, "mfa_otp_required_on_access", mfa_otp_required_on_access)
         if pending_request_expiry is not None:
             pulumi.set(__self__, "pending_request_expiry", pending_request_expiry)
         if remove_sso_deleted_users_from_endpoints is not None:
@@ -112,7 +108,7 @@ class WorkspaceSettingsArgs:
     @pulumi.getter(name="defaultChatProviderId")
     def default_chat_provider_id(self) -> Optional[pulumi.Input[_builtins.str]]:
         """
-        Id of the default chat (e.g. Slack) integration.
+        Id of the default Slack/Teams integration. Set to an empty string to clear.
         """
         return pulumi.get(self, "default_chat_provider_id")
 
@@ -124,7 +120,7 @@ class WorkspaceSettingsArgs:
     @pulumi.getter(name="defaultCluster")
     def default_cluster(self) -> Optional[pulumi.Input[_builtins.str]]:
         """
-        Default cluster for new endpoints.
+        Default cluster for new endpoints: "0", "1" or a Kubernetes resource id.
         """
         return pulumi.get(self, "default_cluster")
 
@@ -136,7 +132,7 @@ class WorkspaceSettingsArgs:
     @pulumi.getter(name="defaultCpu")
     def default_cpu(self) -> Optional[pulumi.Input[_builtins.str]]:
         """
-        Default CPU for endpoint pods.
+        Default CPU for endpoint pods, a Kubernetes quantity (e.g. 0.5, 500m).
         """
         return pulumi.get(self, "default_cpu")
 
@@ -148,7 +144,7 @@ class WorkspaceSettingsArgs:
     @pulumi.getter(name="defaultLogForwarder")
     def default_log_forwarder(self) -> Optional[pulumi.Input[_builtins.str]]:
         """
-        Default log forwarder.
+        Id of the default logger integration (a JSON array string for several). Set to an empty string to clear.
         """
         return pulumi.get(self, "default_log_forwarder")
 
@@ -172,7 +168,7 @@ class WorkspaceSettingsArgs:
     @pulumi.getter(name="defaultMemory")
     def default_memory(self) -> Optional[pulumi.Input[_builtins.str]]:
         """
-        Default memory for endpoint pods.
+        Default memory for endpoint pods (e.g. 500Mi, 2Gi).
         """
         return pulumi.get(self, "default_memory")
 
@@ -184,7 +180,7 @@ class WorkspaceSettingsArgs:
     @pulumi.getter(name="defaultTicketProviderId")
     def default_ticket_provider_id(self) -> Optional[pulumi.Input[_builtins.str]]:
         """
-        Id of the default ticketing integration.
+        Id of the default FreshService integration. Set to an empty string to clear.
         """
         return pulumi.get(self, "default_ticket_provider_id")
 
@@ -244,7 +240,7 @@ class WorkspaceSettingsArgs:
     @pulumi.getter(name="maxJitRequestDuration")
     def max_jit_request_duration(self) -> Optional[pulumi.Input[_builtins.str]]:
         """
-        Maximum duration of a just-in-time access request (e.g. 8h).
+        Maximum duration of a just-in-time access request (e.g. 8h, 1d). Set to an empty string to clear the limit.
         """
         return pulumi.get(self, "max_jit_request_duration")
 
@@ -256,7 +252,7 @@ class WorkspaceSettingsArgs:
     @pulumi.getter(name="mfaEnabled")
     def mfa_enabled(self) -> Optional[pulumi.Input[_builtins.bool]]:
         """
-        Whether multi-factor authentication is enabled.
+        Whether multi-factor authentication is enabled (also sets MFA on access, as in the UI).
         """
         return pulumi.get(self, "mfa_enabled")
 
@@ -265,22 +261,10 @@ class WorkspaceSettingsArgs:
         pulumi.set(self, "mfa_enabled", value)
 
     @_builtins.property
-    @pulumi.getter(name="mfaOtpRequiredOnAccess")
-    def mfa_otp_required_on_access(self) -> Optional[pulumi.Input[_builtins.bool]]:
-        """
-        Whether an OTP is required each time access is used.
-        """
-        return pulumi.get(self, "mfa_otp_required_on_access")
-
-    @mfa_otp_required_on_access.setter
-    def mfa_otp_required_on_access(self, value: Optional[pulumi.Input[_builtins.bool]]):
-        pulumi.set(self, "mfa_otp_required_on_access", value)
-
-    @_builtins.property
     @pulumi.getter(name="pendingRequestExpiry")
     def pending_request_expiry(self) -> Optional[pulumi.Input[_builtins.str]]:
         """
-        How long a pending access request lives before it expires (e.g. 24h).
+        How long a pending access request lives before it expires (e.g. 24h). Set to an empty string to clear.
         """
         return pulumi.get(self, "pending_request_expiry")
 
@@ -352,7 +336,7 @@ class WorkspaceSettingsArgs:
     @pulumi.getter
     def timezone(self) -> Optional[pulumi.Input[_builtins.str]]:
         """
-        Workspace IANA timezone.
+        Workspace IANA timezone. Set to an empty string to use the server zone.
         """
         return pulumi.get(self, "timezone")
 
@@ -380,7 +364,6 @@ class WorkspaceSettings(pulumi.CustomResource):
                  integration_probe_interval: Optional[pulumi.Input[_builtins.str]] = None,
                  max_jit_request_duration: Optional[pulumi.Input[_builtins.str]] = None,
                  mfa_enabled: Optional[pulumi.Input[_builtins.bool]] = None,
-                 mfa_otp_required_on_access: Optional[pulumi.Input[_builtins.bool]] = None,
                  pending_request_expiry: Optional[pulumi.Input[_builtins.str]] = None,
                  remove_sso_deleted_users_from_endpoints: Optional[pulumi.Input[_builtins.bool]] = None,
                  require_comments_on_access_requests: Optional[pulumi.Input[_builtins.bool]] = None,
@@ -394,27 +377,26 @@ class WorkspaceSettings(pulumi.CustomResource):
 
         :param str resource_name: The name of the resource.
         :param pulumi.ResourceOptions opts: Options for the resource.
-        :param pulumi.Input[_builtins.str] default_chat_provider_id: Id of the default chat (e.g. Slack) integration.
-        :param pulumi.Input[_builtins.str] default_cluster: Default cluster for new endpoints.
-        :param pulumi.Input[_builtins.str] default_cpu: Default CPU for endpoint pods.
-        :param pulumi.Input[_builtins.str] default_log_forwarder: Default log forwarder.
+        :param pulumi.Input[_builtins.str] default_chat_provider_id: Id of the default Slack/Teams integration. Set to an empty string to clear.
+        :param pulumi.Input[_builtins.str] default_cluster: Default cluster for new endpoints: "0", "1" or a Kubernetes resource id.
+        :param pulumi.Input[_builtins.str] default_cpu: Default CPU for endpoint pods, a Kubernetes quantity (e.g. 0.5, 500m).
+        :param pulumi.Input[_builtins.str] default_log_forwarder: Id of the default logger integration (a JSON array string for several). Set to an empty string to clear.
         :param pulumi.Input[_builtins.bool] default_login_enabled: Whether password/default login is enabled. Setting false while no SSO login method is enabled is rejected by the server (lock-out guard).
-        :param pulumi.Input[_builtins.str] default_memory: Default memory for endpoint pods.
-        :param pulumi.Input[_builtins.str] default_ticket_provider_id: Id of the default ticketing integration.
+        :param pulumi.Input[_builtins.str] default_memory: Default memory for endpoint pods (e.g. 500Mi, 2Gi).
+        :param pulumi.Input[_builtins.str] default_ticket_provider_id: Id of the default FreshService integration. Set to an empty string to clear.
         :param pulumi.Input[_builtins.bool] disable_new_access_request: Whether new access requests are disabled.
         :param pulumi.Input[_builtins.str] endpoint_sleep_timeout: Idle time before endpoints are put to sleep.
         :param pulumi.Input[_builtins.bool] expiration_notifications_enabled: Whether access-expiration notifications are sent.
         :param pulumi.Input[_builtins.str] integration_probe_interval: Interval between integration health probes.
-        :param pulumi.Input[_builtins.str] max_jit_request_duration: Maximum duration of a just-in-time access request (e.g. 8h).
-        :param pulumi.Input[_builtins.bool] mfa_enabled: Whether multi-factor authentication is enabled.
-        :param pulumi.Input[_builtins.bool] mfa_otp_required_on_access: Whether an OTP is required each time access is used.
-        :param pulumi.Input[_builtins.str] pending_request_expiry: How long a pending access request lives before it expires (e.g. 24h).
+        :param pulumi.Input[_builtins.str] max_jit_request_duration: Maximum duration of a just-in-time access request (e.g. 8h, 1d). Set to an empty string to clear the limit.
+        :param pulumi.Input[_builtins.bool] mfa_enabled: Whether multi-factor authentication is enabled (also sets MFA on access, as in the UI).
+        :param pulumi.Input[_builtins.str] pending_request_expiry: How long a pending access request lives before it expires (e.g. 24h). Set to an empty string to clear.
         :param pulumi.Input[_builtins.bool] remove_sso_deleted_users_from_endpoints: Whether users deleted at the IdP are removed from endpoints.
         :param pulumi.Input[_builtins.bool] require_comments_on_access_requests: Whether access requests must include a comment.
         :param pulumi.Input[_builtins.str] session_timeout: Web session timeout.
         :param pulumi.Input[_builtins.bool] sso_sync_enabled: Whether automatic SSO user/group sync is enabled.
         :param pulumi.Input[_builtins.str] sso_sync_interval: Interval of the automatic SSO sync.
-        :param pulumi.Input[_builtins.str] timezone: Workspace IANA timezone.
+        :param pulumi.Input[_builtins.str] timezone: Workspace IANA timezone. Set to an empty string to use the server zone.
         """
         ...
     @overload
@@ -453,7 +435,6 @@ class WorkspaceSettings(pulumi.CustomResource):
                  integration_probe_interval: Optional[pulumi.Input[_builtins.str]] = None,
                  max_jit_request_duration: Optional[pulumi.Input[_builtins.str]] = None,
                  mfa_enabled: Optional[pulumi.Input[_builtins.bool]] = None,
-                 mfa_otp_required_on_access: Optional[pulumi.Input[_builtins.bool]] = None,
                  pending_request_expiry: Optional[pulumi.Input[_builtins.str]] = None,
                  remove_sso_deleted_users_from_endpoints: Optional[pulumi.Input[_builtins.bool]] = None,
                  require_comments_on_access_requests: Optional[pulumi.Input[_builtins.bool]] = None,
@@ -483,7 +464,6 @@ class WorkspaceSettings(pulumi.CustomResource):
             __props__.__dict__["integration_probe_interval"] = integration_probe_interval
             __props__.__dict__["max_jit_request_duration"] = max_jit_request_duration
             __props__.__dict__["mfa_enabled"] = mfa_enabled
-            __props__.__dict__["mfa_otp_required_on_access"] = mfa_otp_required_on_access
             __props__.__dict__["pending_request_expiry"] = pending_request_expiry
             __props__.__dict__["remove_sso_deleted_users_from_endpoints"] = remove_sso_deleted_users_from_endpoints
             __props__.__dict__["require_comments_on_access_requests"] = require_comments_on_access_requests
@@ -526,7 +506,6 @@ class WorkspaceSettings(pulumi.CustomResource):
         __props__.__dict__["integration_probe_interval"] = None
         __props__.__dict__["max_jit_request_duration"] = None
         __props__.__dict__["mfa_enabled"] = None
-        __props__.__dict__["mfa_otp_required_on_access"] = None
         __props__.__dict__["pending_request_expiry"] = None
         __props__.__dict__["remove_sso_deleted_users_from_endpoints"] = None
         __props__.__dict__["require_comments_on_access_requests"] = None
@@ -540,7 +519,7 @@ class WorkspaceSettings(pulumi.CustomResource):
     @pulumi.getter(name="defaultChatProviderId")
     def default_chat_provider_id(self) -> pulumi.Output[Optional[_builtins.str]]:
         """
-        Id of the default chat (e.g. Slack) integration.
+        Id of the default Slack/Teams integration. Set to an empty string to clear.
         """
         return pulumi.get(self, "default_chat_provider_id")
 
@@ -548,7 +527,7 @@ class WorkspaceSettings(pulumi.CustomResource):
     @pulumi.getter(name="defaultCluster")
     def default_cluster(self) -> pulumi.Output[Optional[_builtins.str]]:
         """
-        Default cluster for new endpoints.
+        Default cluster for new endpoints: "0", "1" or a Kubernetes resource id.
         """
         return pulumi.get(self, "default_cluster")
 
@@ -556,7 +535,7 @@ class WorkspaceSettings(pulumi.CustomResource):
     @pulumi.getter(name="defaultCpu")
     def default_cpu(self) -> pulumi.Output[Optional[_builtins.str]]:
         """
-        Default CPU for endpoint pods.
+        Default CPU for endpoint pods, a Kubernetes quantity (e.g. 0.5, 500m).
         """
         return pulumi.get(self, "default_cpu")
 
@@ -564,7 +543,7 @@ class WorkspaceSettings(pulumi.CustomResource):
     @pulumi.getter(name="defaultLogForwarder")
     def default_log_forwarder(self) -> pulumi.Output[Optional[_builtins.str]]:
         """
-        Default log forwarder.
+        Id of the default logger integration (a JSON array string for several). Set to an empty string to clear.
         """
         return pulumi.get(self, "default_log_forwarder")
 
@@ -580,7 +559,7 @@ class WorkspaceSettings(pulumi.CustomResource):
     @pulumi.getter(name="defaultMemory")
     def default_memory(self) -> pulumi.Output[Optional[_builtins.str]]:
         """
-        Default memory for endpoint pods.
+        Default memory for endpoint pods (e.g. 500Mi, 2Gi).
         """
         return pulumi.get(self, "default_memory")
 
@@ -588,7 +567,7 @@ class WorkspaceSettings(pulumi.CustomResource):
     @pulumi.getter(name="defaultTicketProviderId")
     def default_ticket_provider_id(self) -> pulumi.Output[Optional[_builtins.str]]:
         """
-        Id of the default ticketing integration.
+        Id of the default FreshService integration. Set to an empty string to clear.
         """
         return pulumi.get(self, "default_ticket_provider_id")
 
@@ -628,7 +607,7 @@ class WorkspaceSettings(pulumi.CustomResource):
     @pulumi.getter(name="maxJitRequestDuration")
     def max_jit_request_duration(self) -> pulumi.Output[Optional[_builtins.str]]:
         """
-        Maximum duration of a just-in-time access request (e.g. 8h).
+        Maximum duration of a just-in-time access request (e.g. 8h, 1d). Set to an empty string to clear the limit.
         """
         return pulumi.get(self, "max_jit_request_duration")
 
@@ -636,23 +615,15 @@ class WorkspaceSettings(pulumi.CustomResource):
     @pulumi.getter(name="mfaEnabled")
     def mfa_enabled(self) -> pulumi.Output[Optional[_builtins.bool]]:
         """
-        Whether multi-factor authentication is enabled.
+        Whether multi-factor authentication is enabled (also sets MFA on access, as in the UI).
         """
         return pulumi.get(self, "mfa_enabled")
-
-    @_builtins.property
-    @pulumi.getter(name="mfaOtpRequiredOnAccess")
-    def mfa_otp_required_on_access(self) -> pulumi.Output[Optional[_builtins.bool]]:
-        """
-        Whether an OTP is required each time access is used.
-        """
-        return pulumi.get(self, "mfa_otp_required_on_access")
 
     @_builtins.property
     @pulumi.getter(name="pendingRequestExpiry")
     def pending_request_expiry(self) -> pulumi.Output[Optional[_builtins.str]]:
         """
-        How long a pending access request lives before it expires (e.g. 24h).
+        How long a pending access request lives before it expires (e.g. 24h). Set to an empty string to clear.
         """
         return pulumi.get(self, "pending_request_expiry")
 
@@ -700,7 +671,7 @@ class WorkspaceSettings(pulumi.CustomResource):
     @pulumi.getter
     def timezone(self) -> pulumi.Output[Optional[_builtins.str]]:
         """
-        Workspace IANA timezone.
+        Workspace IANA timezone. Set to an empty string to use the server zone.
         """
         return pulumi.get(self, "timezone")
 

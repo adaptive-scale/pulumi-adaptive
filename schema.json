@@ -1790,7 +1790,7 @@
           "items": {
             "type": "string"
           },
-          "description": "IdP group ids included in SSO sync. Order does not matter. The set replaces the persisted selection; an empty list selects no groups."
+          "description": "IdP group ids included in SSO sync. Order does not matter. The set replaces the persisted selection. An empty list (or unset) means no persisted selection, so auto sync falls back to its legacy behaviour. Supported provider types: google, azureactivedirectory, jumpcloud, onelogin; okta and LDAP are rejected by the server."
         },
         "loginEnabled": {
           "type": "boolean",
@@ -1798,7 +1798,7 @@
         },
         "providerId": {
           "type": "string",
-          "description": "Id of the SSO integration (resource) whose group sync is managed. Changing it replaces the resource.",
+          "description": "Id of the SSO integration (resource) whose group sync is managed (google, azureactivedirectory, jumpcloud or onelogin). Changing it replaces the resource.",
           "replaceOnChanges": true
         },
         "providerType": {
@@ -1827,7 +1827,7 @@
           "items": {
             "type": "string"
           },
-          "description": "IdP group ids included in SSO sync. Order does not matter. The set replaces the persisted selection; an empty list selects no groups."
+          "description": "IdP group ids included in SSO sync. Order does not matter. The set replaces the persisted selection. An empty list (or unset) means no persisted selection, so auto sync falls back to its legacy behaviour. Supported provider types: google, azureactivedirectory, jumpcloud, onelogin; okta and LDAP are rejected by the server."
         },
         "loginEnabled": {
           "type": "boolean",
@@ -1835,7 +1835,7 @@
         },
         "providerId": {
           "type": "string",
-          "description": "Id of the SSO integration (resource) whose group sync is managed. Changing it replaces the resource.",
+          "description": "Id of the SSO integration (resource) whose group sync is managed (google, azureactivedirectory, jumpcloud or onelogin). Changing it replaces the resource.",
           "replaceOnChanges": true
         },
         "roleSyncEnabled": {
@@ -1855,19 +1855,19 @@
       "properties": {
         "defaultChatProviderId": {
           "type": "string",
-          "description": "Id of the default chat (e.g. Slack) integration."
+          "description": "Id of the default Slack/Teams integration. Set to an empty string to clear."
         },
         "defaultCluster": {
           "type": "string",
-          "description": "Default cluster for new endpoints."
+          "description": "Default cluster for new endpoints: \"0\", \"1\" or a Kubernetes resource id."
         },
         "defaultCpu": {
           "type": "string",
-          "description": "Default CPU for endpoint pods."
+          "description": "Default CPU for endpoint pods, a Kubernetes quantity (e.g. 0.5, 500m)."
         },
         "defaultLogForwarder": {
           "type": "string",
-          "description": "Default log forwarder."
+          "description": "Id of the default logger integration (a JSON array string for several). Set to an empty string to clear."
         },
         "defaultLoginEnabled": {
           "type": "boolean",
@@ -1875,11 +1875,11 @@
         },
         "defaultMemory": {
           "type": "string",
-          "description": "Default memory for endpoint pods."
+          "description": "Default memory for endpoint pods (e.g. 500Mi, 2Gi)."
         },
         "defaultTicketProviderId": {
           "type": "string",
-          "description": "Id of the default ticketing integration."
+          "description": "Id of the default FreshService integration. Set to an empty string to clear."
         },
         "disableNewAccessRequest": {
           "type": "boolean",
@@ -1899,19 +1899,15 @@
         },
         "maxJitRequestDuration": {
           "type": "string",
-          "description": "Maximum duration of a just-in-time access request (e.g. 8h)."
+          "description": "Maximum duration of a just-in-time access request (e.g. 8h, 1d). Set to an empty string to clear the limit."
         },
         "mfaEnabled": {
           "type": "boolean",
-          "description": "Whether multi-factor authentication is enabled."
-        },
-        "mfaOtpRequiredOnAccess": {
-          "type": "boolean",
-          "description": "Whether an OTP is required each time access is used."
+          "description": "Whether multi-factor authentication is enabled (also sets MFA on access, as in the UI)."
         },
         "pendingRequestExpiry": {
           "type": "string",
-          "description": "How long a pending access request lives before it expires (e.g. 24h)."
+          "description": "How long a pending access request lives before it expires (e.g. 24h). Set to an empty string to clear."
         },
         "removeSsoDeletedUsersFromEndpoints": {
           "type": "boolean",
@@ -1935,25 +1931,25 @@
         },
         "timezone": {
           "type": "string",
-          "description": "Workspace IANA timezone."
+          "description": "Workspace IANA timezone. Set to an empty string to use the server zone."
         }
       },
       "inputProperties": {
         "defaultChatProviderId": {
           "type": "string",
-          "description": "Id of the default chat (e.g. Slack) integration."
+          "description": "Id of the default Slack/Teams integration. Set to an empty string to clear."
         },
         "defaultCluster": {
           "type": "string",
-          "description": "Default cluster for new endpoints."
+          "description": "Default cluster for new endpoints: \"0\", \"1\" or a Kubernetes resource id."
         },
         "defaultCpu": {
           "type": "string",
-          "description": "Default CPU for endpoint pods."
+          "description": "Default CPU for endpoint pods, a Kubernetes quantity (e.g. 0.5, 500m)."
         },
         "defaultLogForwarder": {
           "type": "string",
-          "description": "Default log forwarder."
+          "description": "Id of the default logger integration (a JSON array string for several). Set to an empty string to clear."
         },
         "defaultLoginEnabled": {
           "type": "boolean",
@@ -1961,11 +1957,11 @@
         },
         "defaultMemory": {
           "type": "string",
-          "description": "Default memory for endpoint pods."
+          "description": "Default memory for endpoint pods (e.g. 500Mi, 2Gi)."
         },
         "defaultTicketProviderId": {
           "type": "string",
-          "description": "Id of the default ticketing integration."
+          "description": "Id of the default FreshService integration. Set to an empty string to clear."
         },
         "disableNewAccessRequest": {
           "type": "boolean",
@@ -1985,19 +1981,15 @@
         },
         "maxJitRequestDuration": {
           "type": "string",
-          "description": "Maximum duration of a just-in-time access request (e.g. 8h)."
+          "description": "Maximum duration of a just-in-time access request (e.g. 8h, 1d). Set to an empty string to clear the limit."
         },
         "mfaEnabled": {
           "type": "boolean",
-          "description": "Whether multi-factor authentication is enabled."
-        },
-        "mfaOtpRequiredOnAccess": {
-          "type": "boolean",
-          "description": "Whether an OTP is required each time access is used."
+          "description": "Whether multi-factor authentication is enabled (also sets MFA on access, as in the UI)."
         },
         "pendingRequestExpiry": {
           "type": "string",
-          "description": "How long a pending access request lives before it expires (e.g. 24h)."
+          "description": "How long a pending access request lives before it expires (e.g. 24h). Set to an empty string to clear."
         },
         "removeSsoDeletedUsersFromEndpoints": {
           "type": "boolean",
@@ -2021,7 +2013,7 @@
         },
         "timezone": {
           "type": "string",
-          "description": "Workspace IANA timezone."
+          "description": "Workspace IANA timezone. Set to an empty string to use the server zone."
         }
       }
     }

@@ -21,7 +21,6 @@ type WorkspaceSettingsArgs struct {
 	DefaultCluster                     *string `pulumi:"defaultCluster,optional"`
 	DefaultLoginEnabled                *bool   `pulumi:"defaultLoginEnabled,optional"`
 	MfaEnabled                         *bool   `pulumi:"mfaEnabled,optional"`
-	MfaOtpRequiredOnAccess             *bool   `pulumi:"mfaOtpRequiredOnAccess,optional"`
 	RequireCommentsOnAccessRequests    *bool   `pulumi:"requireCommentsOnAccessRequests,optional"`
 	DisableNewAccessRequest            *bool   `pulumi:"disableNewAccessRequest,optional"`
 	MaxJitRequestDuration              *string `pulumi:"maxJitRequestDuration,optional"`
@@ -46,33 +45,32 @@ type WorkspaceSettingsState struct {
 }
 
 func (s *WorkspaceSettingsArgs) Annotate(a infer.Annotator) {
-	a.Describe(&s.DefaultCluster, "Default cluster for new endpoints.")
+	a.Describe(&s.DefaultCluster, "Default cluster for new endpoints: \"0\", \"1\" or a Kubernetes resource id.")
 	a.Describe(&s.DefaultLoginEnabled, "Whether password/default login is enabled. Setting false while no SSO login method is enabled is rejected by the server (lock-out guard).")
-	a.Describe(&s.MfaEnabled, "Whether multi-factor authentication is enabled.")
-	a.Describe(&s.MfaOtpRequiredOnAccess, "Whether an OTP is required each time access is used.")
+	a.Describe(&s.MfaEnabled, "Whether multi-factor authentication is enabled (also sets MFA on access, as in the UI).")
 	a.Describe(&s.RequireCommentsOnAccessRequests, "Whether access requests must include a comment.")
 	a.Describe(&s.DisableNewAccessRequest, "Whether new access requests are disabled.")
-	a.Describe(&s.MaxJitRequestDuration, "Maximum duration of a just-in-time access request (e.g. 8h).")
-	a.Describe(&s.PendingRequestExpiry, "How long a pending access request lives before it expires (e.g. 24h).")
-	a.Describe(&s.Timezone, "Workspace IANA timezone.")
+	a.Describe(&s.MaxJitRequestDuration, "Maximum duration of a just-in-time access request (e.g. 8h, 1d). Set to an empty string to clear the limit.")
+	a.Describe(&s.PendingRequestExpiry, "How long a pending access request lives before it expires (e.g. 24h). Set to an empty string to clear.")
+	a.Describe(&s.Timezone, "Workspace IANA timezone. Set to an empty string to use the server zone.")
 	a.Describe(&s.ExpirationNotificationsEnabled, "Whether access-expiration notifications are sent.")
 	a.Describe(&s.SsoSyncEnabled, "Whether automatic SSO user/group sync is enabled.")
 	a.Describe(&s.SsoSyncInterval, "Interval of the automatic SSO sync.")
 	a.Describe(&s.RemoveSsoDeletedUsersFromEndpoints, "Whether users deleted at the IdP are removed from endpoints.")
-	a.Describe(&s.DefaultChatProviderId, "Id of the default chat (e.g. Slack) integration.")
-	a.Describe(&s.DefaultTicketProviderId, "Id of the default ticketing integration.")
-	a.Describe(&s.DefaultLogForwarder, "Default log forwarder.")
+	a.Describe(&s.DefaultChatProviderId, "Id of the default Slack/Teams integration. Set to an empty string to clear.")
+	a.Describe(&s.DefaultTicketProviderId, "Id of the default FreshService integration. Set to an empty string to clear.")
+	a.Describe(&s.DefaultLogForwarder, "Id of the default logger integration (a JSON array string for several). Set to an empty string to clear.")
 	a.Describe(&s.SessionTimeout, "Web session timeout.")
 	a.Describe(&s.EndpointSleepTimeout, "Idle time before endpoints are put to sleep.")
 	a.Describe(&s.IntegrationProbeInterval, "Interval between integration health probes.")
-	a.Describe(&s.DefaultCpu, "Default CPU for endpoint pods.")
-	a.Describe(&s.DefaultMemory, "Default memory for endpoint pods.")
+	a.Describe(&s.DefaultCpu, "Default CPU for endpoint pods, a Kubernetes quantity (e.g. 0.5, 500m).")
+	a.Describe(&s.DefaultMemory, "Default memory for endpoint pods (e.g. 500Mi, 2Gi).")
 }
 
 func (a WorkspaceSettingsArgs) toBody() WorkspaceSettingsBody {
 	return WorkspaceSettingsBody{
 		DefaultCluster: a.DefaultCluster, DefaultLoginEnabled: a.DefaultLoginEnabled,
-		MfaEnabled: a.MfaEnabled, MfaOtpRequiredOnAccess: a.MfaOtpRequiredOnAccess,
+		MfaEnabled:                      a.MfaEnabled,
 		RequireCommentsOnAccessRequests: a.RequireCommentsOnAccessRequests,
 		DisableNewAccessRequest:         a.DisableNewAccessRequest,
 		MaxJitRequestDuration:           a.MaxJitRequestDuration, PendingRequestExpiry: a.PendingRequestExpiry,
@@ -113,7 +111,6 @@ func applyWorkspaceSettingsRead(prior WorkspaceSettingsArgs, r *WorkspaceSetting
 		DefaultCluster:                     ptrOpt(prior.DefaultCluster, r.DefaultCluster, isImport),
 		DefaultLoginEnabled:                ptrOpt(prior.DefaultLoginEnabled, r.DefaultLoginEnabled, isImport),
 		MfaEnabled:                         ptrOpt(prior.MfaEnabled, r.MfaEnabled, isImport),
-		MfaOtpRequiredOnAccess:             ptrOpt(prior.MfaOtpRequiredOnAccess, r.MfaOtpRequiredOnAccess, isImport),
 		RequireCommentsOnAccessRequests:    ptrOpt(prior.RequireCommentsOnAccessRequests, r.RequireCommentsOnAccessRequests, isImport),
 		DisableNewAccessRequest:            ptrOpt(prior.DisableNewAccessRequest, r.DisableNewAccessRequest, isImport),
 		MaxJitRequestDuration:              ptrOpt(prior.MaxJitRequestDuration, r.MaxJitRequestDuration, isImport),
@@ -228,11 +225,11 @@ type SsoSyncState struct {
 }
 
 func (s *SsoSyncArgs) Annotate(a infer.Annotator) {
-	a.Describe(&s.ProviderId, "Id of the SSO integration (resource) whose group sync is managed. Changing it replaces the resource.")
+	a.Describe(&s.ProviderId, "Id of the SSO integration (resource) whose group sync is managed (google, azureactivedirectory, jumpcloud or onelogin). Changing it replaces the resource.")
 	a.Describe(&s.LoginEnabled, "Whether login through this SSO provider is enabled. Unset leaves it untouched.")
 	a.Describe(&s.AutoSyncEnabled, "Whether automatic sync is enabled for this provider. Unset leaves it untouched.")
 	a.Describe(&s.RoleSyncEnabled, "Whether roles are synced from the IdP. Unset leaves it untouched.")
-	a.Describe(&s.Groups, "IdP group ids included in SSO sync. Order does not matter. The set replaces the persisted selection; an empty list selects no groups.")
+	a.Describe(&s.Groups, "IdP group ids included in SSO sync. Order does not matter. The set replaces the persisted selection. An empty list (or unset) means no persisted selection, so auto sync falls back to its legacy behaviour. Supported provider types: google, azureactivedirectory, jumpcloud, onelogin; okta and LDAP are rejected by the server.")
 	a.Describe(&s.SyncOnApply, "Trigger a sync after applying (default true).")
 }
 
@@ -271,7 +268,7 @@ func (*SsoSync) Check(ctx context.Context, req infer.CheckRequest) (infer.CheckR
 func (a SsoSyncArgs) toRequest() SsoSyncUpdateRequest {
 	return SsoSyncUpdateRequest{
 		LoginEnabled: a.LoginEnabled, AutoSyncEnabled: a.AutoSyncEnabled,
-		RoleSyncEnabled: a.RoleSyncEnabled, Groups: a.Groups,
+		RoleSyncEnabled: a.RoleSyncEnabled, Groups: groupsPtr(a.Groups),
 		SyncNow: a.SyncOnApply == nil || *a.SyncOnApply,
 	}
 }
@@ -310,7 +307,14 @@ func (*SsoSync) Update(ctx context.Context, req infer.UpdateRequest[SsoSyncArgs,
 	if err != nil {
 		return out, err
 	}
-	r, err := c.UpdateSsoSync(ctx, req.Inputs.ProviderId, req.Inputs.toRequest())
+	body := req.Inputs.toRequest()
+	// Removing groups from the program (or setting []) must clear the persisted
+	// list; infer decodes an empty list as nil, so send [] explicitly.
+	if body.Groups == nil && len(req.State.Groups) > 0 {
+		empty := []string{}
+		body.Groups = &empty
+	}
+	r, err := c.UpdateSsoSync(ctx, req.Inputs.ProviderId, body)
 	if err != nil {
 		return out, err
 	}
@@ -337,7 +341,9 @@ func applySsoSyncRead(prior SsoSyncArgs, r *SsoSyncReadResponse, isImport bool) 
 	}
 	ids = normalizeGroups(ids)
 	// groups are always managed once the resource exists; order never matters.
-	if !isImport && sameSet(prior.Groups, ids) {
+	if !isImport && prior.Groups == nil {
+		a.Groups = nil // groups not managed by the program
+	} else if !isImport && sameSet(prior.Groups, ids) {
 		a.Groups = prior.Groups
 	} else {
 		a.Groups = ids
@@ -379,4 +385,13 @@ func (*SsoSync) Delete(ctx context.Context, req infer.DeleteRequest[SsoSyncState
 		return infer.DeleteResponse{}, err
 	}
 	return infer.DeleteResponse{}, c.DeleteSsoSync(ctx, req.ID)
+}
+
+// groupsPtr maps unset (nil) to omitted, so the server leaves the persisted
+// list alone, while an explicit empty list is sent and empties it.
+func groupsPtr(g []string) *[]string {
+	if g == nil {
+		return nil
+	}
+	return &g
 }

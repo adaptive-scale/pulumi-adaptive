@@ -32,19 +32,19 @@ export class WorkspaceSettings extends pulumi.CustomResource {
     }
 
     /**
-     * Id of the default chat (e.g. Slack) integration.
+     * Id of the default Slack/Teams integration. Set to an empty string to clear.
      */
     declare public readonly defaultChatProviderId: pulumi.Output<string | undefined>;
     /**
-     * Default cluster for new endpoints.
+     * Default cluster for new endpoints: "0", "1" or a Kubernetes resource id.
      */
     declare public readonly defaultCluster: pulumi.Output<string | undefined>;
     /**
-     * Default CPU for endpoint pods.
+     * Default CPU for endpoint pods, a Kubernetes quantity (e.g. 0.5, 500m).
      */
     declare public readonly defaultCpu: pulumi.Output<string | undefined>;
     /**
-     * Default log forwarder.
+     * Id of the default logger integration (a JSON array string for several). Set to an empty string to clear.
      */
     declare public readonly defaultLogForwarder: pulumi.Output<string | undefined>;
     /**
@@ -52,11 +52,11 @@ export class WorkspaceSettings extends pulumi.CustomResource {
      */
     declare public readonly defaultLoginEnabled: pulumi.Output<boolean | undefined>;
     /**
-     * Default memory for endpoint pods.
+     * Default memory for endpoint pods (e.g. 500Mi, 2Gi).
      */
     declare public readonly defaultMemory: pulumi.Output<string | undefined>;
     /**
-     * Id of the default ticketing integration.
+     * Id of the default FreshService integration. Set to an empty string to clear.
      */
     declare public readonly defaultTicketProviderId: pulumi.Output<string | undefined>;
     /**
@@ -76,19 +76,15 @@ export class WorkspaceSettings extends pulumi.CustomResource {
      */
     declare public readonly integrationProbeInterval: pulumi.Output<string | undefined>;
     /**
-     * Maximum duration of a just-in-time access request (e.g. 8h).
+     * Maximum duration of a just-in-time access request (e.g. 8h, 1d). Set to an empty string to clear the limit.
      */
     declare public readonly maxJitRequestDuration: pulumi.Output<string | undefined>;
     /**
-     * Whether multi-factor authentication is enabled.
+     * Whether multi-factor authentication is enabled (also sets MFA on access, as in the UI).
      */
     declare public readonly mfaEnabled: pulumi.Output<boolean | undefined>;
     /**
-     * Whether an OTP is required each time access is used.
-     */
-    declare public readonly mfaOtpRequiredOnAccess: pulumi.Output<boolean | undefined>;
-    /**
-     * How long a pending access request lives before it expires (e.g. 24h).
+     * How long a pending access request lives before it expires (e.g. 24h). Set to an empty string to clear.
      */
     declare public readonly pendingRequestExpiry: pulumi.Output<string | undefined>;
     /**
@@ -112,7 +108,7 @@ export class WorkspaceSettings extends pulumi.CustomResource {
      */
     declare public readonly ssoSyncInterval: pulumi.Output<string | undefined>;
     /**
-     * Workspace IANA timezone.
+     * Workspace IANA timezone. Set to an empty string to use the server zone.
      */
     declare public readonly timezone: pulumi.Output<string | undefined>;
 
@@ -140,7 +136,6 @@ export class WorkspaceSettings extends pulumi.CustomResource {
             resourceInputs["integrationProbeInterval"] = args?.integrationProbeInterval;
             resourceInputs["maxJitRequestDuration"] = args?.maxJitRequestDuration;
             resourceInputs["mfaEnabled"] = args?.mfaEnabled;
-            resourceInputs["mfaOtpRequiredOnAccess"] = args?.mfaOtpRequiredOnAccess;
             resourceInputs["pendingRequestExpiry"] = args?.pendingRequestExpiry;
             resourceInputs["removeSsoDeletedUsersFromEndpoints"] = args?.removeSsoDeletedUsersFromEndpoints;
             resourceInputs["requireCommentsOnAccessRequests"] = args?.requireCommentsOnAccessRequests;
@@ -162,7 +157,6 @@ export class WorkspaceSettings extends pulumi.CustomResource {
             resourceInputs["integrationProbeInterval"] = undefined /*out*/;
             resourceInputs["maxJitRequestDuration"] = undefined /*out*/;
             resourceInputs["mfaEnabled"] = undefined /*out*/;
-            resourceInputs["mfaOtpRequiredOnAccess"] = undefined /*out*/;
             resourceInputs["pendingRequestExpiry"] = undefined /*out*/;
             resourceInputs["removeSsoDeletedUsersFromEndpoints"] = undefined /*out*/;
             resourceInputs["requireCommentsOnAccessRequests"] = undefined /*out*/;
@@ -181,19 +175,19 @@ export class WorkspaceSettings extends pulumi.CustomResource {
  */
 export interface WorkspaceSettingsArgs {
     /**
-     * Id of the default chat (e.g. Slack) integration.
+     * Id of the default Slack/Teams integration. Set to an empty string to clear.
      */
     defaultChatProviderId?: pulumi.Input<string>;
     /**
-     * Default cluster for new endpoints.
+     * Default cluster for new endpoints: "0", "1" or a Kubernetes resource id.
      */
     defaultCluster?: pulumi.Input<string>;
     /**
-     * Default CPU for endpoint pods.
+     * Default CPU for endpoint pods, a Kubernetes quantity (e.g. 0.5, 500m).
      */
     defaultCpu?: pulumi.Input<string>;
     /**
-     * Default log forwarder.
+     * Id of the default logger integration (a JSON array string for several). Set to an empty string to clear.
      */
     defaultLogForwarder?: pulumi.Input<string>;
     /**
@@ -201,11 +195,11 @@ export interface WorkspaceSettingsArgs {
      */
     defaultLoginEnabled?: pulumi.Input<boolean>;
     /**
-     * Default memory for endpoint pods.
+     * Default memory for endpoint pods (e.g. 500Mi, 2Gi).
      */
     defaultMemory?: pulumi.Input<string>;
     /**
-     * Id of the default ticketing integration.
+     * Id of the default FreshService integration. Set to an empty string to clear.
      */
     defaultTicketProviderId?: pulumi.Input<string>;
     /**
@@ -225,19 +219,15 @@ export interface WorkspaceSettingsArgs {
      */
     integrationProbeInterval?: pulumi.Input<string>;
     /**
-     * Maximum duration of a just-in-time access request (e.g. 8h).
+     * Maximum duration of a just-in-time access request (e.g. 8h, 1d). Set to an empty string to clear the limit.
      */
     maxJitRequestDuration?: pulumi.Input<string>;
     /**
-     * Whether multi-factor authentication is enabled.
+     * Whether multi-factor authentication is enabled (also sets MFA on access, as in the UI).
      */
     mfaEnabled?: pulumi.Input<boolean>;
     /**
-     * Whether an OTP is required each time access is used.
-     */
-    mfaOtpRequiredOnAccess?: pulumi.Input<boolean>;
-    /**
-     * How long a pending access request lives before it expires (e.g. 24h).
+     * How long a pending access request lives before it expires (e.g. 24h). Set to an empty string to clear.
      */
     pendingRequestExpiry?: pulumi.Input<string>;
     /**
@@ -261,7 +251,7 @@ export interface WorkspaceSettingsArgs {
      */
     ssoSyncInterval?: pulumi.Input<string>;
     /**
-     * Workspace IANA timezone.
+     * Workspace IANA timezone. Set to an empty string to use the server zone.
      */
     timezone?: pulumi.Input<string>;
 }

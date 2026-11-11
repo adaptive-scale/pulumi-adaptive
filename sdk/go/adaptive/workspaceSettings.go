@@ -14,19 +14,19 @@ import (
 type WorkspaceSettings struct {
 	pulumi.CustomResourceState
 
-	// Id of the default chat (e.g. Slack) integration.
+	// Id of the default Slack/Teams integration. Set to an empty string to clear.
 	DefaultChatProviderId pulumi.StringPtrOutput `pulumi:"defaultChatProviderId"`
-	// Default cluster for new endpoints.
+	// Default cluster for new endpoints: "0", "1" or a Kubernetes resource id.
 	DefaultCluster pulumi.StringPtrOutput `pulumi:"defaultCluster"`
-	// Default CPU for endpoint pods.
+	// Default CPU for endpoint pods, a Kubernetes quantity (e.g. 0.5, 500m).
 	DefaultCpu pulumi.StringPtrOutput `pulumi:"defaultCpu"`
-	// Default log forwarder.
+	// Id of the default logger integration (a JSON array string for several). Set to an empty string to clear.
 	DefaultLogForwarder pulumi.StringPtrOutput `pulumi:"defaultLogForwarder"`
 	// Whether password/default login is enabled. Setting false while no SSO login method is enabled is rejected by the server (lock-out guard).
 	DefaultLoginEnabled pulumi.BoolPtrOutput `pulumi:"defaultLoginEnabled"`
-	// Default memory for endpoint pods.
+	// Default memory for endpoint pods (e.g. 500Mi, 2Gi).
 	DefaultMemory pulumi.StringPtrOutput `pulumi:"defaultMemory"`
-	// Id of the default ticketing integration.
+	// Id of the default FreshService integration. Set to an empty string to clear.
 	DefaultTicketProviderId pulumi.StringPtrOutput `pulumi:"defaultTicketProviderId"`
 	// Whether new access requests are disabled.
 	DisableNewAccessRequest pulumi.BoolPtrOutput `pulumi:"disableNewAccessRequest"`
@@ -36,13 +36,11 @@ type WorkspaceSettings struct {
 	ExpirationNotificationsEnabled pulumi.BoolPtrOutput `pulumi:"expirationNotificationsEnabled"`
 	// Interval between integration health probes.
 	IntegrationProbeInterval pulumi.StringPtrOutput `pulumi:"integrationProbeInterval"`
-	// Maximum duration of a just-in-time access request (e.g. 8h).
+	// Maximum duration of a just-in-time access request (e.g. 8h, 1d). Set to an empty string to clear the limit.
 	MaxJitRequestDuration pulumi.StringPtrOutput `pulumi:"maxJitRequestDuration"`
-	// Whether multi-factor authentication is enabled.
+	// Whether multi-factor authentication is enabled (also sets MFA on access, as in the UI).
 	MfaEnabled pulumi.BoolPtrOutput `pulumi:"mfaEnabled"`
-	// Whether an OTP is required each time access is used.
-	MfaOtpRequiredOnAccess pulumi.BoolPtrOutput `pulumi:"mfaOtpRequiredOnAccess"`
-	// How long a pending access request lives before it expires (e.g. 24h).
+	// How long a pending access request lives before it expires (e.g. 24h). Set to an empty string to clear.
 	PendingRequestExpiry pulumi.StringPtrOutput `pulumi:"pendingRequestExpiry"`
 	// Whether users deleted at the IdP are removed from endpoints.
 	RemoveSsoDeletedUsersFromEndpoints pulumi.BoolPtrOutput `pulumi:"removeSsoDeletedUsersFromEndpoints"`
@@ -54,7 +52,7 @@ type WorkspaceSettings struct {
 	SsoSyncEnabled pulumi.BoolPtrOutput `pulumi:"ssoSyncEnabled"`
 	// Interval of the automatic SSO sync.
 	SsoSyncInterval pulumi.StringPtrOutput `pulumi:"ssoSyncInterval"`
-	// Workspace IANA timezone.
+	// Workspace IANA timezone. Set to an empty string to use the server zone.
 	Timezone pulumi.StringPtrOutput `pulumi:"timezone"`
 }
 
@@ -98,19 +96,19 @@ func (WorkspaceSettingsState) ElementType() reflect.Type {
 }
 
 type workspaceSettingsArgs struct {
-	// Id of the default chat (e.g. Slack) integration.
+	// Id of the default Slack/Teams integration. Set to an empty string to clear.
 	DefaultChatProviderId *string `pulumi:"defaultChatProviderId"`
-	// Default cluster for new endpoints.
+	// Default cluster for new endpoints: "0", "1" or a Kubernetes resource id.
 	DefaultCluster *string `pulumi:"defaultCluster"`
-	// Default CPU for endpoint pods.
+	// Default CPU for endpoint pods, a Kubernetes quantity (e.g. 0.5, 500m).
 	DefaultCpu *string `pulumi:"defaultCpu"`
-	// Default log forwarder.
+	// Id of the default logger integration (a JSON array string for several). Set to an empty string to clear.
 	DefaultLogForwarder *string `pulumi:"defaultLogForwarder"`
 	// Whether password/default login is enabled. Setting false while no SSO login method is enabled is rejected by the server (lock-out guard).
 	DefaultLoginEnabled *bool `pulumi:"defaultLoginEnabled"`
-	// Default memory for endpoint pods.
+	// Default memory for endpoint pods (e.g. 500Mi, 2Gi).
 	DefaultMemory *string `pulumi:"defaultMemory"`
-	// Id of the default ticketing integration.
+	// Id of the default FreshService integration. Set to an empty string to clear.
 	DefaultTicketProviderId *string `pulumi:"defaultTicketProviderId"`
 	// Whether new access requests are disabled.
 	DisableNewAccessRequest *bool `pulumi:"disableNewAccessRequest"`
@@ -120,13 +118,11 @@ type workspaceSettingsArgs struct {
 	ExpirationNotificationsEnabled *bool `pulumi:"expirationNotificationsEnabled"`
 	// Interval between integration health probes.
 	IntegrationProbeInterval *string `pulumi:"integrationProbeInterval"`
-	// Maximum duration of a just-in-time access request (e.g. 8h).
+	// Maximum duration of a just-in-time access request (e.g. 8h, 1d). Set to an empty string to clear the limit.
 	MaxJitRequestDuration *string `pulumi:"maxJitRequestDuration"`
-	// Whether multi-factor authentication is enabled.
+	// Whether multi-factor authentication is enabled (also sets MFA on access, as in the UI).
 	MfaEnabled *bool `pulumi:"mfaEnabled"`
-	// Whether an OTP is required each time access is used.
-	MfaOtpRequiredOnAccess *bool `pulumi:"mfaOtpRequiredOnAccess"`
-	// How long a pending access request lives before it expires (e.g. 24h).
+	// How long a pending access request lives before it expires (e.g. 24h). Set to an empty string to clear.
 	PendingRequestExpiry *string `pulumi:"pendingRequestExpiry"`
 	// Whether users deleted at the IdP are removed from endpoints.
 	RemoveSsoDeletedUsersFromEndpoints *bool `pulumi:"removeSsoDeletedUsersFromEndpoints"`
@@ -138,25 +134,25 @@ type workspaceSettingsArgs struct {
 	SsoSyncEnabled *bool `pulumi:"ssoSyncEnabled"`
 	// Interval of the automatic SSO sync.
 	SsoSyncInterval *string `pulumi:"ssoSyncInterval"`
-	// Workspace IANA timezone.
+	// Workspace IANA timezone. Set to an empty string to use the server zone.
 	Timezone *string `pulumi:"timezone"`
 }
 
 // The set of arguments for constructing a WorkspaceSettings resource.
 type WorkspaceSettingsArgs struct {
-	// Id of the default chat (e.g. Slack) integration.
+	// Id of the default Slack/Teams integration. Set to an empty string to clear.
 	DefaultChatProviderId pulumi.StringPtrInput
-	// Default cluster for new endpoints.
+	// Default cluster for new endpoints: "0", "1" or a Kubernetes resource id.
 	DefaultCluster pulumi.StringPtrInput
-	// Default CPU for endpoint pods.
+	// Default CPU for endpoint pods, a Kubernetes quantity (e.g. 0.5, 500m).
 	DefaultCpu pulumi.StringPtrInput
-	// Default log forwarder.
+	// Id of the default logger integration (a JSON array string for several). Set to an empty string to clear.
 	DefaultLogForwarder pulumi.StringPtrInput
 	// Whether password/default login is enabled. Setting false while no SSO login method is enabled is rejected by the server (lock-out guard).
 	DefaultLoginEnabled pulumi.BoolPtrInput
-	// Default memory for endpoint pods.
+	// Default memory for endpoint pods (e.g. 500Mi, 2Gi).
 	DefaultMemory pulumi.StringPtrInput
-	// Id of the default ticketing integration.
+	// Id of the default FreshService integration. Set to an empty string to clear.
 	DefaultTicketProviderId pulumi.StringPtrInput
 	// Whether new access requests are disabled.
 	DisableNewAccessRequest pulumi.BoolPtrInput
@@ -166,13 +162,11 @@ type WorkspaceSettingsArgs struct {
 	ExpirationNotificationsEnabled pulumi.BoolPtrInput
 	// Interval between integration health probes.
 	IntegrationProbeInterval pulumi.StringPtrInput
-	// Maximum duration of a just-in-time access request (e.g. 8h).
+	// Maximum duration of a just-in-time access request (e.g. 8h, 1d). Set to an empty string to clear the limit.
 	MaxJitRequestDuration pulumi.StringPtrInput
-	// Whether multi-factor authentication is enabled.
+	// Whether multi-factor authentication is enabled (also sets MFA on access, as in the UI).
 	MfaEnabled pulumi.BoolPtrInput
-	// Whether an OTP is required each time access is used.
-	MfaOtpRequiredOnAccess pulumi.BoolPtrInput
-	// How long a pending access request lives before it expires (e.g. 24h).
+	// How long a pending access request lives before it expires (e.g. 24h). Set to an empty string to clear.
 	PendingRequestExpiry pulumi.StringPtrInput
 	// Whether users deleted at the IdP are removed from endpoints.
 	RemoveSsoDeletedUsersFromEndpoints pulumi.BoolPtrInput
@@ -184,7 +178,7 @@ type WorkspaceSettingsArgs struct {
 	SsoSyncEnabled pulumi.BoolPtrInput
 	// Interval of the automatic SSO sync.
 	SsoSyncInterval pulumi.StringPtrInput
-	// Workspace IANA timezone.
+	// Workspace IANA timezone. Set to an empty string to use the server zone.
 	Timezone pulumi.StringPtrInput
 }
 
@@ -275,22 +269,22 @@ func (o WorkspaceSettingsOutput) ToWorkspaceSettingsOutputWithContext(ctx contex
 	return o
 }
 
-// Id of the default chat (e.g. Slack) integration.
+// Id of the default Slack/Teams integration. Set to an empty string to clear.
 func (o WorkspaceSettingsOutput) DefaultChatProviderId() pulumi.StringPtrOutput {
 	return o.ApplyT(func(v *WorkspaceSettings) pulumi.StringPtrOutput { return v.DefaultChatProviderId }).(pulumi.StringPtrOutput)
 }
 
-// Default cluster for new endpoints.
+// Default cluster for new endpoints: "0", "1" or a Kubernetes resource id.
 func (o WorkspaceSettingsOutput) DefaultCluster() pulumi.StringPtrOutput {
 	return o.ApplyT(func(v *WorkspaceSettings) pulumi.StringPtrOutput { return v.DefaultCluster }).(pulumi.StringPtrOutput)
 }
 
-// Default CPU for endpoint pods.
+// Default CPU for endpoint pods, a Kubernetes quantity (e.g. 0.5, 500m).
 func (o WorkspaceSettingsOutput) DefaultCpu() pulumi.StringPtrOutput {
 	return o.ApplyT(func(v *WorkspaceSettings) pulumi.StringPtrOutput { return v.DefaultCpu }).(pulumi.StringPtrOutput)
 }
 
-// Default log forwarder.
+// Id of the default logger integration (a JSON array string for several). Set to an empty string to clear.
 func (o WorkspaceSettingsOutput) DefaultLogForwarder() pulumi.StringPtrOutput {
 	return o.ApplyT(func(v *WorkspaceSettings) pulumi.StringPtrOutput { return v.DefaultLogForwarder }).(pulumi.StringPtrOutput)
 }
@@ -300,12 +294,12 @@ func (o WorkspaceSettingsOutput) DefaultLoginEnabled() pulumi.BoolPtrOutput {
 	return o.ApplyT(func(v *WorkspaceSettings) pulumi.BoolPtrOutput { return v.DefaultLoginEnabled }).(pulumi.BoolPtrOutput)
 }
 
-// Default memory for endpoint pods.
+// Default memory for endpoint pods (e.g. 500Mi, 2Gi).
 func (o WorkspaceSettingsOutput) DefaultMemory() pulumi.StringPtrOutput {
 	return o.ApplyT(func(v *WorkspaceSettings) pulumi.StringPtrOutput { return v.DefaultMemory }).(pulumi.StringPtrOutput)
 }
 
-// Id of the default ticketing integration.
+// Id of the default FreshService integration. Set to an empty string to clear.
 func (o WorkspaceSettingsOutput) DefaultTicketProviderId() pulumi.StringPtrOutput {
 	return o.ApplyT(func(v *WorkspaceSettings) pulumi.StringPtrOutput { return v.DefaultTicketProviderId }).(pulumi.StringPtrOutput)
 }
@@ -330,22 +324,17 @@ func (o WorkspaceSettingsOutput) IntegrationProbeInterval() pulumi.StringPtrOutp
 	return o.ApplyT(func(v *WorkspaceSettings) pulumi.StringPtrOutput { return v.IntegrationProbeInterval }).(pulumi.StringPtrOutput)
 }
 
-// Maximum duration of a just-in-time access request (e.g. 8h).
+// Maximum duration of a just-in-time access request (e.g. 8h, 1d). Set to an empty string to clear the limit.
 func (o WorkspaceSettingsOutput) MaxJitRequestDuration() pulumi.StringPtrOutput {
 	return o.ApplyT(func(v *WorkspaceSettings) pulumi.StringPtrOutput { return v.MaxJitRequestDuration }).(pulumi.StringPtrOutput)
 }
 
-// Whether multi-factor authentication is enabled.
+// Whether multi-factor authentication is enabled (also sets MFA on access, as in the UI).
 func (o WorkspaceSettingsOutput) MfaEnabled() pulumi.BoolPtrOutput {
 	return o.ApplyT(func(v *WorkspaceSettings) pulumi.BoolPtrOutput { return v.MfaEnabled }).(pulumi.BoolPtrOutput)
 }
 
-// Whether an OTP is required each time access is used.
-func (o WorkspaceSettingsOutput) MfaOtpRequiredOnAccess() pulumi.BoolPtrOutput {
-	return o.ApplyT(func(v *WorkspaceSettings) pulumi.BoolPtrOutput { return v.MfaOtpRequiredOnAccess }).(pulumi.BoolPtrOutput)
-}
-
-// How long a pending access request lives before it expires (e.g. 24h).
+// How long a pending access request lives before it expires (e.g. 24h). Set to an empty string to clear.
 func (o WorkspaceSettingsOutput) PendingRequestExpiry() pulumi.StringPtrOutput {
 	return o.ApplyT(func(v *WorkspaceSettings) pulumi.StringPtrOutput { return v.PendingRequestExpiry }).(pulumi.StringPtrOutput)
 }
@@ -375,7 +364,7 @@ func (o WorkspaceSettingsOutput) SsoSyncInterval() pulumi.StringPtrOutput {
 	return o.ApplyT(func(v *WorkspaceSettings) pulumi.StringPtrOutput { return v.SsoSyncInterval }).(pulumi.StringPtrOutput)
 }
 
-// Workspace IANA timezone.
+// Workspace IANA timezone. Set to an empty string to use the server zone.
 func (o WorkspaceSettingsOutput) Timezone() pulumi.StringPtrOutput {
 	return o.ApplyT(func(v *WorkspaceSettings) pulumi.StringPtrOutput { return v.Timezone }).(pulumi.StringPtrOutput)
 }

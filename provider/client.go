@@ -1013,7 +1013,6 @@ type WorkspaceSettingsBody struct {
 	DefaultCluster                     *string `json:"defaultCluster,omitempty"`
 	DefaultLoginEnabled                *bool   `json:"defaultLoginEnabled,omitempty"`
 	MfaEnabled                         *bool   `json:"mfaEnabled,omitempty"`
-	MfaOtpRequiredOnAccess             *bool   `json:"mfaOtpRequiredOnAccess,omitempty"`
 	RequireCommentsOnAccessRequests    *bool   `json:"requireCommentsOnAccessRequests,omitempty"`
 	DisableNewAccessRequest            *bool   `json:"disableNewAccessRequest,omitempty"`
 	MaxJitRequestDuration              *string `json:"maxJitRequestDuration,omitempty"`
@@ -1048,7 +1047,7 @@ func (c *Client) UpdateWorkspaceSettings(ctx context.Context, req WorkspaceSetti
 	}
 	defer resp.Body.Close()
 	if resp.StatusCode != http.StatusOK {
-		return nil, fmt.Errorf("error updating workspace settings: %s", readBody(resp))
+		return nil, fmt.Errorf("error updating workspace settings: %s", apiErrorMessage(resp))
 	}
 	var out WorkspaceSettingsBody
 	if err := json.NewDecoder(resp.Body).Decode(&out); err != nil {
@@ -1074,11 +1073,11 @@ type SsoSyncReadResponse struct {
 func (r *SsoSyncReadResponse) readID() string { return r.ProviderID }
 
 type SsoSyncUpdateRequest struct {
-	LoginEnabled    *bool    `json:"loginEnabled,omitempty"`
-	AutoSyncEnabled *bool    `json:"autoSyncEnabled,omitempty"`
-	RoleSyncEnabled *bool    `json:"roleSyncEnabled,omitempty"`
-	Groups          []string `json:"groups"`
-	SyncNow         bool     `json:"syncNow"`
+	LoginEnabled    *bool     `json:"loginEnabled,omitempty"`
+	AutoSyncEnabled *bool     `json:"autoSyncEnabled,omitempty"`
+	RoleSyncEnabled *bool     `json:"roleSyncEnabled,omitempty"`
+	Groups          *[]string `json:"groups,omitempty"`
+	SyncNow         bool      `json:"syncNow"`
 }
 
 func (c *Client) ReadSsoSync(ctx context.Context, providerID string) (*SsoSyncReadResponse, error) {
@@ -1086,9 +1085,6 @@ func (c *Client) ReadSsoSync(ctx context.Context, providerID string) (*SsoSyncRe
 }
 
 func (c *Client) UpdateSsoSync(ctx context.Context, providerID string, req SsoSyncUpdateRequest) (*SsoSyncReadResponse, error) {
-	if req.Groups == nil {
-		req.Groups = []string{}
-	}
 	body, err := encode(req)
 	if err != nil {
 		return nil, err
@@ -1099,7 +1095,7 @@ func (c *Client) UpdateSsoSync(ctx context.Context, providerID string, req SsoSy
 	}
 	defer resp.Body.Close()
 	if resp.StatusCode != http.StatusOK {
-		return nil, fmt.Errorf("error updating sso sync %s: %s", providerID, readBody(resp))
+		return nil, fmt.Errorf("error updating sso sync %s: %s", providerID, apiErrorMessage(resp))
 	}
 	var out SsoSyncReadResponse
 	if err := json.NewDecoder(resp.Body).Decode(&out); err != nil {
@@ -1119,7 +1115,25 @@ func (c *Client) DeleteSsoSync(ctx context.Context, providerID string) error {
 		return nil
 	}
 	if resp.StatusCode != http.StatusOK {
-		return fmt.Errorf("error deleting sso sync %s: %s", providerID, readBody(resp))
+		return fmt.Errorf("error deleting sso sync %s: %s", providerID, apiErrorMessage(resp))
 	}
 	return nil
+}
+
+// apiErrorMessage extracts the message from the {"error": "..."} body the
+// workspace settings and sso-sync routes return, including the unknown group
+// ids of a 400. Falls back to the raw body for other shapes.
+func apiErrorMessage(resp *http.Response) string {
+	raw, _ := io.ReadAll(resp.Body)
+	var e struct {
+		Error           string   `json:"error"`
+		UnknownGroupIDs []string `json:"unknownGroupIds"`
+	}
+	if json.Unmarshal(raw, &e) != nil || e.Error == "" {
+		return strings.TrimSpace(string(raw))
+	}
+	if len(e.UnknownGroupIDs) > 0 {
+		return fmt.Sprintf("%s: %s", e.Error, strings.Join(e.UnknownGroupIDs, ", "))
+	}
+	return e.Error
 }

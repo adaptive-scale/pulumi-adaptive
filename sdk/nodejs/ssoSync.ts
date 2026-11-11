@@ -40,7 +40,7 @@ export class SsoSync extends pulumi.CustomResource {
      */
     declare public /*out*/ readonly groupNames: pulumi.Output<{[key: string]: string} | undefined>;
     /**
-     * IdP group ids included in SSO sync. Order does not matter. The set replaces the persisted selection; an empty list selects no groups.
+     * IdP group ids included in SSO sync. Order does not matter. The set replaces the persisted selection. An empty list (or unset) means no persisted selection, so auto sync falls back to its legacy behaviour. Supported provider types: google, azureactivedirectory, jumpcloud, onelogin; okta and LDAP are rejected by the server.
      */
     declare public readonly groups: pulumi.Output<string[] | undefined>;
     /**
@@ -48,7 +48,7 @@ export class SsoSync extends pulumi.CustomResource {
      */
     declare public readonly loginEnabled: pulumi.Output<boolean | undefined>;
     /**
-     * Id of the SSO integration (resource) whose group sync is managed. Changing it replaces the resource.
+     * Id of the SSO integration (resource) whose group sync is managed (google, azureactivedirectory, jumpcloud or onelogin). Changing it replaces the resource.
      */
     declare public readonly providerId: pulumi.Output<string>;
     /**
@@ -112,7 +112,7 @@ export interface SsoSyncArgs {
      */
     autoSyncEnabled?: pulumi.Input<boolean>;
     /**
-     * IdP group ids included in SSO sync. Order does not matter. The set replaces the persisted selection; an empty list selects no groups.
+     * IdP group ids included in SSO sync. Order does not matter. The set replaces the persisted selection. An empty list (or unset) means no persisted selection, so auto sync falls back to its legacy behaviour. Supported provider types: google, azureactivedirectory, jumpcloud, onelogin; okta and LDAP are rejected by the server.
      */
     groups?: pulumi.Input<pulumi.Input<string>[]>;
     /**
@@ -120,7 +120,7 @@ export interface SsoSyncArgs {
      */
     loginEnabled?: pulumi.Input<boolean>;
     /**
-     * Id of the SSO integration (resource) whose group sync is managed. Changing it replaces the resource.
+     * Id of the SSO integration (resource) whose group sync is managed (google, azureactivedirectory, jumpcloud or onelogin). Changing it replaces the resource.
      */
     providerId: pulumi.Input<string>;
     /**

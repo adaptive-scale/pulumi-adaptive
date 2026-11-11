@@ -19,10 +19,11 @@ import (
 // fakeWorkspace is an httptest stand-in for the workspace settings and sso-sync
 // terraform routes.
 type fakeWorkspace struct {
-	mu       sync.Mutex
-	settings map[string]any
-	sso      map[string]*SsoSyncReadResponse // by provider id
-	deleted  []string
+	mu          sync.Mutex
+	settings    map[string]any
+	sso         map[string]*SsoSyncReadResponse // by provider id
+	deleted     []string
+	lastSsoBody SsoSyncUpdateRequest
 }
 
 func newFakeWorkspace() *fakeWorkspace {
@@ -77,10 +78,19 @@ func (f *fakeWorkspace) handler(w http.ResponseWriter, r *http.Request) {
 		if req.RoleSyncEnabled != nil {
 			s.RoleSyncEnabled = *req.RoleSyncEnabled
 		}
-		s.Groups = nil
-		// The IdP returns groups in its own (reverse) order.
-		for i := len(req.Groups) - 1; i >= 0; i-- {
-			s.Groups = append(s.Groups, SsoSyncGroup{ID: req.Groups[i], Name: "name-" + req.Groups[i]})
+		f.lastSsoBody = req
+		if req.Groups != nil {
+			s.Groups = []SsoSyncGroup{}
+			// The IdP returns groups in its own (reverse) order.
+			gs := *req.Groups
+			for i := len(gs) - 1; i >= 0; i-- {
+				if gs[i] == "bad" {
+					w.WriteHeader(http.StatusBadRequest)
+					write(map[string]any{"error": "unknown group ids", "unknownGroupIds": []string{"bad"}})
+					return
+				}
+				s.Groups = append(s.Groups, SsoSyncGroup{ID: gs[i], Name: "name-" + gs[i]})
+			}
 		}
 		write(s)
 	case strings.Contains(path, "/terraform/sso-sync/delete/"):
@@ -358,5 +368,33 @@ func TestNormalizeGroups(t *testing.T) {
 	}
 	if normalizeGroups(nil) != nil {
 		t.Fatal("nil must stay nil")
+	}
+}
+
+func TestSsoSyncUnknownGroupErrorSurfaced(t *testing.T) {
+	srv, _ := newWorkspaceServer(t)
+	_, err := srv.Create(p.CreateRequest{Urn: urnFor(ssoTok), Properties: property.NewMap(map[string]property.Value{
+		"providerId": property.New("g-1"), "groups": strList("bad"),
+	})})
+	if err == nil || !strings.Contains(err.Error(), "unknown group ids: bad") || strings.Contains(err.Error(), "{") {
+		t.Fatalf("error not surfaced cleanly: %v", err)
+	}
+}
+
+func TestSsoSyncGroupsOmittedWhenUnsetSentWhenEmpty(t *testing.T) {
+	srv, f := newWorkspaceServer(t)
+	create(t, srv, ssoTok, property.NewMap(map[string]property.Value{"providerId": property.New("g-1")}))
+	if f.lastSsoBody.Groups != nil {
+		t.Fatal("unset groups must be omitted")
+	}
+	// Dropping groups from the program clears the persisted list via an explicit [].
+	in1 := property.NewMap(map[string]property.Value{"providerId": property.New("g-2"), "groups": strList("a")})
+	id, st := create(t, srv, ssoTok, in1)
+	in2 := property.NewMap(map[string]property.Value{"providerId": property.New("g-2")})
+	if _, err := srv.Update(p.UpdateRequest{ID: id, Urn: urnFor(ssoTok), State: st, Inputs: in2}); err != nil {
+		t.Fatal(err)
+	}
+	if f.lastSsoBody.Groups == nil || len(*f.lastSsoBody.Groups) != 0 {
+		t.Fatal("removing groups must send []")
 	}
 }
