@@ -22,6 +22,8 @@ and other infrastructure. This provider manages that surface declaratively:
 - `adaptive.Script` — a command attached to an endpoint.
 - `adaptive.Schedule` — an auto-approval schedule window for users, groups, and endpoints.
 - `adaptive.DataProtection` — a data-masking policy for a resource.
+- `adaptive.WorkspaceSettings` — the workspace settings singleton (only fields you set are managed).
+- `adaptive.SsoSync` — the IdP groups included in SSO sync for an SSO provider.
 
 ## Example
 

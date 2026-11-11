@@ -45,6 +45,16 @@ export type Script = import("./script").Script;
 export const Script: typeof import("./script").Script = null as any;
 utilities.lazyLoad(exports, ["Script"], () => require("./script"));
 
+export { SsoSyncArgs } from "./ssoSync";
+export type SsoSync = import("./ssoSync").SsoSync;
+export const SsoSync: typeof import("./ssoSync").SsoSync = null as any;
+utilities.lazyLoad(exports, ["SsoSync"], () => require("./ssoSync"));
+
+export { WorkspaceSettingsArgs } from "./workspaceSettings";
+export type WorkspaceSettings = import("./workspaceSettings").WorkspaceSettings;
+export const WorkspaceSettings: typeof import("./workspaceSettings").WorkspaceSettings = null as any;
+utilities.lazyLoad(exports, ["WorkspaceSettings"], () => require("./workspaceSettings"));
+
 
 // Export sub-modules:
 import * as types from "./types";
@@ -71,6 +81,10 @@ const _module = {
                 return new Schedule(name, <any>undefined, { urn })
             case "adaptive:index:Script":
                 return new Script(name, <any>undefined, { urn })
+            case "adaptive:index:SsoSync":
+                return new SsoSync(name, <any>undefined, { urn })
+            case "adaptive:index:WorkspaceSettings":
+                return new WorkspaceSettings(name, <any>undefined, { urn })
             default:
                 throw new Error(`unknown resource type ${type}`);
         }

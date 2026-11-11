@@ -14,6 +14,8 @@ from .provider import *
 from .resource import *
 from .schedule import *
 from .script import *
+from .sso_sync import *
+from .workspace_settings import *
 from ._inputs import *
 from . import outputs
 _utilities.register(
@@ -30,7 +32,9 @@ _utilities.register(
    "adaptive:index:Group": "Group",
    "adaptive:index:Resource": "Resource",
    "adaptive:index:Schedule": "Schedule",
-   "adaptive:index:Script": "Script"
+   "adaptive:index:Script": "Script",
+   "adaptive:index:SsoSync": "SsoSync",
+   "adaptive:index:WorkspaceSettings": "WorkspaceSettings"
   }
  }
 ]

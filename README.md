@@ -25,9 +25,32 @@ Terraform or the Terraform bridge.
 | `adaptive.Script` | A command attached to an endpoint, with optional description and parameter docs. |
 | `adaptive.Schedule` | An auto-approval (or auto-reject) schedule window applied to users, groups, and endpoints. |
 | `adaptive.DataProtection` | A data-masking policy for a resource (per-database/table/column masking rules). |
+| `adaptive.WorkspaceSettings` | Singleton for Organization > Workspace Settings. Only fields set in the program are managed. |
+| `adaptive.SsoSync` | Which IdP groups are included in SSO sync for one SSO provider, plus login, auto sync and role sync toggles. |
 
 Notification/webhook integrations (e.g. MS Teams workflows) are managed through
 `adaptive.Resource` with the matching `type` (e.g. `msteams_workflow` + `webhookUrl`).
+
+### Workspace settings and SSO group sync
+
+```python
+adaptive.WorkspaceSettings("workspace",
+    mfa_enabled=True,
+    timezone="Europe/Stockholm",
+    max_jit_request_duration="8h")
+
+adaptive.SsoSync("okta-sync",
+    provider_id=okta.id,           # the SSO integration id; changing it replaces the resource
+    auto_sync_enabled=True,
+    groups=["00g1abc", "00g2def"]) # IdP group ids, order does not matter
+```
+
+`WorkspaceSettings` is a singleton: fields you leave unset are never sent and never
+diff, and `pulumi destroy` stops managing the settings without resetting them.
+`SsoSync` replaces the persisted group selection; destroying it clears the
+selection (auto sync falls back to its legacy behaviour) and does not delete
+teams, users or disable login. Requires a backend that exposes the
+`/terraform/workspace/settings` and `/terraform/sso-sync` routes.
 
 ### Data protection (masking)
 

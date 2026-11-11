@@ -50,4 +50,17 @@ developers = adaptive.Group("developers",
     members=["you@example.com"],
     endpoints=[endpoint.name])
 
+# Workspace settings (singleton). Only the fields set here are managed.
+adaptive.WorkspaceSettings("workspace",
+    mfa_enabled=True,
+    timezone="Europe/Stockholm",
+    max_jit_request_duration="8h")
+
+# Choose which IdP groups are included in SSO sync. provider_id is the id of an
+# existing SSO integration; group order does not matter.
+adaptive.SsoSync("okta-sync",
+    provider_id="REPLACE_WITH_SSO_INTEGRATION_ID",
+    auto_sync_enabled=True,
+    groups=["00g1abc", "00g2def"])
+
 pulumi.export("endpointName", endpoint.name)
