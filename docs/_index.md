@@ -62,7 +62,11 @@ import pulumi_adaptive as adaptive
 
 adaptive.WorkspaceUserRole("member-role",
     email="member@example.com",
-    role="workspaceadmin")
+    role="workspaceapprover")
+
+# email must identify an existing workspace member. If that member's IdP role
+# sync is enabled, disable it separately before managing their local role.
+# WorkspaceUserRole does not disable sync automatically.
 
 db = adaptive.Resource("my-db",
     name="staging-postgres",

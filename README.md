@@ -37,10 +37,10 @@ Notification/webhook integrations (e.g. MS Teams workflows) are managed through
 ```python
 adaptive.WorkspaceUserRole("member-role",
     email="member@example.com",
-    role="workspaceadmin")
+    role="workspaceapprover")
 ```
 
-Supported local roles are `workspaceadmin`, `workspaceuser`, `workspaceauditor`, `workspaceapprover`, `workspaceoperator`, and `workspacesoc`. These local roles are independent of IdP roles. Active conflicting SSO role sync can reject an update with a conflict; it is not automatically disabled. The member must already exist. Deleting this resource leaves the member's role unchanged. Email changes replace the resource.
+Supported local roles are `workspaceadmin`, `workspaceuser`, `workspaceauditor`, `workspaceapprover`, `workspaceoperator`, and `workspacesoc`. These local roles are independent of IdP roles. The member must already exist. `email` must identify an existing workspace member. Deleting this resource leaves the member's role unchanged. Email changes replace the resource. If SSO role sync is enabled for the user's IdP, disable it separately before managing that user's local role. This resource does not disable sync automatically.
 
 ```python
 adaptive.WorkspaceSettings("workspace",
@@ -48,10 +48,10 @@ adaptive.WorkspaceSettings("workspace",
     timezone="Europe/Stockholm",
     max_jit_request_duration="8h")
 
-adaptive.SsoSync("okta-sync",
-    provider_id=okta.id,           # the SSO integration id; changing it replaces the resource
+adaptive.SsoSync("onelogin-sync",
+    provider_id="REPLACE_WITH_EXISTING_SSO_INTEGRATION_ID", # existing OneLogin integration id
     auto_sync_enabled=True,
-    groups=["00g1abc", "00g2def"]) # IdP group ids, order does not matter
+    groups=["REPLACE_WITH_IDP_GROUP_ID"]) # existing OneLogin group id
 ```
 
 `WorkspaceSettings` is a singleton: fields you leave unset are never sent and never
