@@ -189,6 +189,9 @@ secret-typed for all of them; its wire key and meaning remain integration-specif
 
 ## Secrets
 
+See the [secret management guide](docs/secret-management.md) for the input-intent
+matrix, deployment and rotation workflows, imports, recovery, and detection limits.
+
 Credential-bearing fields (`password`, `secretAccessKey`, `clientSecret`, SSH
 keys, API tokens, webhook URLs, connection-string `uri`s, script `command`s, …)
 are marked secret in the provider schema. The engine therefore shows them as
@@ -199,7 +202,7 @@ language.
 To keep secrets out of source code, put them in stack config:
 
 ```bash
-pulumi config set --secret dbPassword 'S3cret!'
+pulumi config set --secret dbPassword
 ```
 
 ```python
@@ -217,33 +220,37 @@ with `password=""` does not continually re-add that empty password after refresh
 A previously nonempty value cleared in Adaptive is still reconciled as cleared;
 this does not suppress actual secret drift or bypass held-value update guards.
 
-**Secret drift detection.** The Adaptive API never returns secret values, but
-it returns an opaque server-side fingerprint per secret field
-(`appliedDigests` on resources, `commandDigest` on scripts). The provider
-records the fingerprints as of its last write and compares them on
-`pulumi refresh`, so a secret rotated out-of-band (e.g. in the UI) shows up in
-the next preview on the argument it belongs to — as `[secret]`, never in
-plaintext. The argument name is what carries the information.
+**Resource secret drift detection.** Ordinary Adaptive resource reads withhold
+recognized secret values and can return an opaque server-side fingerprint per
+reported secret. The Resource provider records fingerprints in `appliedDigests`
+after writes and compares them on `pulumi refresh`, so a covered out-of-band
+rotation shows up in the next preview on its argument — as `[secret]`, not the
+credential. Script bodies use a separate `commandDigest` algorithm; see the guide
+before generalizing these Resource guarantees.
 
 What the preview then does depends on your program, because the platform stores
 the configuration as a single blob and every update replaces it whole:
 
 - the argument is in your program — the update re-applies your value.
-- it is not — the update clears it, because your program is the source of truth
-  for the whole resource. That has always been what an update does to an
-  argument you do not set; it is now visible beforehand instead of happening
-  silently on whatever unrelated `up` ran first.
+- it is not — preview shows removal, but the update-time guard requires you to
+  supply the held value or explicitly set the argument to `""` before clearing it.
+  Omitting a credential is not permission to delete it during an unrelated update.
 
 A secret *added* out-of-band is reported the same way. Notes:
 
 - Requires an Adaptive backend with digest support; against older servers,
   refresh keeps the prior value silently (previous behavior).
-- Nothing is reported on the first refresh after an import or a provider
-  upgrade: with no recorded fingerprints there is no baseline, so they are
-  recorded and compared from the next refresh on.
-- Fingerprints are HMACs under a server-held key (`ADAPTIVE_SECRET_DIGEST_KEY`)
-  — they cannot be reversed or brute-forced, and rotating that key causes one
-  self-healing drift cycle.
+- A missing baseline on import or legacy state is initialized from a complete
+  server observation. A known-empty baseline is retained, so the first secret
+  added later is detected too. An explicitly empty argument contradicts a held
+  secret even without a historical baseline; refresh reports that conflict rather
+  than accepting it, including when an earlier provider already seeded it.
+- Failed or incomplete fingerprint captures retain the previous baseline (or
+  leave a new resource's baseline unknown). Missing digest metadata alone is not
+  proof that no secrets exist.
+- Fingerprints are keyed comparison metadata scoped to the server's context.
+  Rotating the fingerprint key can resemble widespread credential drift;
+  investigate the backend change before approving unexpected rewrites.
 - `pulumi import` cannot recover secret values: set them in config, and the
   first `pulumi up` re-establishes them; drift detection is active from then on.
 - A secret nested inside a structured field (the `adaptive_rdp` target list) is
@@ -267,26 +274,23 @@ pulumi import adaptive:index:DataProtection my-policy <resource-id>
 (`DataProtection` imports by the protected **resource's** ID — a policy has no
 separate identity of its own.)
 
-Before importing a resource with credentials, capture its values from the
-admin-only, audited export path. The provider deliberately does not use this
-endpoint:
-
-```bash
-adaptive admin export resources --name <name> --type <type> --include-secrets
-```
+Before updating an imported integration with held credentials, obtain the values
+you intend to retain from an authorized secret source and supply them using secret
+config, or explicitly clear them. A privileged secret export is a separate
+sensitive operation, not a routine import prerequisite. See the
+[import workflow](docs/secret-management.md#importing-an-existing-integration).
 
 Some values are write-only in ordinary Adaptive API reads, so the provider
 cannot recover them during import:
 
 - **Script `command`**: script bodies are never returned by the API. After
   importing a script, set `command` in your program; the first `pulumi up`
-  rewrites it (refresh never touches it).
-- **Resource secrets**: secret configuration values (passwords, keys, tokens)
-  are stripped from API reads. Capture them with the command above before
-  import, then add the matching arguments to your program. The import warning
-  names those public argument names; the first `pulumi up` shows a one-time
-  `+` diff as it records the values. On refresh, secrets already in state are
-  kept.
+  rewrites it; refresh cannot recover the withheld body.
+- **Resource secrets**: recognized passwords, keys, and tokens are stripped from
+  ordinary reads. Supply the matching public arguments from an authorized secret
+  source, or explicitly clear them. The import warning names those arguments;
+  resupplying them can produce a one-time `+` diff. An unrelated update that omits
+  recognized held credentials is rejected, even after a clean import preview.
 - **Webhook URLs** (e.g. `msteams_workflow` resources): redacted like other secrets.
 - **Schedules are upserted by name**: creating a schedule whose name already
   exists on the backend adopts the existing schedule instead of failing.
@@ -300,7 +304,15 @@ endpoint/authorization fails loudly instead of pruning it.
 The protection against clearing a server-held value runs in `Update`, so an
 omitted argument is rejected at apply time rather than preview time. `Check`
 does not receive prior state or its fingerprints. The existing read-side drift
-check therefore covers `refresh` and `up --refresh` only.
+check therefore covers `refresh` and `up --refresh` only. Every resource update
+requires a successful preflight read with identity, integration type, readable
+configuration, and evidence accounting for previously held secrets. Failed,
+not-found, or detectably incomplete reads block the write; restore read access
+and a complete response, then refresh and retry. Older servers may supply
+`redactedKeys` without fingerprints. The API has no completeness token: a
+previously unknown secret silently omitted from an otherwise valid response
+cannot be distinguished from absence. Post-write fingerprint capture remains
+best-effort and does not adopt preflight fingerprints as a write baseline.
 
 ## Development
 

@@ -79,7 +79,13 @@ latter, the deployment marked `default` is used; a single deployment needs no
 marker, and several without one are refused rather than picked arbitrarily — that
 would send credentials to whichever environment happened to come up first.
 
-### Why there is no `pulumi config`
+### Provider credentials versus resource secrets
+
+Provider authentication is separate from credentials stored in an integration.
+Use the [secret management guide](./secret-management.md) for resource passwords,
+keys, certificates, secret config, and update/import expectations.
+
+### Why provider credentials are not Pulumi configuration
 
 Pulumi persists provider configuration on the provider resource inside the stack.
 A `adaptive:serviceToken` config value therefore ended up in state, and because
@@ -90,10 +96,12 @@ which the engine can cascade into replacing every resource it manages.
 The provider now declares no configuration at all, which removes the cause rather
 than working around it. Two things follow:
 
-- **One process, one workspace.** There is no per-stack workspace override,
-  because there is no config to hold one. Set `ADAPTIVE_URL` per invocation.
-- **No explicit provider instances.** The SDKs no longer generate a `Provider`
-  type, so a program cannot construct one.
+- **One process, one workspace identity.** There is no per-stack provider
+  credential override. For raw tokens, set `ADAPTIVE_URL` per invocation;
+  supported JSON credentials select their embedded URL/default deployment.
+- **No per-instance credential configuration.** A generated `Provider` type
+  can exist, but its arguments do not select a token or workspace. Constructing
+  another instance is not a separate authentication context.
 
 ### Upgrading from a version with config
 

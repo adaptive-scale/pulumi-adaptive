@@ -1589,12 +1589,18 @@ func argIsSecret(field int) bool {
 }
 
 // argIsSet reports whether the program supplied a value for the field at index
-// i. An unset argument means the secret is not under management: the drift is
-// still reported, and the next update clears it server-side, because the
-// program is the source of truth for the whole configuration.
+// i. An unset argument is omitted from the full configuration. Update rejects
+// omission of a server-held value; only an explicit empty string clears it.
 func argIsSet(a *ResourceArgs, field int) bool {
 	f := reflect.ValueOf(a).Elem().Field(field)
 	return f.Kind() == reflect.Ptr && !f.IsNil()
+}
+
+// argIsEmpty distinguishes an explicitly cleared string from an omitted input.
+func argIsEmpty(a *ResourceArgs, field int) bool {
+	f := reflect.ValueOf(a).Elem().Field(field)
+	return f.Kind() == reflect.Ptr && !f.IsNil() &&
+		f.Elem().Kind() == reflect.String && f.Elem().String() == ""
 }
 
 // setArg writes a value to the field at index i.
