@@ -238,12 +238,17 @@ func (*WorkspaceUserRole) Check(ctx context.Context, req infer.CheckRequest) (in
 			failures = append(failures, p.CheckFailure{Property: key, Reason: "unknown input; supported inputs are email and role"})
 		}
 	}
-	a.Email = strings.ToLower(strings.TrimSpace(a.Email))
-	parsedEmail, emailErr := mail.ParseAddress(a.Email)
-	if emailErr != nil || parsedEmail.Address != a.Email {
-		failures = append(failures, p.CheckFailure{Property: "email", Reason: "must be a valid email address"})
+	inputs := req.NewInputs.AsMap()
+	emailUnknown := inputs["email"].HasComputed()
+	roleUnknown := inputs["role"].HasComputed()
+	if !emailUnknown {
+		a.Email = strings.ToLower(strings.TrimSpace(a.Email))
+		parsedEmail, emailErr := mail.ParseAddress(a.Email)
+		if emailErr != nil || parsedEmail.Address != a.Email {
+			failures = append(failures, p.CheckFailure{Property: "email", Reason: "must be a valid email address"})
+		}
 	}
-	if !workspaceRoles[a.Role] {
+	if !roleUnknown && !workspaceRoles[a.Role] {
 		failures = append(failures, p.CheckFailure{Property: "role", Reason: "must be one of workspaceadmin, workspaceuser, workspaceauditor, workspaceapprover, workspaceoperator, workspacesoc"})
 	}
 	return infer.CheckResponse[WorkspaceUserRoleArgs]{Inputs: a, Failures: failures}, nil

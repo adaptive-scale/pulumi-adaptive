@@ -275,6 +275,27 @@ func TestWorkspaceUserRoleCheckRejectsInvalidEmailAndUnknownInput(t *testing.T) 
 	}
 }
 
+func TestWorkspaceUserRoleCheckPreservesComputedInputs(t *testing.T) {
+	srv, _ := newWorkspaceServer(t)
+	inputs := property.NewMap(map[string]property.Value{
+		"email": property.New(property.Computed),
+		"role":  property.New(property.Computed),
+	})
+	resp, err := srv.Check(p.CheckRequest{Urn: urnFor(wsRoleTok), Inputs: inputs})
+	if err != nil {
+		t.Fatal(err)
+	}
+	if len(resp.Failures) != 0 {
+		t.Fatalf("computed values failed Check: %v", resp.Failures)
+	}
+	for _, key := range []string{"email", "role"} {
+		value, ok := resp.Inputs.GetOk(key)
+		if !ok || !value.IsComputed() {
+			t.Errorf("%s unknown not preserved: present=%v value=%v", key, ok, value)
+		}
+	}
+}
+
 func TestWorkspaceSettingsLifecycleAndConvergence(t *testing.T) {
 	srv, f := newWorkspaceServer(t)
 	inputs := property.NewMap(map[string]property.Value{
