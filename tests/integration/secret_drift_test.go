@@ -29,9 +29,10 @@ const resourceTypeToken = "adaptive:index:Resource"
 // pgSpec is the configuration a drift test deploys. The program closes over it,
 // so mutating a field and calling harness.Up produces a real update.
 type pgSpec struct {
-	Name     string
-	Password string // "" means the program does not manage it
-	RootCert string // "" means the program does not manage it
+	Name          string
+	Password      string // "" omits the input unless ClearPassword is set
+	ClearPassword bool
+	RootCert      string // "" means the program does not manage it
 }
 
 func (s *pgSpec) declare(ctx *pulumi.Context) error {
@@ -43,7 +44,7 @@ func (s *pgSpec) declare(ctx *pulumi.Context) error {
 		Username: pulumi.String("admin"),
 		SslMode:  pulumi.String("require"),
 	}
-	if s.Password != "" {
+	if s.Password != "" || s.ClearPassword {
 		args.Password = pulumi.String(s.Password)
 	}
 	if s.RootCert != "" {
@@ -175,10 +176,19 @@ func TestSecretDriftUnmanagedField(t *testing.T) {
 	assert.NotZero(t, changes["update"],
 		"a secret added outside the program must still reach the plan; silence here is the original bug (%v)", changes)
 
-	// The program owns the whole configuration, so reconciling means clearing it.
+	// Omission exposes drift but must not authorize deleting a held secret.
+	before := serverDigests(t, cfg, id)
+	_, err := stack.Up(t.Context())
+	require.ErrorContains(t, err, "server-held values for password")
+	require.Equal(t, before, serverDigests(t, cfg, id), "rejected omission changed the held credential")
+	// Authorize the clear explicitly, then require convergence and deletion.
+	spec.ClearPassword = true
 	harness.Up(t, stack)
+	require.Empty(t, serverDigests(t, cfg, id))
 	harness.AssertRefreshClean(t, stack)
-	assert.Zero(t, harness.Preview(t, stack)["update"], "should converge after one up")
+	assert.Zero(t, harness.Preview(t, stack)["update"], "should converge after explicit clear")
+	harness.Destroy(t, stack)
+	assertTerraformGone(t, cfg, "resource", id)
 }
 
 // rootCert is withheld by the server like any password, but its argument was not

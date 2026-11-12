@@ -3,6 +3,7 @@ package adaptive
 import (
 	"context"
 	"fmt"
+	"reflect"
 	"sort"
 	"strings"
 
@@ -235,8 +236,29 @@ func migrateResourceStateV1(ctx context.Context, v1 resourceStateV1) (infer.Migr
 	}, nil
 }
 
+// pulumi-go-provider v1.3.2 restores empty-map paths recorded by the old
+// decoder after a typed migration. Match the legacy empty map as an empty
+// object so it cannot recreate redactedDigests after the rename. Nonempty maps
+// do not match this shape; absent/null values fall through to the migration
+// above. The pointer distinguishes a present empty object from absence.
+type resourceStateV1Empty struct {
+	ResourceArgs
+	RedactedDigests *struct{} `pulumi:"redactedDigests,optional"`
+}
+
+func migrateResourceStateV1Empty(_ context.Context, v1 resourceStateV1Empty) (infer.MigrationResult[ResourceState], error) {
+	if v1.RedactedDigests == nil {
+		return infer.MigrationResult[ResourceState]{}, nil
+	}
+	return infer.MigrationResult[ResourceState]{Result: &ResourceState{
+		ResourceArgs:   v1.ResourceArgs,
+		AppliedDigests: map[string]string{},
+	}}, nil
+}
+
 func (*Resource) StateMigrations(context.Context) []infer.StateMigrationFunc[ResourceState] {
 	return []infer.StateMigrationFunc[ResourceState]{
+		infer.StateMigration(migrateResourceStateV1Empty),
 		infer.StateMigration(migrateResourceStateV1),
 	}
 }
@@ -278,12 +300,10 @@ func (*Resource) Create(ctx context.Context, req infer.CreateRequest[ResourceArg
 		return out, err
 	}
 	out.ID = resp.ID
-	// Best-effort: capture the server's secret fingerprints for drift detection.
-	// When this read fails the fingerprints stay unset, so the next refresh
-	// reports our own write as drift. It self-corrects on the next successful
-	// write and only ever over-reports, which is the safe direction.
+	// Best-effort capture. A failed or incomplete read leaves the baseline
+	// unknown; a later refresh may seed it, but cannot prove historical drift.
 	if r, rerr := c.ReadResource(ctx, resp.ID); rerr == nil && r != nil {
-		out.Output.AppliedDigests = r.RedactedDigests
+		out.Output.AppliedDigests = captureResourceDigests(r, nil)
 	}
 	return out, nil
 }
@@ -298,10 +318,30 @@ func (*Resource) Update(ctx context.Context, req infer.UpdateRequest[ResourceArg
 		return out, err
 	}
 	effectiveAppliedDigests := req.State.AppliedDigests
-	if r, rerr := c.ReadResource(ctx, req.ID); rerr == nil && r != nil {
-		effectiveAppliedDigests = pruneClearedSecretDigests(effectiveAppliedDigests, r.Configuration)
+	guardDigests := effectiveAppliedDigests
+	r, rerr := c.ReadResource(ctx, req.ID)
+	if rerr != nil || !usableResourceGuard(r, req.ID, req.State) {
+		// Do not include the response/error body: it may contain credentials.
+		return out, fmt.Errorf("cannot verify server-held values for resource %q; no update was sent. Restore read access and a complete resource read response, then refresh and retry", req.ID)
 	}
-	if err := validateHeldArguments(req.Inputs, req.Inputs.Type, effectiveAppliedDigests); err != nil {
+	effectiveAppliedDigests = pruneClearedSecretDigests(effectiveAppliedDigests, r.Configuration)
+	// A newly held secret also needs explicit update intent, even if it is
+	// absent from the last-write baseline. Observing it is not a write
+	// acknowledgment: keep this guard separate from the saved baseline.
+	held := make(map[string]string, len(effectiveAppliedDigests)+len(r.RedactedDigests))
+	for key, digest := range effectiveAppliedDigests {
+		held[key] = digest
+	}
+	for key, digest := range r.RedactedDigests {
+		held[key] = digest
+	}
+	for _, key := range r.RedactedKeys {
+		// Presence is sufficient for this guard, including on servers
+		// that withhold credentials but do not support fingerprints.
+		held[key] = r.RedactedDigests[key]
+	}
+	guardDigests = pruneClearedSecretDigests(held, r.Configuration)
+	if err := validateHeldArguments(req.Inputs, req.Inputs.Type, guardDigests); err != nil {
 		return out, err
 	}
 	cfgObj, effType, err := buildIntegrationConfig(req.Inputs)
@@ -315,13 +355,11 @@ func (*Resource) Update(ctx context.Context, req infer.UpdateRequest[ResourceArg
 	if _, err := c.UpdateResource(ctx, req.ID, effType, yamlBytes, req.Inputs.Tags, sv(req.Inputs.DefaultCluster)); err != nil {
 		return out, err
 	}
-	// Best-effort: re-record the secret fingerprints after the write, so the
-	// drift this update just reconciled stops being reported. A failed read
-	// leaves the previous fingerprints in place and the next refresh re-reports
-	// the same drift — see the note in Create.
+	// A failed or incomplete capture retains the prior baseline, not the
+	// fingerprints fetched for the omission guard before the write.
 	out.Output.AppliedDigests = effectiveAppliedDigests
 	if r, rerr := c.ReadResource(ctx, req.ID); rerr == nil && r != nil {
-		out.Output.AppliedDigests = r.RedactedDigests
+		out.Output.AppliedDigests = captureResourceDigests(r, effectiveAppliedDigests)
 	}
 	return out, nil
 }
@@ -367,15 +405,35 @@ func (*Resource) Read(ctx context.Context, req infer.ReadRequest[ResourceArgs, R
 
 	applyIntegrationConfig(&inputs, r.IntegrationType, r.Configuration)
 
-	// The applied fingerprints are recorded at write time and deliberately
-	// survive a refresh: they are the baseline the live fingerprints are
-	// compared against. The one exception is seeding — with nothing recorded
-	// there is no baseline, so adopt the current view and report nothing.
+	// Nil means no baseline was recorded; a non-nil empty map records known
+	// absence and must still detect the first secret added out-of-band.
 	appliedDigests := req.State.AppliedDigests
-	if len(appliedDigests) == 0 {
-		appliedDigests = r.RedactedDigests
+	if appliedDigests == nil {
+		appliedDigests = captureResourceDigests(r, nil)
 	} else {
 		appliedDigests = pruneClearedSecretDigests(appliedDigests, r.Configuration)
+	}
+	// Even legacy state without fingerprints records explicit clear intent.
+	// A held secret contradicts it, including when an earlier refresh wrongly
+	// seeded that secret. Do not adopt the conflicting digest: after marking
+	// the input below, the saved baseline must keep subsequent refreshes dirty.
+	if !isImport {
+		copied := false
+		for key := range r.RedactedDigests {
+			field, _, ok := argForConfigKey(r.IntegrationType, key)
+			if !ok || !argIsSecret(field) || !argIsEmpty(&req.Inputs, field) {
+				continue
+			}
+			if !copied {
+				baseline := make(map[string]string, len(appliedDigests))
+				for k, digest := range appliedDigests {
+					baseline[k] = digest
+				}
+				appliedDigests = baseline
+				copied = true
+			}
+			delete(appliedDigests, key)
+		}
 	}
 
 	// Secret drift: the server withholds secret values but returns an opaque
@@ -391,21 +449,21 @@ func (*Resource) Read(ctx context.Context, req infer.ReadRequest[ResourceArgs, R
 	//
 	// What the marker produces:
 	//   - program sets the field  -> ~ password, and up re-applies its value
-	//   - program does not        -> - password, and up clears it server-side,
-	//                                because the program owns the whole config
+	//   - program does not        -> - password, but Update rejects omission;
+	//                                supply a value or explicit "" to clear
 	//
 	// Nothing writes state inputs back to the server (Create and Update build
 	// from req.Inputs, the program's inputs), so a fingerprint sitting in a
 	// secret argument can never be applied as one.
 	//
-	// An empty recorded map (import, a resource predating this field, an older
-	// server) is seeded rather than reported: everything would look drifted.
-	if !isImport && len(r.RedactedDigests) > 0 && len(req.State.AppliedDigests) > 0 {
+	// Only unknown legacy/import baselines are seeded. Known-empty baselines
+	// and explicit-clear contradictions participate in drift detection too.
+	if !isImport && len(r.RedactedDigests) > 0 && appliedDigests != nil {
 		// Two different reasons a drifted key cannot be marked, kept apart
 		// because they mean different things to whoever reads the warning.
 		var unmapped []string  // names no single argument at all
 		var notSecret []string // names one, but the schema does not call it secret
-		for _, k := range driftedDigestKeys(req.State.AppliedDigests, r.RedactedDigests) {
+		for _, k := range driftedDigestKeys(appliedDigests, r.RedactedDigests) {
 			field, prop, ok := argForConfigKey(r.IntegrationType, k)
 			switch {
 			case !ok:
@@ -444,7 +502,7 @@ func (*Resource) Read(ctx context.Context, req infer.ReadRequest[ResourceArgs, R
 		p.GetLogger(ctx).Warningf(
 			"resource %q was imported without its credentials: the server withholds %s. "+
 				"Set the matching arguments in your program; the first pulumi up will show a one-time + diff. "+
-				"Leaving one unset would clear it on a later update.",
+				"Leaving one unset blocks later updates while the server still holds it; set it explicitly to \"\" to clear it.",
 			r.Name, strings.Join(keys, ", "))
 	}
 
@@ -453,6 +511,86 @@ func (*Resource) Read(ctx context.Context, req infer.ReadRequest[ResourceArgs, R
 		Inputs: inputs,
 		State:  ResourceState{ResourceArgs: inputs, AppliedDigests: appliedDigests},
 	}, nil
+}
+
+// usableResourceGuard requires the normal read DTO, not fingerprint support.
+// Known prior secrets must be accounted for by configuration or redaction
+// metadata. There is no completeness token: an unreported, previously unknown
+// secret cannot be distinguished from absence in an otherwise valid response.
+func usableResourceGuard(r *ResourceReadResponse, id string, previous ResourceState) bool {
+	if r == nil || r.ID != id || r.Name == "" || r.IntegrationType == "" ||
+		providerType(r.IntegrationType) != previous.Type || r.Configuration == nil {
+		return false
+	}
+	var observed ResourceArgs
+	applyIntegrationConfig(&observed, r.IntegrationType, r.Configuration)
+	accounted := make(map[string]bool)
+	for key, value := range r.Configuration {
+		field, _, ok := argForConfigKey(r.IntegrationType, key)
+		if ok && argIsSecret(field) {
+			if _, ok := value.(string); !ok {
+				return false
+			}
+			// setStr leaves an initially empty field nil for an empty value.
+			setArg(&observed, field, "observed")
+		}
+		accounted[key] = true
+	}
+	keys := append([]string(nil), r.RedactedKeys...)
+	for key := range r.RedactedDigests {
+		keys = append(keys, key)
+	}
+	for _, key := range keys {
+		if key == "" {
+			return false
+		}
+		accounted[key] = true
+		if field, _, ok := argForConfigKey(r.IntegrationType, key); ok {
+			setArg(&observed, field, "observed")
+		}
+	}
+	for key := range previous.AppliedDigests {
+		if !accounted[key] {
+			return false
+		}
+	}
+	for field := 0; field < reflect.TypeOf(previous.ResourceArgs).NumField(); field++ {
+		if argIsSecret(field) && argIsSet(&previous.ResourceArgs, field) &&
+			!argIsEmpty(&previous.ResourceArgs, field) && !argIsSet(&observed, field) {
+			return false
+		}
+	}
+	return true
+}
+
+// captureResourceDigests accepts a complete fingerprint observation. The API
+// omits empty digest maps, so a readable configuration with no withheld keys
+// also establishes known emptiness. Missing configuration/metadata or an older
+// server withholding keys without fingerprints cannot erase prior evidence.
+func captureResourceDigests(r *ResourceReadResponse, previous map[string]string) map[string]string {
+	if r.RedactedDigests == nil && (r.Configuration == nil || len(r.RedactedKeys) > 0) {
+		return previous
+	}
+	for _, key := range r.RedactedKeys {
+		if r.RedactedDigests[key] == "" {
+			return previous
+		}
+	}
+	observed := make(map[string]string, len(r.RedactedDigests)+len(previous))
+	for key, digest := range r.RedactedDigests {
+		observed[key] = digest
+	}
+	for key, digest := range previous {
+		if _, ok := observed[key]; ok {
+			continue
+		}
+		// An absent key can still be withheld. Only a present empty value
+		// acknowledges clearing a previously fingerprinted credential.
+		if value, ok := getStr(r.Configuration, key); !ok || value != "" {
+			observed[key] = digest
+		}
+	}
+	return observed
 }
 
 // heldArgumentsMissing identifies server-held, write-only values that this
@@ -501,9 +639,8 @@ func importArgumentNames(integrationType string, keys []string) []string {
 //
 // A key that only appeared since the last write used to be dismissed as "not
 // drift". It is drift: someone setting a password in the UI where there was
-// none is exactly the change an operator needs to see. The wholesale
-// empty-map guard at the call site is what keeps an import or a first refresh
-// after upgrade from reporting every key as new.
+// none is exactly the change an operator needs to see. The caller seeds only
+// unknown baselines; a known-empty map still participates in this comparison.
 //
 // Keys that disappeared are not reported: the secret is gone, there is nothing
 // to reconcile, and the ordinary config diff already covers a program removing

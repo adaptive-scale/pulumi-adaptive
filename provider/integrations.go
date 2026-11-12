@@ -1589,12 +1589,18 @@ func argIsSecret(field int) bool {
 }
 
 // argIsSet reports whether the program supplied a value for the field at index
-// i. An unset argument means the secret is not under management: the drift is
-// still reported, and the next update clears it server-side, because the
-// program is the source of truth for the whole configuration.
+// i. An unset argument is omitted from the full configuration. Update rejects
+// omission of a server-held value; only an explicit empty string clears it.
 func argIsSet(a *ResourceArgs, field int) bool {
 	f := reflect.ValueOf(a).Elem().Field(field)
 	return f.Kind() == reflect.Ptr && !f.IsNil()
+}
+
+// argIsEmpty distinguishes an explicitly cleared string from an omitted input.
+func argIsEmpty(a *ResourceArgs, field int) bool {
+	f := reflect.ValueOf(a).Elem().Field(field)
+	return f.Kind() == reflect.Ptr && !f.IsNil() &&
+		f.Elem().Kind() == reflect.String && f.Elem().String() == ""
 }
 
 // setArg writes a value to the field at index i.
@@ -1608,17 +1614,17 @@ func setArg(a *ResourceArgs, field int, value string) {
 }
 
 // setStr reconciles one optional string argument against the server value. An
-// absent key (a stripped secret) leaves the argument alone; an empty value
-// clears it only when the program had set it. This lets users omit optional
-// fields in Pulumi when Adaptive stores them empty, instead of having to keep an
-// explicit empty string in the program forever.
+// absent key (a stripped secret) leaves the argument alone. A server-side empty
+// value clears a previously nonempty argument, but preserves an explicitly empty
+// argument so refresh does not turn a matching "" into a perpetual add diff.
+// Inputs the program omitted stay omitted when the server reports empty.
 func setStr(dst **string, cfg map[string]any, key string) {
 	s, ok := getStr(cfg, key)
 	if !ok {
 		return
 	}
 	if s == "" {
-		if *dst != nil {
+		if *dst != nil && **dst != "" {
 			*dst = nil
 		}
 		return
