@@ -27,8 +27,8 @@ class AuthorizationArgs:
         The set of arguments for constructing a Authorization resource.
 
         :param pulumi.Input[_builtins.str] name: The name of the authorization object.
-        :param pulumi.Input[_builtins.str] permissions: The permission policy. The required format depends on resource_type: structured YAML for postgres/mysql/sqlserver/cockroachdb/yugabytedb (an `allow:` list of database/privileges/objects) and for kubernetes (an RBAC Role manifest); a free-form string for mongodb, ssh, and elasticsearch. Note: the SQL and kubernetes types are validated as YAML server-side, so a bare value like "SELECT" is rejected.
-        :param pulumi.Input[_builtins.str] resource_type: Resource type to grant permission on, e.g. postgres, mysql, mongodb, kubernetes, ssh.
+        :param pulumi.Input[_builtins.str] permissions: The permission policy. The required format depends on resource_type: structured YAML for postgres/mysql/sqlserver/cockroachdb/yugabytedb (an `allow:` list of database/privileges/objects) and for kubernetes (an RBAC Role manifest); a free-form string for mongodb, ssh, and elasticsearch. For servicelist, use allow/deny YAML with operation_type (HTTP method or *) and route (path with an optional trailing *); deny takes precedence and payload_regex is unsupported. Note: the SQL and kubernetes types are validated as YAML server-side, so a bare value like "SELECT" is rejected.
+        :param pulumi.Input[_builtins.str] resource_type: Resource type to grant permission on, e.g. postgres, mysql, mongodb, kubernetes, ssh, servicelist.
         :param pulumi.Input[_builtins.str] description: An optional description of the authorization object.
         """
         pulumi.set(__self__, "name", name)
@@ -53,7 +53,7 @@ class AuthorizationArgs:
     @pulumi.getter
     def permissions(self) -> pulumi.Input[_builtins.str]:
         """
-        The permission policy. The required format depends on resource_type: structured YAML for postgres/mysql/sqlserver/cockroachdb/yugabytedb (an `allow:` list of database/privileges/objects) and for kubernetes (an RBAC Role manifest); a free-form string for mongodb, ssh, and elasticsearch. Note: the SQL and kubernetes types are validated as YAML server-side, so a bare value like "SELECT" is rejected.
+        The permission policy. The required format depends on resource_type: structured YAML for postgres/mysql/sqlserver/cockroachdb/yugabytedb (an `allow:` list of database/privileges/objects) and for kubernetes (an RBAC Role manifest); a free-form string for mongodb, ssh, and elasticsearch. For servicelist, use allow/deny YAML with operation_type (HTTP method or *) and route (path with an optional trailing *); deny takes precedence and payload_regex is unsupported. Note: the SQL and kubernetes types are validated as YAML server-side, so a bare value like "SELECT" is rejected.
         """
         return pulumi.get(self, "permissions")
 
@@ -65,7 +65,7 @@ class AuthorizationArgs:
     @pulumi.getter(name="resourceType")
     def resource_type(self) -> pulumi.Input[_builtins.str]:
         """
-        Resource type to grant permission on, e.g. postgres, mysql, mongodb, kubernetes, ssh.
+        Resource type to grant permission on, e.g. postgres, mysql, mongodb, kubernetes, ssh, servicelist.
         """
         return pulumi.get(self, "resource_type")
 
@@ -104,8 +104,8 @@ class Authorization(pulumi.CustomResource):
         :param pulumi.ResourceOptions opts: Options for the resource.
         :param pulumi.Input[_builtins.str] description: An optional description of the authorization object.
         :param pulumi.Input[_builtins.str] name: The name of the authorization object.
-        :param pulumi.Input[_builtins.str] permissions: The permission policy. The required format depends on resource_type: structured YAML for postgres/mysql/sqlserver/cockroachdb/yugabytedb (an `allow:` list of database/privileges/objects) and for kubernetes (an RBAC Role manifest); a free-form string for mongodb, ssh, and elasticsearch. Note: the SQL and kubernetes types are validated as YAML server-side, so a bare value like "SELECT" is rejected.
-        :param pulumi.Input[_builtins.str] resource_type: Resource type to grant permission on, e.g. postgres, mysql, mongodb, kubernetes, ssh.
+        :param pulumi.Input[_builtins.str] permissions: The permission policy. The required format depends on resource_type: structured YAML for postgres/mysql/sqlserver/cockroachdb/yugabytedb (an `allow:` list of database/privileges/objects) and for kubernetes (an RBAC Role manifest); a free-form string for mongodb, ssh, and elasticsearch. For servicelist, use allow/deny YAML with operation_type (HTTP method or *) and route (path with an optional trailing *); deny takes precedence and payload_regex is unsupported. Note: the SQL and kubernetes types are validated as YAML server-side, so a bare value like "SELECT" is rejected.
+        :param pulumi.Input[_builtins.str] resource_type: Resource type to grant permission on, e.g. postgres, mysql, mongodb, kubernetes, ssh, servicelist.
         """
         ...
     @overload
@@ -204,7 +204,7 @@ class Authorization(pulumi.CustomResource):
     @pulumi.getter
     def permissions(self) -> pulumi.Output[_builtins.str]:
         """
-        The permission policy. The required format depends on resource_type: structured YAML for postgres/mysql/sqlserver/cockroachdb/yugabytedb (an `allow:` list of database/privileges/objects) and for kubernetes (an RBAC Role manifest); a free-form string for mongodb, ssh, and elasticsearch. Note: the SQL and kubernetes types are validated as YAML server-side, so a bare value like "SELECT" is rejected.
+        The permission policy. The required format depends on resource_type: structured YAML for postgres/mysql/sqlserver/cockroachdb/yugabytedb (an `allow:` list of database/privileges/objects) and for kubernetes (an RBAC Role manifest); a free-form string for mongodb, ssh, and elasticsearch. For servicelist, use allow/deny YAML with operation_type (HTTP method or *) and route (path with an optional trailing *); deny takes precedence and payload_regex is unsupported. Note: the SQL and kubernetes types are validated as YAML server-side, so a bare value like "SELECT" is rejected.
         """
         return pulumi.get(self, "permissions")
 
@@ -212,7 +212,7 @@ class Authorization(pulumi.CustomResource):
     @pulumi.getter(name="resourceType")
     def resource_type(self) -> pulumi.Output[_builtins.str]:
         """
-        Resource type to grant permission on, e.g. postgres, mysql, mongodb, kubernetes, ssh.
+        Resource type to grant permission on, e.g. postgres, mysql, mongodb, kubernetes, ssh, servicelist.
         """
         return pulumi.get(self, "resource_type")
 

@@ -26,13 +26,13 @@ namespace AdaptiveScale.Adaptive
         public Output<string> Name { get; private set; } = null!;
 
         /// <summary>
-        /// The permission policy. The required format depends on resource_type: structured YAML for postgres/mysql/sqlserver/cockroachdb/yugabytedb (an `allow:` list of database/privileges/objects) and for kubernetes (an RBAC Role manifest); a free-form string for mongodb, ssh, and elasticsearch. Note: the SQL and kubernetes types are validated as YAML server-side, so a bare value like "SELECT" is rejected.
+        /// The permission policy. The required format depends on resource_type: structured YAML for postgres/mysql/sqlserver/cockroachdb/yugabytedb (an `allow:` list of database/privileges/objects) and for kubernetes (an RBAC Role manifest); a free-form string for mongodb, ssh, and elasticsearch. For servicelist, use allow/deny YAML with operation_type (HTTP method or *) and route (path with an optional trailing *); deny takes precedence and payload_regex is unsupported. Note: the SQL and kubernetes types are validated as YAML server-side, so a bare value like "SELECT" is rejected.
         /// </summary>
         [Output("permissions")]
         public Output<string> Permissions { get; private set; } = null!;
 
         /// <summary>
-        /// Resource type to grant permission on, e.g. postgres, mysql, mongodb, kubernetes, ssh.
+        /// Resource type to grant permission on, e.g. postgres, mysql, mongodb, kubernetes, ssh, servicelist.
         /// </summary>
         [Output("resourceType")]
         public Output<string> ResourceType { get; private set; } = null!;
@@ -102,13 +102,13 @@ namespace AdaptiveScale.Adaptive
         public Input<string> Name { get; set; } = null!;
 
         /// <summary>
-        /// The permission policy. The required format depends on resource_type: structured YAML for postgres/mysql/sqlserver/cockroachdb/yugabytedb (an `allow:` list of database/privileges/objects) and for kubernetes (an RBAC Role manifest); a free-form string for mongodb, ssh, and elasticsearch. Note: the SQL and kubernetes types are validated as YAML server-side, so a bare value like "SELECT" is rejected.
+        /// The permission policy. The required format depends on resource_type: structured YAML for postgres/mysql/sqlserver/cockroachdb/yugabytedb (an `allow:` list of database/privileges/objects) and for kubernetes (an RBAC Role manifest); a free-form string for mongodb, ssh, and elasticsearch. For servicelist, use allow/deny YAML with operation_type (HTTP method or *) and route (path with an optional trailing *); deny takes precedence and payload_regex is unsupported. Note: the SQL and kubernetes types are validated as YAML server-side, so a bare value like "SELECT" is rejected.
         /// </summary>
         [Input("permissions", required: true)]
         public Input<string> Permissions { get; set; } = null!;
 
         /// <summary>
-        /// Resource type to grant permission on, e.g. postgres, mysql, mongodb, kubernetes, ssh.
+        /// Resource type to grant permission on, e.g. postgres, mysql, mongodb, kubernetes, ssh, servicelist.
         /// </summary>
         [Input("resourceType", required: true)]
         public Input<string> ResourceType { get; set; } = null!;

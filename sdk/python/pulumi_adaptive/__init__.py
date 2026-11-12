@@ -14,6 +14,7 @@ from .provider import *
 from .resource import *
 from .schedule import *
 from .script import *
+from .variable import *
 from ._inputs import *
 from . import outputs
 
@@ -38,7 +39,8 @@ _utilities.register(
    "adaptive:index:Group": "Group",
    "adaptive:index:Resource": "Resource",
    "adaptive:index:Schedule": "Schedule",
-   "adaptive:index:Script": "Script"
+   "adaptive:index:Script": "Script",
+   "adaptive:index:Variable": "Variable"
   }
  }
 ]

@@ -12,15 +12,21 @@ Run with:
 import pulumi
 import pulumi_adaptive as adaptive
 
+database_host = adaptive.Variable("database-host",
+    name="database_host",
+    value="db.example.com",
+    labels=["production", "database"])
+
 # A connection to a Postgres database.
 db = adaptive.Resource("my-db",
     name="playground-postgres",
     type="postgres",
-    host="db.example.com",
+    host="{{database_host}}",
     port="5432",
     username="admin",
     password="not-a-real-password",
-    ssl_mode="require")
+    ssl_mode="require",
+    opts=pulumi.ResourceOptions(depends_on=[database_host]))
 
 # A time-limited access endpoint. Referencing db.name makes Pulumi create the
 # resource before the endpoint (the dependency graph).

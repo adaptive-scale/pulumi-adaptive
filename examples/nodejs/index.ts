@@ -11,16 +11,22 @@
 
 import * as adaptive from "@adaptive-scale/pulumi-adaptive";
 
+const databaseHost = new adaptive.Variable("database-host", {
+    name: "database_host",
+    value: "db.example.com",
+    labels: ["production", "database"],
+});
+
 // A connection to a Postgres database.
 const db = new adaptive.Resource("my-db", {
     name: "playground-postgres",
     type: "postgres",
-    host: "db.example.com",
+    host: "{{database_host}}",
     port: "5432",
     username: "admin",
     password: "not-a-real-password",
     sslMode: "require",
-});
+}, { dependsOn: [databaseHost] });
 
 // A time-limited access endpoint. Referencing db.name makes Pulumi create
 // the resource before the endpoint (the dependency graph).

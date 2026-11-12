@@ -4,7 +4,7 @@
     <GeneratePackageOnBuild>true</GeneratePackageOnBuild>
     <Authors>Adaptive Scale</Authors>
     <Company>Adaptive Scale</Company>
-    <Description>A Pulumi provider for managing Adaptive (adaptive.live) infrastructure: resources, endpoints, authorizations, groups, and scripts.</Description>
+    <Description>A Pulumi provider for managing Adaptive (adaptive.live) infrastructure: resources, endpoints, authorizations, groups, scripts, schedules, and variables.</Description>
     <PackageLicenseExpression>Apache-2.0</PackageLicenseExpression>
     <PackageProjectUrl>https://adaptive.live</PackageProjectUrl>
     <RepositoryUrl>https://github.com/adaptive-scale/pulumi-adaptive</RepositoryUrl>

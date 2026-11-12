@@ -45,6 +45,11 @@ export type Script = import("./script").Script;
 export const Script: typeof import("./script").Script = null as any;
 utilities.lazyLoad(exports, ["Script"], () => require("./script"));
 
+export { VariableArgs } from "./variable";
+export type Variable = import("./variable").Variable;
+export const Variable: typeof import("./variable").Variable = null as any;
+utilities.lazyLoad(exports, ["Variable"], () => require("./variable"));
+
 
 // Export sub-modules:
 import * as config from "./config";
@@ -73,6 +78,8 @@ const _module = {
                 return new Schedule(name, <any>undefined, { urn })
             case "adaptive:index:Script":
                 return new Script(name, <any>undefined, { urn })
+            case "adaptive:index:Variable":
+                return new Variable(name, <any>undefined, { urn })
             default:
                 throw new Error(`unknown resource type ${type}`);
         }

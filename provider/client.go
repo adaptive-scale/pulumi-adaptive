@@ -52,6 +52,7 @@ func (c *Client) teamAPI() string          { return c.workspaceURL + "/terraform
 func (c *Client) scriptAPI() string        { return c.workspaceURL + "/terraform/script" }
 func (c *Client) resourceAPI() string      { return c.workspaceURL + "/terraform/resource" }
 func (c *Client) sessionAPI() string       { return c.workspaceURL + "/terraform/session" }
+func (c *Client) variableAPI() string      { return c.workspaceURL + "/terraform/variable" }
 func (c *Client) sessionForceDeleteAPI() string {
 	return c.workspaceURL + "/sessions/force-delete"
 }
@@ -131,6 +132,12 @@ type ScriptRequest struct {
 	Endpoint              string            `json:"Endpoint"`
 	Description           string            `json:"Description,omitempty"`
 	ParameterDescriptions map[string]string `json:"ParameterDescriptions,omitempty"`
+}
+
+type VariableRequest struct {
+	Name   string   `json:"name"`
+	Value  string   `json:"value"`
+	Labels []string `json:"labels"`
 }
 
 // ScheduleRequest mirrors the server's TerraformCreateScheduleRequest.
@@ -302,6 +309,15 @@ type ScheduleReadResponse struct {
 	Timezone      string   `json:"timezone"`
 	OperationType string   `json:"operationType"`
 	UpdatedAt     string   `json:"updatedAt"`
+}
+
+type VariableReadResponse struct {
+	ID        string   `json:"id"`
+	Name      string   `json:"name"`
+	Value     string   `json:"value"`
+	Labels    []string `json:"labels"`
+	CreatedAt string   `json:"createdAt"`
+	UpdatedAt string   `json:"updatedAt"`
 }
 
 type CreateAuthorizationRequest struct {
@@ -655,6 +671,12 @@ func (c *Client) ReadSchedule(ctx context.Context, scheduleID string) (*Schedule
 	return readTyped[ScheduleReadResponse](c, ctx, fmt.Sprintf("%s/read/%s", c.scheduleAPI(), scheduleID), "schedule", scheduleID)
 }
 
+// ReadVariable fetches a workspace variable by ID. The provider marks Value as
+// secret, so it stays encrypted in Pulumi state and redacted from CLI output.
+func (c *Client) ReadVariable(ctx context.Context, variableID string) (*VariableReadResponse, error) {
+	return readTyped[VariableReadResponse](c, ctx, fmt.Sprintf("%s/read/%s", c.variableAPI(), variableID), "variable", variableID)
+}
+
 func (c *Client) waitForSession(ctx context.Context, sessionID string) (*SessionReadResponse, error) {
 	return Do(func() (*SessionReadResponse, error) {
 		return c.ReadSession(ctx, sessionID)
@@ -806,6 +828,53 @@ func (c *Client) DeleteTeam(ctx context.Context, id, name string) error {
 	defer resp.Body.Close()
 	if resp.StatusCode != http.StatusOK {
 		return fmt.Errorf("error deleting group %s: %s", name, readBody(resp))
+	}
+	return nil
+}
+
+// ---------------------------------------------------------------------------
+// Variables
+// ---------------------------------------------------------------------------
+
+func (c *Client) writeVariable(ctx context.Context, url string, request VariableRequest) (*VariableReadResponse, error) {
+	body, err := encode(request)
+	if err != nil {
+		return nil, err
+	}
+	resp, err := c.do(ctx, mustReq(http.MethodPost, url, body))
+	if err != nil {
+		return nil, err
+	}
+	defer resp.Body.Close()
+	if resp.StatusCode != http.StatusOK {
+		return nil, fmt.Errorf("error writing variable %s: %s", request.Name, readBody(resp))
+	}
+	var out VariableReadResponse
+	if err := json.NewDecoder(resp.Body).Decode(&out); err != nil {
+		return nil, fmt.Errorf("failed to decode variable response: %w", err)
+	}
+	return &out, nil
+}
+
+func (c *Client) CreateVariable(ctx context.Context, request VariableRequest) (*VariableReadResponse, error) {
+	return c.writeVariable(ctx, c.variableAPI()+"/create", request)
+}
+
+func (c *Client) UpdateVariable(ctx context.Context, id string, request VariableRequest) (*VariableReadResponse, error) {
+	return c.writeVariable(ctx, fmt.Sprintf("%s/update/%s", c.variableAPI(), id), request)
+}
+
+func (c *Client) DeleteVariable(ctx context.Context, id string) error {
+	resp, err := c.do(ctx, mustReq(http.MethodPost, fmt.Sprintf("%s/delete/%s", c.variableAPI(), id), nil))
+	if err != nil {
+		return err
+	}
+	defer resp.Body.Close()
+	if resp.StatusCode == http.StatusNotFound {
+		return nil
+	}
+	if resp.StatusCode != http.StatusOK {
+		return fmt.Errorf("error deleting variable %s: %s", id, readBody(resp))
 	}
 	return nil
 }

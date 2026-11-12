@@ -35,6 +35,8 @@ func (m *module) Construct(ctx *pulumi.Context, name, typ, urn string) (r pulumi
 		r = &Schedule{}
 	case "adaptive:index:Script":
 		r = &Script{}
+	case "adaptive:index:Variable":
+		r = &Variable{}
 	default:
 		return nil, fmt.Errorf("unknown resource type: %s", typ)
 	}

@@ -5,7 +5,7 @@
 
 A native [Pulumi](https://www.pulumi.com/) provider for [Adaptive](https://adaptive.live),
 the access-management platform. It lets you manage Adaptive infrastructure —
-resource connections, access endpoints, authorizations, groups, and scripts —
+resource connections, access endpoints, authorizations, groups, scripts, schedules, and variables —
 as code, the same surface offered by the
 [Adaptive Terraform provider](https://registry.terraform.io/providers/adaptive-scale/adaptive),
 but for Pulumi.
@@ -25,6 +25,7 @@ Terraform or the Terraform bridge.
 | `adaptive.Script` | A command attached to an endpoint, with optional description and parameter docs. |
 | `adaptive.Schedule` | An auto-approval (or auto-reject) schedule window applied to users, groups, and endpoints. |
 | `adaptive.DataProtection` | A data-masking policy for a resource (per-database/table/column masking rules). |
+| `adaptive.Variable` | An encrypted workspace value referenced from resource configuration as `{{name}}`. |
 
 Notification/webhook integrations (e.g. MS Teams workflows) are managed through
 `adaptive.Resource` with the matching `type` (e.g. `msteams_workflow` + `webhookUrl`).
@@ -105,16 +106,22 @@ Unset the variables to use values set with `pulumi config`.
 ```typescript
 import * as adaptive from "@adaptive-scale/pulumi-adaptive";
 
+const databaseHost = new adaptive.Variable("database-host", {
+    name: "database_host",
+    value: "db.example.com",
+    labels: ["production", "database"],
+});
+
 // A connection to a Postgres database.
 const db = new adaptive.Resource("my-db", {
     name: "playground-postgres",
     type: "postgres",
-    host: "db.example.com",
+    host: "{{database_host}}",
     port: "5432",
     username: "admin",
     password: "not-a-real-password",
     sslMode: "require",
-});
+}, { dependsOn: [databaseHost] });
 
 // A time-limited access endpoint to it.
 const endpoint = new adaptive.Endpoint("my-db-access", {
@@ -144,7 +151,7 @@ pulumi up
 
 Credential-bearing fields (`password`, `secretAccessKey`, `clientSecret`, SSH
 keys, API tokens, webhook URLs, connection-string `uri`s, script `command`s, …)
-are marked secret in the provider schema. The engine therefore shows them as
+and variable `value`s are marked secret in the provider schema. The engine therefore shows them as
 `[secret]` in `pulumi preview`/`up` output and encrypts them in the stack
 state — **even when the program passes a plaintext literal**, in every
 language.
@@ -163,8 +170,8 @@ db = adaptive.Resource("db",
     password=cfg.require_secret("dbPassword"))
 ```
 
-**Secret drift detection.** The Adaptive API never returns secret values, but
-it returns an opaque server-side fingerprint per secret field
+**Secret drift detection.** Resource credentials and script bodies are never
+returned by the Adaptive API, but it returns an opaque server-side fingerprint per secret field
 (`redactedDigests` on resources, `commandDigest` on scripts). The provider
 records these in state and compares them on `pulumi refresh`: when a secret was
 changed out-of-band (e.g. rotated in the UI), refresh clears that field in
@@ -191,6 +198,7 @@ pulumi import adaptive:index:Group        my-group   <group-id>
 pulumi import adaptive:index:Script       my-script  <script-id>
 pulumi import adaptive:index:Schedule     my-window  <schedule-id>
 pulumi import adaptive:index:DataProtection my-policy <resource-id>
+pulumi import adaptive:index:Variable     database-host <variable-id>
 ```
 
 (`DataProtection` imports by the protected **resource's** ID — a policy has no
@@ -206,6 +214,9 @@ recovered on import:
   are stripped from API reads. The import warns with the exact list of
   redacted fields to fill in. On refresh, secrets already in state are kept.
 - **Webhook URLs** (e.g. `msteams_workflow` resources): redacted like other secrets.
+- **Variables**: the admin-only provider API returns the encrypted variable's
+  value during import/refresh; Pulumi immediately treats it as a secret and
+  encrypts it in stack state.
 - **Schedules are upserted by name**: creating a schedule whose name already
   exists on the backend adopts the existing schedule instead of failing.
 

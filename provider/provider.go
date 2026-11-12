@@ -1,7 +1,7 @@
 // Package adaptive implements a native Pulumi provider for Adaptive
 // (https://adaptive.live), built with pulumi-go-provider. It mirrors the
 // resource surface of the Adaptive Terraform provider: resources, endpoints,
-// authorizations, groups, scripts, and schedules.
+// authorizations, groups, scripts, schedules, and variables.
 package adaptive
 
 import (
@@ -82,7 +82,7 @@ func buildProvider() (p.Provider, error) {
 		WithNamespace("adaptive-scale").
 		WithDisplayName("Adaptive").
 		WithDescription("A Pulumi provider for managing Adaptive (adaptive.live) infrastructure: "+
-			"resources, endpoints, authorizations, groups, and scripts.").
+			"resources, endpoints, authorizations, groups, scripts, schedules, and variables.").
 		WithHomepage("https://adaptive.live").
 		WithRepository("https://github.com/adaptive-scale/pulumi-adaptive").
 		WithLicense("Apache-2.0").
@@ -133,6 +133,7 @@ func buildProvider() (p.Provider, error) {
 			infer.Resource(&Script{}),
 			infer.Resource(&Schedule{}),
 			infer.Resource(&DataProtection{}),
+			infer.Resource(&Variable{}),
 		).
 		Build()
 }

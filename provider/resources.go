@@ -240,10 +240,11 @@ func (a *AuthorizationState) Annotate(an infer.Annotator) {
 
 func (a *AuthorizationArgs) Annotate(an infer.Annotator) {
 	an.Describe(&a.Name, "The name of the authorization object.")
-	an.Describe(&a.ResourceType, "Resource type to grant permission on, e.g. postgres, mysql, mongodb, kubernetes, ssh.")
+	an.Describe(&a.ResourceType, "Resource type to grant permission on, e.g. postgres, mysql, mongodb, kubernetes, ssh, servicelist.")
 	an.Describe(&a.Permissions, "The permission policy. The required format depends on resource_type: "+
 		"structured YAML for postgres/mysql/sqlserver/cockroachdb/yugabytedb (an `allow:` list of database/privileges/objects) "+
 		"and for kubernetes (an RBAC Role manifest); a free-form string for mongodb, ssh, and elasticsearch. "+
+		"For servicelist, use allow/deny YAML with operation_type (HTTP method or *) and route (path with an optional trailing *); deny takes precedence and payload_regex is unsupported. "+
 		"Note: the SQL and kubernetes types are validated as YAML server-side, so a bare value like \"SELECT\" is rejected.")
 	an.Describe(&a.Description, "An optional description of the authorization object.")
 }

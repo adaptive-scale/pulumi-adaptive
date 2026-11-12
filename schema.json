@@ -2,7 +2,7 @@
   "name": "adaptive",
   "displayName": "Adaptive",
   "version": "0.2.0",
-  "description": "A Pulumi provider for managing Adaptive (adaptive.live) infrastructure: resources, endpoints, authorizations, groups, and scripts.",
+  "description": "A Pulumi provider for managing Adaptive (adaptive.live) infrastructure: resources, endpoints, authorizations, groups, scripts, schedules, and variables.",
   "keywords": [
     "pulumi",
     "adaptive",
@@ -186,11 +186,11 @@
         },
         "permissions": {
           "type": "string",
-          "description": "The permission policy. The required format depends on resource_type: structured YAML for postgres/mysql/sqlserver/cockroachdb/yugabytedb (an `allow:` list of database/privileges/objects) and for kubernetes (an RBAC Role manifest); a free-form string for mongodb, ssh, and elasticsearch. Note: the SQL and kubernetes types are validated as YAML server-side, so a bare value like \"SELECT\" is rejected."
+          "description": "The permission policy. The required format depends on resource_type: structured YAML for postgres/mysql/sqlserver/cockroachdb/yugabytedb (an `allow:` list of database/privileges/objects) and for kubernetes (an RBAC Role manifest); a free-form string for mongodb, ssh, and elasticsearch. For servicelist, use allow/deny YAML with operation_type (HTTP method or *) and route (path with an optional trailing *); deny takes precedence and payload_regex is unsupported. Note: the SQL and kubernetes types are validated as YAML server-side, so a bare value like \"SELECT\" is rejected."
         },
         "resourceType": {
           "type": "string",
-          "description": "Resource type to grant permission on, e.g. postgres, mysql, mongodb, kubernetes, ssh."
+          "description": "Resource type to grant permission on, e.g. postgres, mysql, mongodb, kubernetes, ssh, servicelist."
         },
         "status": {
           "type": "string",
@@ -213,11 +213,11 @@
         },
         "permissions": {
           "type": "string",
-          "description": "The permission policy. The required format depends on resource_type: structured YAML for postgres/mysql/sqlserver/cockroachdb/yugabytedb (an `allow:` list of database/privileges/objects) and for kubernetes (an RBAC Role manifest); a free-form string for mongodb, ssh, and elasticsearch. Note: the SQL and kubernetes types are validated as YAML server-side, so a bare value like \"SELECT\" is rejected."
+          "description": "The permission policy. The required format depends on resource_type: structured YAML for postgres/mysql/sqlserver/cockroachdb/yugabytedb (an `allow:` list of database/privileges/objects) and for kubernetes (an RBAC Role manifest); a free-form string for mongodb, ssh, and elasticsearch. For servicelist, use allow/deny YAML with operation_type (HTTP method or *) and route (path with an optional trailing *); deny takes precedence and payload_regex is unsupported. Note: the SQL and kubernetes types are validated as YAML server-side, so a bare value like \"SELECT\" is rejected."
         },
         "resourceType": {
           "type": "string",
-          "description": "Resource type to grant permission on, e.g. postgres, mysql, mongodb, kubernetes, ssh."
+          "description": "Resource type to grant permission on, e.g. postgres, mysql, mongodb, kubernetes, ssh, servicelist."
         }
       },
       "requiredInputs": [
@@ -230,7 +230,7 @@
       "properties": {
         "authorizationName": {
           "type": "string",
-          "description": "Name of the generated masking authorization (masked_\u003cresource\u003e). Attach it to an Endpoint's `authorization` to serve masked sessions."
+          "description": "Name of the generated masking authorization (masked_<resource>). Attach it to an Endpoint's `authorization` to serve masked sessions."
         },
         "lastAppliedAt": {
           "type": "string",
@@ -1673,6 +1673,54 @@
         "name",
         "command",
         "endpoint"
+      ]
+    },
+    "adaptive:index:Variable": {
+      "properties": {
+        "labels": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          },
+          "description": "Permission labels attached to the variable."
+        },
+        "name": {
+          "type": "string",
+          "description": "Workspace-unique variable name. Use it in resource configuration as {{name}}. Changing it replaces the variable.",
+          "replaceOnChanges": true
+        },
+        "value": {
+          "type": "string",
+          "description": "Secret or configuration value substituted into Adaptive resource configurations at runtime.",
+          "secret": true
+        }
+      },
+      "required": [
+        "name",
+        "value"
+      ],
+      "inputProperties": {
+        "labels": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          },
+          "description": "Permission labels attached to the variable."
+        },
+        "name": {
+          "type": "string",
+          "description": "Workspace-unique variable name. Use it in resource configuration as {{name}}. Changing it replaces the variable.",
+          "replaceOnChanges": true
+        },
+        "value": {
+          "type": "string",
+          "description": "Secret or configuration value substituted into Adaptive resource configurations at runtime.",
+          "secret": true
+        }
+      },
+      "requiredInputs": [
+        "name",
+        "value"
       ]
     }
   }

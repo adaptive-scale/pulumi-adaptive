@@ -16,16 +16,25 @@ import (
 
 func main() {
 	pulumi.Run(func(ctx *pulumi.Context) error {
+		databaseHost, err := adaptive.NewVariable(ctx, "database-host", &adaptive.VariableArgs{
+			Name:   pulumi.String("database_host"),
+			Value:  pulumi.String("db.example.com"),
+			Labels: pulumi.StringArray{pulumi.String("production"), pulumi.String("database")},
+		})
+		if err != nil {
+			return err
+		}
+
 		// A connection to a Postgres database.
 		db, err := adaptive.NewResource(ctx, "my-db", &adaptive.ResourceArgs{
 			Name:     pulumi.String("playground-postgres"),
 			Type:     pulumi.String("postgres"),
-			Host:     pulumi.String("db.example.com"),
+			Host:     pulumi.String("{{database_host}}"),
 			Port:     pulumi.String("5432"),
 			Username: pulumi.String("admin"),
 			Password: pulumi.String("not-a-real-password"),
 			SslMode:  pulumi.String("require"),
-		})
+		}, pulumi.DependsOn([]pulumi.Resource{databaseHost}))
 		if err != nil {
 			return err
 		}
