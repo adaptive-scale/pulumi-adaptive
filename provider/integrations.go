@@ -1597,6 +1597,18 @@ func argIsSet(a *ResourceArgs, field int) bool {
 	return f.Kind() == reflect.Ptr && !f.IsNil()
 }
 
+// argIsExplicitEmpty reports whether the program set the field at index i to "".
+func argIsExplicitEmpty(a *ResourceArgs, field int) bool {
+	f := reflect.ValueOf(a).Elem().Field(field)
+	return f.Kind() == reflect.Ptr && !f.IsNil() && f.Elem().Kind() == reflect.String && f.Elem().String() == ""
+}
+
+// argEquals reports whether the field at index i is set to exactly value.
+func argEquals(a *ResourceArgs, field int, value string) bool {
+	f := reflect.ValueOf(a).Elem().Field(field)
+	return f.Kind() == reflect.Ptr && !f.IsNil() && f.Elem().Kind() == reflect.String && f.Elem().String() == value
+}
+
 // setArg writes a value to the field at index i.
 func setArg(a *ResourceArgs, field int, value string) {
 	f := reflect.ValueOf(a).Elem().Field(field)

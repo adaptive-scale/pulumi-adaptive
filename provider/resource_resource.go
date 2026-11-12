@@ -374,6 +374,15 @@ func (*Resource) Read(ctx context.Context, req infer.ReadRequest[ResourceArgs, R
 	appliedDigests := req.State.AppliedDigests
 	if len(appliedDigests) == 0 {
 		appliedDigests = r.RedactedDigests
+		// Seeding is right when nothing was recorded because nothing could be
+		// (import, a resource predating this field). It is wrong for a secret
+		// the program explicitly set to "": our last write cleared it, so that
+		// write is the baseline, and a fingerprint appearing since is drift.
+		if !isImport {
+			if drifted := markAppearedOverExplicitEmpty(&inputs, &req.Inputs, r.IntegrationType, r.RedactedDigests); len(drifted) > 0 {
+				appliedDigests = withoutKeys(r.RedactedDigests, drifted)
+			}
+		}
 	} else {
 		appliedDigests = pruneClearedSecretDigests(appliedDigests, r.Configuration)
 	}
@@ -491,6 +500,44 @@ func importArgumentNames(integrationType string, keys []string) []string {
 		} else {
 			out = append(out, key)
 		}
+	}
+	return out
+}
+
+// markAppearedOverExplicitEmpty handles the one case the empty-baseline seed
+// would otherwise hide: the program set a secret argument to "", so our last
+// write left the server holding nothing, and the server now reports a
+// fingerprint for it. Each such argument gets the fingerprint as its drift
+// marker (rendered as [secret]), so preview shows ~ and up writes "" again.
+// It returns the config keys it marked.
+func markAppearedOverExplicitEmpty(inputs, prior *ResourceArgs, integrationType string, current map[string]string) []string {
+	var marked []string
+	for k, digest := range current {
+		field, _, ok := argForConfigKey(integrationType, k)
+		if !ok || !argIsSecret(field) {
+			continue
+		}
+		// The prior input is either the program's "" (first refresh after the
+		// out-of-band change) or this same marker (a later refresh, since
+		// refresh stores the inputs it returned). Both mean the drift stands.
+		if !argIsExplicitEmpty(prior, field) && !argEquals(prior, field, digest) {
+			continue
+		}
+		setArg(inputs, field, digest)
+		marked = append(marked, k)
+	}
+	sort.Strings(marked)
+	return marked
+}
+
+// withoutKeys returns a copy of m without the given keys.
+func withoutKeys(m map[string]string, keys []string) map[string]string {
+	out := make(map[string]string, len(m))
+	for k, v := range m {
+		out[k] = v
+	}
+	for _, k := range keys {
+		delete(out, k)
 	}
 	return out
 }

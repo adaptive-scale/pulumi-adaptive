@@ -223,7 +223,9 @@ it returns an opaque server-side fingerprint per secret field
 records the fingerprints as of its last write and compares them on
 `pulumi refresh`, so a secret rotated out-of-band (e.g. in the UI) shows up in
 the next preview on the argument it belongs to — as `[secret]`, never in
-plaintext. The argument name is what carries the information.
+plaintext. The argument name is what carries the information. This includes a
+secret your program sets to `""`: if someone later sets a value in the UI, the
+preview shows `~ password` and the next update clears it again.
 
 What the preview then does depends on your program, because the platform stores
 the configuration as a single blob and every update replaces it whole:
