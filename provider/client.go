@@ -8,6 +8,7 @@ import (
 	"fmt"
 	"io"
 	"net/http"
+	"net/url"
 	"os"
 	"path"
 	"sort"
@@ -994,4 +995,179 @@ func resolveToken() (string, string, error) {
 
 	// raw string
 	return strings.TrimSpace(serviceToken), workspaceURL, nil
+}
+
+// ---------------------------------------------------------------------------
+// Workspace settings and SSO sync
+// ---------------------------------------------------------------------------
+
+func (c *Client) workspaceSettingsAPI() string {
+	return c.workspaceURL + "/terraform/workspace/settings"
+}
+func (c *Client) ssoSyncAPI() string { return c.workspaceURL + "/terraform/sso-sync" }
+
+type WorkspaceUserRoleResponse struct {
+	UserID string `json:"userId"`
+	Email  string `json:"email"`
+	Role   string `json:"role"`
+}
+
+func (r *WorkspaceUserRoleResponse) readID() string { return r.Email }
+func (c *Client) workspaceUserRoleAPI() string {
+	return c.workspaceURL + "/terraform/workspace/user-role"
+}
+func (c *Client) ReadWorkspaceUserRole(ctx context.Context, email string) (*WorkspaceUserRoleResponse, error) {
+	return readTyped[WorkspaceUserRoleResponse](c, ctx, c.workspaceUserRoleAPI()+"/read/"+url.PathEscape(email), "workspace user role", email)
+}
+func (c *Client) UpdateWorkspaceUserRole(ctx context.Context, email, role string) (*WorkspaceUserRoleResponse, error) {
+	body, err := encode(map[string]string{"email": email, "role": role})
+	if err != nil {
+		return nil, err
+	}
+	resp, err := c.do(ctx, mustReq("POST", c.workspaceUserRoleAPI()+"/update", body))
+	if err != nil {
+		return nil, err
+	}
+	defer resp.Body.Close()
+	if resp.StatusCode != http.StatusOK {
+		return nil, fmt.Errorf("error updating workspace user role: %s", apiErrorMessage(resp))
+	}
+	var out WorkspaceUserRoleResponse
+	if err := json.NewDecoder(resp.Body).Decode(&out); err != nil {
+		return nil, err
+	}
+	return &out, nil
+}
+
+// WorkspaceSettingsBody is both the partial-update request and the read model of
+// the workspace settings endpoints. Every field is a pointer: nil is omitted from
+// requests (the server leaves it untouched), and a non-nil zero value is an
+// explicit set, including the empty string.
+type WorkspaceSettingsBody struct {
+	DefaultCluster                     *string `json:"defaultCluster,omitempty"`
+	DefaultLoginEnabled                *bool   `json:"defaultLoginEnabled,omitempty"`
+	MfaEnabled                         *bool   `json:"mfaEnabled,omitempty"`
+	RequireCommentsOnAccessRequests    *bool   `json:"requireCommentsOnAccessRequests,omitempty"`
+	DisableNewAccessRequest            *bool   `json:"disableNewAccessRequest,omitempty"`
+	MaxJitRequestDuration              *string `json:"maxJitRequestDuration,omitempty"`
+	PendingRequestExpiry               *string `json:"pendingRequestExpiry,omitempty"`
+	Timezone                           *string `json:"timezone,omitempty"`
+	ExpirationNotificationsEnabled     *bool   `json:"expirationNotificationsEnabled,omitempty"`
+	SsoSyncEnabled                     *bool   `json:"ssoSyncEnabled,omitempty"`
+	SsoSyncInterval                    *string `json:"ssoSyncInterval,omitempty"`
+	RemoveSsoDeletedUsersFromEndpoints *bool   `json:"removeSsoDeletedUsersFromEndpoints,omitempty"`
+	DefaultChatProviderId              *string `json:"defaultChatProviderId,omitempty"`
+	DefaultTicketProviderId            *string `json:"defaultTicketProviderId,omitempty"`
+	DefaultLogForwarder                *string `json:"defaultLogForwarder,omitempty"`
+	SessionTimeout                     *string `json:"sessionTimeout,omitempty"`
+	EndpointSleepTimeout               *string `json:"endpointSleepTimeout,omitempty"`
+	IntegrationProbeInterval           *string `json:"integrationProbeInterval,omitempty"`
+	DefaultCpu                         *string `json:"defaultCpu,omitempty"`
+	DefaultMemory                      *string `json:"defaultMemory,omitempty"`
+}
+
+func (c *Client) ReadWorkspaceSettings(ctx context.Context) (*WorkspaceSettingsBody, error) {
+	return readTyped[WorkspaceSettingsBody](c, ctx, c.workspaceSettingsAPI()+"/read", "workspace settings", "workspace-settings")
+}
+
+func (c *Client) UpdateWorkspaceSettings(ctx context.Context, req WorkspaceSettingsBody) (*WorkspaceSettingsBody, error) {
+	body, err := encode(req)
+	if err != nil {
+		return nil, err
+	}
+	resp, err := c.do(ctx, mustReq("POST", c.workspaceSettingsAPI()+"/update", body))
+	if err != nil {
+		return nil, err
+	}
+	defer resp.Body.Close()
+	if resp.StatusCode != http.StatusOK {
+		return nil, fmt.Errorf("error updating workspace settings: %s", apiErrorMessage(resp))
+	}
+	var out WorkspaceSettingsBody
+	if err := json.NewDecoder(resp.Body).Decode(&out); err != nil {
+		return nil, err
+	}
+	return &out, nil
+}
+
+type SsoSyncGroup struct {
+	ID   string `json:"id"`
+	Name string `json:"name"`
+}
+
+type SsoSyncReadResponse struct {
+	ProviderID      string         `json:"providerId"`
+	ProviderType    string         `json:"providerType"`
+	LoginEnabled    bool           `json:"loginEnabled"`
+	AutoSyncEnabled bool           `json:"autoSyncEnabled"`
+	RoleSyncEnabled bool           `json:"roleSyncEnabled"`
+	Groups          []SsoSyncGroup `json:"groups"`
+}
+
+func (r *SsoSyncReadResponse) readID() string { return r.ProviderID }
+
+type SsoSyncUpdateRequest struct {
+	LoginEnabled    *bool     `json:"loginEnabled,omitempty"`
+	AutoSyncEnabled *bool     `json:"autoSyncEnabled,omitempty"`
+	RoleSyncEnabled *bool     `json:"roleSyncEnabled,omitempty"`
+	Groups          *[]string `json:"groups,omitempty"`
+	SyncNow         bool      `json:"syncNow"`
+}
+
+func (c *Client) ReadSsoSync(ctx context.Context, providerID string) (*SsoSyncReadResponse, error) {
+	return readTyped[SsoSyncReadResponse](c, ctx, fmt.Sprintf("%s/read/%s", c.ssoSyncAPI(), providerID), "sso sync", providerID)
+}
+
+func (c *Client) UpdateSsoSync(ctx context.Context, providerID string, req SsoSyncUpdateRequest) (*SsoSyncReadResponse, error) {
+	body, err := encode(req)
+	if err != nil {
+		return nil, err
+	}
+	resp, err := c.do(ctx, mustReq("POST", fmt.Sprintf("%s/update/%s", c.ssoSyncAPI(), providerID), body))
+	if err != nil {
+		return nil, err
+	}
+	defer resp.Body.Close()
+	if resp.StatusCode != http.StatusOK {
+		return nil, fmt.Errorf("error updating sso sync %s: %s", providerID, apiErrorMessage(resp))
+	}
+	var out SsoSyncReadResponse
+	if err := json.NewDecoder(resp.Body).Decode(&out); err != nil {
+		return nil, err
+	}
+	return &out, nil
+}
+
+// DeleteSsoSync clears the persisted group list. A 404 means it is already gone.
+func (c *Client) DeleteSsoSync(ctx context.Context, providerID string) error {
+	resp, err := c.do(ctx, mustReq("POST", fmt.Sprintf("%s/delete/%s", c.ssoSyncAPI(), providerID), nil))
+	if err != nil {
+		return err
+	}
+	defer resp.Body.Close()
+	if resp.StatusCode == http.StatusNotFound {
+		return nil
+	}
+	if resp.StatusCode != http.StatusOK {
+		return fmt.Errorf("error deleting sso sync %s: %s", providerID, apiErrorMessage(resp))
+	}
+	return nil
+}
+
+// apiErrorMessage extracts the message from the {"error": "..."} body the
+// workspace settings and sso-sync routes return, including the unknown group
+// ids of a 400. Falls back to the raw body for other shapes.
+func apiErrorMessage(resp *http.Response) string {
+	raw, _ := io.ReadAll(resp.Body)
+	var e struct {
+		Error           string   `json:"error"`
+		UnknownGroupIDs []string `json:"unknownGroupIds"`
+	}
+	if json.Unmarshal(raw, &e) != nil || e.Error == "" {
+		return strings.TrimSpace(string(raw))
+	}
+	if len(e.UnknownGroupIDs) > 0 {
+		return fmt.Sprintf("%s: %s", e.Error, strings.Join(e.UnknownGroupIDs, ", "))
+	}
+	return e.Error
 }

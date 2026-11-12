@@ -25,9 +25,41 @@ Terraform or the Terraform bridge.
 | `adaptive.Script` | A command attached to an endpoint, with optional description and parameter docs. |
 | `adaptive.Schedule` | An auto-approval (or auto-reject) schedule window applied to users, groups, and endpoints. |
 | `adaptive.DataProtection` | A data-masking policy for a resource (per-database/table/column masking rules). |
+| `adaptive.WorkspaceSettings` | Singleton for Organization > Workspace Settings. Only fields set in the program are managed. |
+| `adaptive.WorkspaceUserRole` | Manages a local role for an existing workspace member. |
+| `adaptive.SsoSync` | Which IdP groups are included in SSO sync for one SSO provider, plus login, auto sync and role sync toggles. |
 
 Notification/webhook integrations (e.g. MS Teams workflows) are managed through
 `adaptive.Resource` with the matching `type` (e.g. `msteams_workflow` + `webhookUrl`).
+
+### Workspace settings and SSO group sync
+
+```python
+adaptive.WorkspaceUserRole("member-role",
+    email="member@example.com",
+    role="workspaceapprover")
+```
+
+Supported local roles are `workspaceadmin`, `workspaceuser`, `workspaceauditor`, `workspaceapprover`, `workspaceoperator`, and `workspacesoc`. These local roles are independent of IdP roles. The member must already exist. `email` must identify an existing workspace member. Deleting this resource leaves the member's role unchanged. Email changes replace the resource. If SSO role sync is enabled for the user's IdP, disable it separately before managing that user's local role. This resource does not disable sync automatically.
+
+```python
+adaptive.WorkspaceSettings("workspace",
+    mfa_enabled=True,
+    timezone="Europe/Stockholm",
+    max_jit_request_duration="8h")
+
+adaptive.SsoSync("onelogin-sync",
+    provider_id="REPLACE_WITH_EXISTING_SSO_INTEGRATION_ID", # existing OneLogin integration id
+    auto_sync_enabled=True,
+    groups=["REPLACE_WITH_IDP_GROUP_ID"]) # existing OneLogin group id
+```
+
+`WorkspaceSettings` is a singleton: fields you leave unset are never sent and never
+diff, and `pulumi destroy` stops managing the settings without resetting them.
+`SsoSync` replaces the persisted group selection; destroying it clears the
+selection (auto sync falls back to its legacy behaviour) and does not delete
+teams, users or disable login. Requires a backend that exposes the
+`/terraform/workspace/settings` and `/terraform/sso-sync` routes.
 
 ### Data protection (masking)
 

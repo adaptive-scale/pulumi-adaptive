@@ -12,6 +12,8 @@ Run with:
 import pulumi
 import pulumi_adaptive as adaptive
 
+# Example only: this broad sample uses external DB placeholders and cannot be
+# run unchanged. The isolated WorkspaceUserRole lab program was run separately.
 # A connection to a Postgres database.
 db = adaptive.Resource("my-db",
     name="playground-postgres",
@@ -49,5 +51,25 @@ developers = adaptive.Group("developers",
     name="playground-developers",
     members=["you@example.com"],
     endpoints=[endpoint.name])
+
+# Workspace settings (singleton). Only the fields set here are managed.
+adaptive.WorkspaceSettings("workspace",
+    mfa_enabled=True,
+    timezone="Europe/Stockholm",
+    max_jit_request_duration="8h")
+
+# Workspace user role (local workspace role, independent of IdP roles).
+# Requires an existing member. Ensure IdP role sync for this user is disabled
+# separately before applying; WorkspaceUserRole does not disable it automatically.
+adaptive.WorkspaceUserRole("member-role",
+    email="you@example.com",
+    role="workspaceapprover")
+
+# Choose which groups from an existing OneLogin integration are included in SSO sync.
+# Replace both placeholders with IDs that already exist in the workspace.
+adaptive.SsoSync("onelogin-sync",
+    provider_id="REPLACE_WITH_EXISTING_SSO_INTEGRATION_ID",
+    auto_sync_enabled=True,
+    groups=["REPLACE_WITH_IDP_GROUP_ID"])
 
 pulumi.export("endpointName", endpoint.name)

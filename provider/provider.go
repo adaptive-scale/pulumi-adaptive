@@ -103,6 +103,9 @@ func buildProvider() (p.Provider, error) {
 			infer.Resource(&Script{}),
 			infer.Resource(&Schedule{}),
 			infer.Resource(&DataProtection{}),
+			infer.Resource(&WorkspaceSettings{}),
+			infer.Resource(&WorkspaceUserRole{}),
+			infer.Resource(&SsoSync{}),
 		).
 		Build()
 }

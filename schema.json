@@ -1771,6 +1771,287 @@
         "command",
         "endpoint"
       ]
+    },
+    "adaptive:index:SsoSync": {
+      "properties": {
+        "autoSyncEnabled": {
+          "type": "boolean",
+          "description": "Whether automatic sync is enabled for this provider. Unset leaves it untouched."
+        },
+        "groupNames": {
+          "type": "object",
+          "additionalProperties": {
+            "type": "string"
+          },
+          "description": "Map of synced group id to group name."
+        },
+        "groups": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          },
+          "description": "IdP group ids included in SSO sync. Order does not matter. The set replaces the persisted selection. An empty list (or unset) means no persisted selection, so auto sync falls back to its legacy behaviour. Supported provider types: google, azureactivedirectory, jumpcloud, onelogin; okta and LDAP are rejected by the server."
+        },
+        "loginEnabled": {
+          "type": "boolean",
+          "description": "Whether login through this SSO provider is enabled. Unset leaves it untouched."
+        },
+        "providerId": {
+          "type": "string",
+          "description": "Id of the SSO integration (resource) whose group sync is managed (google, azureactivedirectory, jumpcloud or onelogin). Changing it replaces the resource.",
+          "replaceOnChanges": true
+        },
+        "providerType": {
+          "type": "string",
+          "description": "The IdP type of the provider (e.g. okta)."
+        },
+        "roleSyncEnabled": {
+          "type": "boolean",
+          "description": "Whether roles are synced from the IdP. Unset leaves it untouched."
+        },
+        "syncOnApply": {
+          "type": "boolean",
+          "description": "Trigger a sync after applying (default true)."
+        }
+      },
+      "required": [
+        "providerId"
+      ],
+      "inputProperties": {
+        "autoSyncEnabled": {
+          "type": "boolean",
+          "description": "Whether automatic sync is enabled for this provider. Unset leaves it untouched."
+        },
+        "groups": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          },
+          "description": "IdP group ids included in SSO sync. Order does not matter. The set replaces the persisted selection. An empty list (or unset) means no persisted selection, so auto sync falls back to its legacy behaviour. Supported provider types: google, azureactivedirectory, jumpcloud, onelogin; okta and LDAP are rejected by the server."
+        },
+        "loginEnabled": {
+          "type": "boolean",
+          "description": "Whether login through this SSO provider is enabled. Unset leaves it untouched."
+        },
+        "providerId": {
+          "type": "string",
+          "description": "Id of the SSO integration (resource) whose group sync is managed (google, azureactivedirectory, jumpcloud or onelogin). Changing it replaces the resource.",
+          "replaceOnChanges": true
+        },
+        "roleSyncEnabled": {
+          "type": "boolean",
+          "description": "Whether roles are synced from the IdP. Unset leaves it untouched."
+        },
+        "syncOnApply": {
+          "type": "boolean",
+          "description": "Trigger a sync after applying (default true)."
+        }
+      },
+      "requiredInputs": [
+        "providerId"
+      ]
+    },
+    "adaptive:index:WorkspaceSettings": {
+      "properties": {
+        "defaultChatProviderId": {
+          "type": "string",
+          "description": "Id of the default Slack/Teams integration. Set to an empty string to clear."
+        },
+        "defaultCluster": {
+          "type": "string",
+          "description": "Default cluster for new endpoints: \"0\", \"1\" or a Kubernetes resource id."
+        },
+        "defaultCpu": {
+          "type": "string",
+          "description": "Default CPU for endpoint pods, a Kubernetes quantity (e.g. 0.5, 500m)."
+        },
+        "defaultLogForwarder": {
+          "type": "string",
+          "description": "Id of the default logger integration (a JSON array string for several). Set to an empty string to clear."
+        },
+        "defaultLoginEnabled": {
+          "type": "boolean",
+          "description": "Whether password/default login is enabled. Setting false while no SSO login method is enabled is rejected by the server (lock-out guard)."
+        },
+        "defaultMemory": {
+          "type": "string",
+          "description": "Default memory for endpoint pods (e.g. 500Mi, 2Gi)."
+        },
+        "defaultTicketProviderId": {
+          "type": "string",
+          "description": "Id of the default FreshService integration. Set to an empty string to clear."
+        },
+        "disableNewAccessRequest": {
+          "type": "boolean",
+          "description": "Whether new access requests are disabled."
+        },
+        "endpointSleepTimeout": {
+          "type": "string",
+          "description": "Idle time before endpoints are put to sleep."
+        },
+        "expirationNotificationsEnabled": {
+          "type": "boolean",
+          "description": "Whether access-expiration notifications are sent."
+        },
+        "integrationProbeInterval": {
+          "type": "string",
+          "description": "Interval between integration health probes."
+        },
+        "maxJitRequestDuration": {
+          "type": "string",
+          "description": "Maximum duration of a just-in-time access request (e.g. 8h, 1d). Set to an empty string to clear the limit."
+        },
+        "mfaEnabled": {
+          "type": "boolean",
+          "description": "Whether multi-factor authentication is enabled (also sets MFA on access, as in the UI)."
+        },
+        "pendingRequestExpiry": {
+          "type": "string",
+          "description": "How long a pending access request lives before it expires (e.g. 24h). Set to an empty string to clear."
+        },
+        "removeSsoDeletedUsersFromEndpoints": {
+          "type": "boolean",
+          "description": "Whether users deleted at the IdP are removed from endpoints."
+        },
+        "requireCommentsOnAccessRequests": {
+          "type": "boolean",
+          "description": "Whether access requests must include a comment."
+        },
+        "sessionTimeout": {
+          "type": "string",
+          "description": "Web session timeout."
+        },
+        "ssoSyncEnabled": {
+          "type": "boolean",
+          "description": "Whether automatic SSO user/group sync is enabled."
+        },
+        "ssoSyncInterval": {
+          "type": "string",
+          "description": "Interval of the automatic SSO sync."
+        },
+        "timezone": {
+          "type": "string",
+          "description": "Workspace IANA timezone. Set to an empty string to use the server zone."
+        }
+      },
+      "inputProperties": {
+        "defaultChatProviderId": {
+          "type": "string",
+          "description": "Id of the default Slack/Teams integration. Set to an empty string to clear."
+        },
+        "defaultCluster": {
+          "type": "string",
+          "description": "Default cluster for new endpoints: \"0\", \"1\" or a Kubernetes resource id."
+        },
+        "defaultCpu": {
+          "type": "string",
+          "description": "Default CPU for endpoint pods, a Kubernetes quantity (e.g. 0.5, 500m)."
+        },
+        "defaultLogForwarder": {
+          "type": "string",
+          "description": "Id of the default logger integration (a JSON array string for several). Set to an empty string to clear."
+        },
+        "defaultLoginEnabled": {
+          "type": "boolean",
+          "description": "Whether password/default login is enabled. Setting false while no SSO login method is enabled is rejected by the server (lock-out guard)."
+        },
+        "defaultMemory": {
+          "type": "string",
+          "description": "Default memory for endpoint pods (e.g. 500Mi, 2Gi)."
+        },
+        "defaultTicketProviderId": {
+          "type": "string",
+          "description": "Id of the default FreshService integration. Set to an empty string to clear."
+        },
+        "disableNewAccessRequest": {
+          "type": "boolean",
+          "description": "Whether new access requests are disabled."
+        },
+        "endpointSleepTimeout": {
+          "type": "string",
+          "description": "Idle time before endpoints are put to sleep."
+        },
+        "expirationNotificationsEnabled": {
+          "type": "boolean",
+          "description": "Whether access-expiration notifications are sent."
+        },
+        "integrationProbeInterval": {
+          "type": "string",
+          "description": "Interval between integration health probes."
+        },
+        "maxJitRequestDuration": {
+          "type": "string",
+          "description": "Maximum duration of a just-in-time access request (e.g. 8h, 1d). Set to an empty string to clear the limit."
+        },
+        "mfaEnabled": {
+          "type": "boolean",
+          "description": "Whether multi-factor authentication is enabled (also sets MFA on access, as in the UI)."
+        },
+        "pendingRequestExpiry": {
+          "type": "string",
+          "description": "How long a pending access request lives before it expires (e.g. 24h). Set to an empty string to clear."
+        },
+        "removeSsoDeletedUsersFromEndpoints": {
+          "type": "boolean",
+          "description": "Whether users deleted at the IdP are removed from endpoints."
+        },
+        "requireCommentsOnAccessRequests": {
+          "type": "boolean",
+          "description": "Whether access requests must include a comment."
+        },
+        "sessionTimeout": {
+          "type": "string",
+          "description": "Web session timeout."
+        },
+        "ssoSyncEnabled": {
+          "type": "boolean",
+          "description": "Whether automatic SSO user/group sync is enabled."
+        },
+        "ssoSyncInterval": {
+          "type": "string",
+          "description": "Interval of the automatic SSO sync."
+        },
+        "timezone": {
+          "type": "string",
+          "description": "Workspace IANA timezone. Set to an empty string to use the server zone."
+        }
+      }
+    },
+    "adaptive:index:WorkspaceUserRole": {
+      "properties": {
+        "email": {
+          "type": "string",
+          "description": "Email of an existing workspace member. Changing it replaces this resource.",
+          "replaceOnChanges": true
+        },
+        "role": {
+          "type": "string",
+          "description": "Local workspace role: workspaceadmin, workspaceuser, workspaceauditor, workspaceapprover, workspaceoperator, or workspacesoc. Independent of IdP roles; active conflicting SSO sync may reject updates."
+        },
+        "userId": {
+          "type": "string"
+        }
+      },
+      "required": [
+        "email",
+        "role",
+        "userId"
+      ],
+      "inputProperties": {
+        "email": {
+          "type": "string",
+          "description": "Email of an existing workspace member. Changing it replaces this resource.",
+          "replaceOnChanges": true
+        },
+        "role": {
+          "type": "string",
+          "description": "Local workspace role: workspaceadmin, workspaceuser, workspaceauditor, workspaceapprover, workspaceoperator, or workspacesoc. Independent of IdP roles; active conflicting SSO sync may reject updates."
+        }
+      },
+      "requiredInputs": [
+        "email",
+        "role"
+      ]
     }
   }
 }
