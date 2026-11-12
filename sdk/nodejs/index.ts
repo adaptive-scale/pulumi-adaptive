@@ -55,6 +55,11 @@ export type WorkspaceSettings = import("./workspaceSettings").WorkspaceSettings;
 export const WorkspaceSettings: typeof import("./workspaceSettings").WorkspaceSettings = null as any;
 utilities.lazyLoad(exports, ["WorkspaceSettings"], () => require("./workspaceSettings"));
 
+export { WorkspaceUserRoleArgs } from "./workspaceUserRole";
+export type WorkspaceUserRole = import("./workspaceUserRole").WorkspaceUserRole;
+export const WorkspaceUserRole: typeof import("./workspaceUserRole").WorkspaceUserRole = null as any;
+utilities.lazyLoad(exports, ["WorkspaceUserRole"], () => require("./workspaceUserRole"));
+
 
 // Export sub-modules:
 import * as types from "./types";
@@ -85,6 +90,8 @@ const _module = {
                 return new SsoSync(name, <any>undefined, { urn })
             case "adaptive:index:WorkspaceSettings":
                 return new WorkspaceSettings(name, <any>undefined, { urn })
+            case "adaptive:index:WorkspaceUserRole":
+                return new WorkspaceUserRole(name, <any>undefined, { urn })
             default:
                 throw new Error(`unknown resource type ${type}`);
         }

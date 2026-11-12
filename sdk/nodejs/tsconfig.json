@@ -33,6 +33,7 @@
         "types/input.ts",
         "types/output.ts",
         "utilities.ts",
-        "workspaceSettings.ts"
+        "workspaceSettings.ts",
+        "workspaceUserRole.ts"
     ]
 }

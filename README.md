@@ -26,12 +26,21 @@ Terraform or the Terraform bridge.
 | `adaptive.Schedule` | An auto-approval (or auto-reject) schedule window applied to users, groups, and endpoints. |
 | `adaptive.DataProtection` | A data-masking policy for a resource (per-database/table/column masking rules). |
 | `adaptive.WorkspaceSettings` | Singleton for Organization > Workspace Settings. Only fields set in the program are managed. |
+| `adaptive.WorkspaceUserRole` | Manages a local role for an existing workspace member. |
 | `adaptive.SsoSync` | Which IdP groups are included in SSO sync for one SSO provider, plus login, auto sync and role sync toggles. |
 
 Notification/webhook integrations (e.g. MS Teams workflows) are managed through
 `adaptive.Resource` with the matching `type` (e.g. `msteams_workflow` + `webhookUrl`).
 
 ### Workspace settings and SSO group sync
+
+```python
+adaptive.WorkspaceUserRole("member-role",
+    email="member@example.com",
+    role="workspaceadmin")
+```
+
+Supported local roles are `workspaceadmin`, `workspaceuser`, `workspaceauditor`, `workspaceapprover`, `workspaceoperator`, and `workspacesoc`. These local roles are independent of IdP roles. Active conflicting SSO role sync can reject an update with a conflict; it is not automatically disabled. The member must already exist. Deleting this resource leaves the member's role unchanged. Email changes replace the resource.
 
 ```python
 adaptive.WorkspaceSettings("workspace",

@@ -4,6 +4,7 @@ import (
 	"context"
 	"fmt"
 	"sort"
+	"strings"
 
 	p "github.com/pulumi/pulumi-go-provider"
 	"github.com/pulumi/pulumi-go-provider/infer"
@@ -200,6 +201,104 @@ func (*WorkspaceSettings) Read(ctx context.Context, req infer.ReadRequest[Worksp
 // Delete only stops managing the settings; the workspace keeps its values.
 func (*WorkspaceSettings) Delete(ctx context.Context, _ infer.DeleteRequest[WorkspaceSettingsState]) (infer.DeleteResponse, error) {
 	p.GetLogger(ctx).Info("adaptive:index:WorkspaceSettings: delete is a no-op; the workspace keeps its current settings and is simply no longer managed by Pulumi")
+	return infer.DeleteResponse{}, nil
+}
+
+// WorkspaceUserRole manages a local workspace role for an existing member.
+type WorkspaceUserRole struct{}
+
+type WorkspaceUserRoleArgs struct {
+	Email string `pulumi:"email" provider:"replaceOnChanges"`
+	Role  string `pulumi:"role"`
+}
+
+type WorkspaceUserRoleState struct {
+	WorkspaceUserRoleArgs
+	UserId string `pulumi:"userId"`
+}
+
+var workspaceRoles = map[string]bool{
+	"workspaceadmin": true, "workspaceuser": true, "workspaceauditor": true,
+	"workspaceapprover": true, "workspaceoperator": true, "workspacesoc": true,
+}
+
+func (a *WorkspaceUserRoleArgs) Annotate(n infer.Annotator) {
+	n.Describe(&a.Email, "Email of an existing workspace member. Changing it replaces this resource.")
+	n.Describe(&a.Role, "Local workspace role: workspaceadmin, workspaceuser, workspaceauditor, workspaceapprover, workspaceoperator, or workspacesoc. Independent of IdP roles; active conflicting SSO sync may reject updates.")
+}
+
+func (*WorkspaceUserRole) Check(ctx context.Context, req infer.CheckRequest) (infer.CheckResponse[WorkspaceUserRoleArgs], error) {
+	a, failures, err := infer.DefaultCheck[WorkspaceUserRoleArgs](ctx, req.NewInputs)
+	if err != nil {
+		return infer.CheckResponse[WorkspaceUserRoleArgs]{}, err
+	}
+	a.Email = strings.ToLower(strings.TrimSpace(a.Email))
+	if a.Email == "" || !strings.Contains(a.Email, "@") {
+		failures = append(failures, p.CheckFailure{Property: "email", Reason: "must be a valid email address"})
+	}
+	if !workspaceRoles[a.Role] {
+		failures = append(failures, p.CheckFailure{Property: "role", Reason: "must be one of workspaceadmin, workspaceuser, workspaceauditor, workspaceapprover, workspaceoperator, workspacesoc"})
+	}
+	return infer.CheckResponse[WorkspaceUserRoleArgs]{Inputs: a, Failures: failures}, nil
+}
+
+func (*WorkspaceUserRole) Create(ctx context.Context, req infer.CreateRequest[WorkspaceUserRoleArgs]) (infer.CreateResponse[WorkspaceUserRoleState], error) {
+	out := infer.CreateResponse[WorkspaceUserRoleState]{ID: req.Inputs.Email, Output: WorkspaceUserRoleState{WorkspaceUserRoleArgs: req.Inputs}}
+	if req.DryRun {
+		return out, nil
+	}
+	c, err := clientFromConfig(ctx)
+	if err != nil {
+		return out, err
+	}
+	r, err := c.UpdateWorkspaceUserRole(ctx, req.Inputs.Email, req.Inputs.Role)
+	if err != nil {
+		return out, err
+	}
+	out.ID = r.Email
+	out.Output = WorkspaceUserRoleState{WorkspaceUserRoleArgs: WorkspaceUserRoleArgs{Email: r.Email, Role: r.Role}, UserId: r.UserID}
+	return out, nil
+}
+
+func (*WorkspaceUserRole) Update(ctx context.Context, req infer.UpdateRequest[WorkspaceUserRoleArgs, WorkspaceUserRoleState]) (infer.UpdateResponse[WorkspaceUserRoleState], error) {
+	out := infer.UpdateResponse[WorkspaceUserRoleState]{Output: WorkspaceUserRoleState{WorkspaceUserRoleArgs: req.Inputs, UserId: req.State.UserId}}
+	if req.DryRun {
+		return out, nil
+	}
+	c, err := clientFromConfig(ctx)
+	if err != nil {
+		return out, err
+	}
+	r, err := c.UpdateWorkspaceUserRole(ctx, req.Inputs.Email, req.Inputs.Role)
+	if err != nil {
+		return out, err
+	}
+	out.Output = WorkspaceUserRoleState{WorkspaceUserRoleArgs: WorkspaceUserRoleArgs{Email: r.Email, Role: r.Role}, UserId: r.UserID}
+	return out, nil
+}
+
+func (*WorkspaceUserRole) Read(ctx context.Context, req infer.ReadRequest[WorkspaceUserRoleArgs, WorkspaceUserRoleState]) (infer.ReadResponse[WorkspaceUserRoleArgs, WorkspaceUserRoleState], error) {
+	type response = infer.ReadResponse[WorkspaceUserRoleArgs, WorkspaceUserRoleState]
+	c, err := clientFromConfig(ctx)
+	if err != nil {
+		return response{}, err
+	}
+	r, err := c.ReadWorkspaceUserRole(ctx, req.ID)
+	if err != nil {
+		return response{}, err
+	}
+	if r == nil {
+		if req.Inputs.Email == "" {
+			return response{}, notFoundOnImport("workspace user role", req.ID)
+		}
+		return response{}, nil
+	}
+	a := WorkspaceUserRoleArgs{Email: r.Email, Role: r.Role}
+	return response{ID: r.Email, Inputs: a, State: WorkspaceUserRoleState{WorkspaceUserRoleArgs: a, UserId: r.UserID}}, nil
+}
+
+func (*WorkspaceUserRole) Delete(ctx context.Context, _ infer.DeleteRequest[WorkspaceUserRoleState]) (infer.DeleteResponse, error) {
+	p.GetLogger(ctx).Info("adaptive:index:WorkspaceUserRole: delete is a no-op; the member role remains unchanged")
 	return infer.DeleteResponse{}, nil
 }
 

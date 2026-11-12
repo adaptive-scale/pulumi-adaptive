@@ -8,6 +8,7 @@ import (
 	"fmt"
 	"io"
 	"net/http"
+	"net/url"
 	"os"
 	"path"
 	"sort"
@@ -1004,6 +1005,39 @@ func (c *Client) workspaceSettingsAPI() string {
 	return c.workspaceURL + "/terraform/workspace/settings"
 }
 func (c *Client) ssoSyncAPI() string { return c.workspaceURL + "/terraform/sso-sync" }
+
+type WorkspaceUserRoleResponse struct {
+	UserID string `json:"userId"`
+	Email  string `json:"email"`
+	Role   string `json:"role"`
+}
+
+func (r *WorkspaceUserRoleResponse) readID() string { return r.Email }
+func (c *Client) workspaceUserRoleAPI() string {
+	return c.workspaceURL + "/terraform/workspace/user-role"
+}
+func (c *Client) ReadWorkspaceUserRole(ctx context.Context, email string) (*WorkspaceUserRoleResponse, error) {
+	return readTyped[WorkspaceUserRoleResponse](c, ctx, c.workspaceUserRoleAPI()+"/read/"+url.PathEscape(email), "workspace user role", email)
+}
+func (c *Client) UpdateWorkspaceUserRole(ctx context.Context, email, role string) (*WorkspaceUserRoleResponse, error) {
+	body, err := encode(map[string]string{"email": email, "role": role})
+	if err != nil {
+		return nil, err
+	}
+	resp, err := c.do(ctx, mustReq("POST", c.workspaceUserRoleAPI()+"/update", body))
+	if err != nil {
+		return nil, err
+	}
+	defer resp.Body.Close()
+	if resp.StatusCode != http.StatusOK {
+		return nil, fmt.Errorf("error updating workspace user role: %s", apiErrorMessage(resp))
+	}
+	var out WorkspaceUserRoleResponse
+	if err := json.NewDecoder(resp.Body).Decode(&out); err != nil {
+		return nil, err
+	}
+	return &out, nil
+}
 
 // WorkspaceSettingsBody is both the partial-update request and the read model of
 // the workspace settings endpoints. Every field is a pointer: nil is omitted from

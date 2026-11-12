@@ -56,6 +56,12 @@ adaptive.WorkspaceSettings("workspace",
     timezone="Europe/Stockholm",
     max_jit_request_duration="8h")
 
+# Workspace user role (local workspace role, independent of IdP roles).
+# Requires the member to exist. Active conflicting SSO role sync may reject this.
+adaptive.WorkspaceUserRole("member-role",
+    email="you@example.com",
+    role="workspaceadmin")
+
 # Choose which IdP groups are included in SSO sync. provider_id is the id of an
 # existing SSO integration; group order does not matter.
 adaptive.SsoSync("okta-sync",

@@ -2016,6 +2016,42 @@
           "description": "Workspace IANA timezone. Set to an empty string to use the server zone."
         }
       }
+    },
+    "adaptive:index:WorkspaceUserRole": {
+      "properties": {
+        "email": {
+          "type": "string",
+          "description": "Email of an existing workspace member. Changing it replaces this resource.",
+          "replaceOnChanges": true
+        },
+        "role": {
+          "type": "string",
+          "description": "Local workspace role: workspaceadmin, workspaceuser, workspaceauditor, workspaceapprover, workspaceoperator, or workspacesoc. Independent of IdP roles; active conflicting SSO sync may reject updates."
+        },
+        "userId": {
+          "type": "string"
+        }
+      },
+      "required": [
+        "email",
+        "role",
+        "userId"
+      ],
+      "inputProperties": {
+        "email": {
+          "type": "string",
+          "description": "Email of an existing workspace member. Changing it replaces this resource.",
+          "replaceOnChanges": true
+        },
+        "role": {
+          "type": "string",
+          "description": "Local workspace role: workspaceadmin, workspaceuser, workspaceauditor, workspaceapprover, workspaceoperator, or workspacesoc. Independent of IdP roles; active conflicting SSO sync may reject updates."
+        }
+      },
+      "requiredInputs": [
+        "email",
+        "role"
+      ]
     }
   }
 }

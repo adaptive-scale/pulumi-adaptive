@@ -24,6 +24,8 @@ type fakeWorkspace struct {
 	sso         map[string]*SsoSyncReadResponse // by provider id
 	deleted     []string
 	lastSsoBody SsoSyncUpdateRequest
+	roles       map[string]*WorkspaceUserRoleResponse
+	roleUpdates int
 }
 
 func newFakeWorkspace() *fakeWorkspace {
@@ -33,7 +35,7 @@ func newFakeWorkspace() *fakeWorkspace {
 			"defaultCluster": "main", "mfaEnabled": false, "timezone": "UTC",
 			"maxJitRequestDuration": "8h", "defaultLoginEnabled": true,
 		},
-		sso: map[string]*SsoSyncReadResponse{},
+		sso: map[string]*SsoSyncReadResponse{}, roles: map[string]*WorkspaceUserRoleResponse{},
 	}
 }
 
@@ -43,6 +45,21 @@ func (f *fakeWorkspace) handler(w http.ResponseWriter, r *http.Request) {
 	path := r.URL.Path
 	write := func(v any) { _ = json.NewEncoder(w).Encode(v) }
 	switch {
+	case strings.Contains(path, "/terraform/workspace/user-role/read/"):
+		email := path[strings.LastIndex(path, "/")+1:]
+		role, ok := f.roles[email]
+		if !ok {
+			w.WriteHeader(http.StatusNotFound)
+			return
+		}
+		write(role)
+	case strings.HasSuffix(path, "/terraform/workspace/user-role/update"):
+		var req WorkspaceUserRoleResponse
+		_ = json.NewDecoder(r.Body).Decode(&req)
+		req.UserID = "user-1"
+		f.roles[req.Email] = &req
+		f.roleUpdates++
+		write(req)
 	case strings.HasSuffix(path, "/terraform/workspace/settings/read"):
 		write(f.settings)
 	case strings.HasSuffix(path, "/terraform/workspace/settings/update"):
@@ -123,8 +140,9 @@ func newWorkspaceServer(t *testing.T) (integration.Server, *fakeWorkspace) {
 }
 
 const (
-	wsTok  = "adaptive:index:WorkspaceSettings"
-	ssoTok = "adaptive:index:SsoSync"
+	wsTok     = "adaptive:index:WorkspaceSettings"
+	wsRoleTok = "adaptive:index:WorkspaceUserRole"
+	ssoTok    = "adaptive:index:SsoSync"
 )
 
 func strList(vs ...string) property.Value {
@@ -160,6 +178,79 @@ func create(t *testing.T, srv integration.Server, tok string, inputs property.Ma
 		t.Fatalf("create: %v", err)
 	}
 	return cr.ID, cr.Properties
+}
+
+func TestWorkspaceUserRoleLifecycle(t *testing.T) {
+	srv, f := newWorkspaceServer(t)
+	inputs := property.NewMap(map[string]property.Value{"email": property.New("  USER@Example.COM "), "role": property.New("workspaceadmin")})
+	checked, err := srv.Check(p.CheckRequest{Urn: urnFor(wsRoleTok), Inputs: inputs})
+	if err != nil || len(checked.Failures) > 0 {
+		t.Fatalf("check: %v %v", err, checked.Failures)
+	}
+	inputs = checked.Inputs
+	if inputs.Get("email").AsString() != "user@example.com" {
+		t.Fatal("email not normalized")
+	}
+	id, state := create(t, srv, wsRoleTok, inputs)
+	if id != "user@example.com" || state.Get("userId").AsString() != "user-1" {
+		t.Fatalf("create id/state %q %v", id, state)
+	}
+	if f.roleUpdates != 1 {
+		t.Fatalf("create requests=%d, want 1", f.roleUpdates)
+	}
+	_, state, changed := cycle(t, srv, wsRoleTok, id, inputs, state)
+	if changed {
+		t.Fatal("unexpected diff")
+	}
+	f.roles[id].Role = "workspaceauditor"
+	_, _, changed = cycle(t, srv, wsRoleTok, id, inputs, state)
+	if !changed {
+		t.Fatal("role drift not detected")
+	}
+	if _, err := srv.Update(p.UpdateRequest{ID: id, Urn: urnFor(wsRoleTok), State: state, Inputs: inputs}); err != nil {
+		t.Fatal(err)
+	}
+	if f.roles[id].Role != "workspaceadmin" {
+		t.Fatal("role drift not restored")
+	}
+	before := f.roleUpdates
+	if err := srv.Delete(p.DeleteRequest{ID: id, Urn: urnFor(wsRoleTok), Properties: state}); err != nil {
+		t.Fatal(err)
+	}
+	if f.roleUpdates != before {
+		t.Fatal("delete issued request")
+	}
+	// Import is read-only and adopts the server role and user ID.
+	imported, err := srv.Read(p.ReadRequest{ID: id, Urn: urnFor(wsRoleTok)})
+	if err != nil || imported.ID != id || imported.Properties.Get("userId").AsString() != "user-1" {
+		t.Fatalf("import: %+v %v", imported, err)
+	}
+	if f.roleUpdates != before {
+		t.Fatal("import mutated role")
+	}
+	otherEmail := property.NewMap(map[string]property.Value{"email": property.New("other@example.com"), "role": property.New("workspaceadmin")})
+	d, err := srv.Diff(p.DiffRequest{ID: id, Urn: urnFor(wsRoleTok), State: state, Inputs: otherEmail, OldInputs: inputs})
+	if err != nil {
+		t.Fatal(err)
+	}
+	if pd, ok := d.DetailedDiff["email"]; !ok || !strings.Contains(string(pd.Kind), "replace") {
+		t.Fatalf("email change should replace: %+v", d.DetailedDiff)
+	}
+	f.mu.Lock()
+	delete(f.roles, id)
+	f.mu.Unlock()
+	rr, err := srv.Read(p.ReadRequest{ID: id, Urn: urnFor(wsRoleTok), Inputs: inputs, Properties: state})
+	if err != nil || rr.ID != "" {
+		t.Fatalf("404 read: %+v %v", rr, err)
+	}
+}
+
+func TestWorkspaceUserRoleRejectsUnknownRole(t *testing.T) {
+	srv, _ := newWorkspaceServer(t)
+	r, err := srv.Check(p.CheckRequest{Urn: urnFor(wsRoleTok), Inputs: property.NewMap(map[string]property.Value{"email": property.New("a@b.co"), "role": property.New("admin")})})
+	if err != nil || len(r.Failures) == 0 {
+		t.Fatalf("unknown role accepted: %v %v", r, err)
+	}
 }
 
 func TestWorkspaceSettingsLifecycleAndConvergence(t *testing.T) {
