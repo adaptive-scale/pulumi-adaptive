@@ -253,6 +253,28 @@ func TestWorkspaceUserRoleRejectsUnknownRole(t *testing.T) {
 	}
 }
 
+func TestWorkspaceUserRoleCheckRejectsInvalidEmailAndUnknownInput(t *testing.T) {
+	srv, _ := newWorkspaceServer(t)
+	for _, tc := range []struct {
+		name   string
+		values map[string]property.Value
+	}{
+		{"malformed email", map[string]property.Value{"email": property.New("not-an-email"), "role": property.New("workspaceadmin")}},
+		{"display name email", map[string]property.Value{"email": property.New("Member <member@example.com>"), "role": property.New("workspaceadmin")}},
+		{"unknown input", map[string]property.Value{"email": property.New("member@example.com"), "role": property.New("workspaceadmin"), "extra": property.New("x")}},
+	} {
+		t.Run(tc.name, func(t *testing.T) {
+			resp, err := srv.Check(p.CheckRequest{Urn: urnFor(wsRoleTok), Inputs: property.NewMap(tc.values)})
+			if err != nil {
+				t.Fatal(err)
+			}
+			if len(resp.Failures) == 0 {
+				t.Fatal("expected validation failure")
+			}
+		})
+	}
+}
+
 func TestWorkspaceSettingsLifecycleAndConvergence(t *testing.T) {
 	srv, f := newWorkspaceServer(t)
 	inputs := property.NewMap(map[string]property.Value{

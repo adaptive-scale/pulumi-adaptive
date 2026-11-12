@@ -3,6 +3,7 @@ package adaptive
 import (
 	"context"
 	"fmt"
+	"net/mail"
 	"sort"
 	"strings"
 
@@ -232,8 +233,14 @@ func (*WorkspaceUserRole) Check(ctx context.Context, req infer.CheckRequest) (in
 	if err != nil {
 		return infer.CheckResponse[WorkspaceUserRoleArgs]{}, err
 	}
+	for key := range req.NewInputs.AsMap() {
+		if key != "email" && key != "role" {
+			failures = append(failures, p.CheckFailure{Property: key, Reason: "unknown input; supported inputs are email and role"})
+		}
+	}
 	a.Email = strings.ToLower(strings.TrimSpace(a.Email))
-	if a.Email == "" || !strings.Contains(a.Email, "@") {
+	parsedEmail, emailErr := mail.ParseAddress(a.Email)
+	if emailErr != nil || parsedEmail.Address != a.Email {
 		failures = append(failures, p.CheckFailure{Property: "email", Reason: "must be a valid email address"})
 	}
 	if !workspaceRoles[a.Role] {
