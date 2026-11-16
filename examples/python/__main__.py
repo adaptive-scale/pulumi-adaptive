@@ -59,8 +59,10 @@ adaptive.WorkspaceSettings("workspace",
     max_jit_request_duration="8h")
 
 # Workspace user role (local workspace role, independent of IdP roles).
-# Requires an existing member. Ensure IdP role sync for this user is disabled
-# separately before applying; WorkspaceUserRole does not disable it automatically.
+# Requires an existing member. Local role updates are blocked if any enabled
+# workspace IdP owns effective role sync, regardless of this user's IdP.
+# Disable role sync separately for all such providers before applying.
+# WorkspaceUserRole does not disable it automatically.
 adaptive.WorkspaceUserRole("member-role",
     email="you@example.com",
     role="workspaceapprover")

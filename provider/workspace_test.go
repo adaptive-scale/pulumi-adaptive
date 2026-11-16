@@ -496,8 +496,9 @@ func TestSsoSyncRead404DropsFromState(t *testing.T) {
 }
 
 func TestNormalizeGroups(t *testing.T) {
-	got := normalizeGroups([]string{"b", "a", "b"})
-	if !sort.StringsAreSorted(got) || len(got) != 2 {
+	in := []string{"b", "a", "b"}
+	got := normalizeGroups(&in)
+	if got == nil || !sort.StringsAreSorted(*got) || len(*got) != 2 {
 		t.Fatalf("got %v", got)
 	}
 	if normalizeGroups(nil) != nil {
@@ -515,20 +516,260 @@ func TestSsoSyncUnknownGroupErrorSurfaced(t *testing.T) {
 	}
 }
 
+func TestNormalizeLogForwarder(t *testing.T) {
+	str := func(s string) *string { return &s }
+	cases := []struct {
+		name  string
+		input *string
+		want  *string
+	}{
+		{"nil", nil, nil},
+		{"empty string", str(""), str("")},
+		// singleton array collapses to plain bare string (matches backend FormatDefaultLogForwarderIDs)
+		{"singleton array→bare", str(`["id-a"]`), str(`id-a`)},
+		// plain bare string stays plain
+		{"plain string passthrough", str(`plain-id`), str(`plain-id`)},
+		{"plain string trimmed", str(`  plain-id  `), str(`plain-id`)},
+		// multi-element: sorted, deduped, compact JSON
+		{"two ordered", str(`["id-a","id-b"]`), str(`["id-a","id-b"]`)},
+		{"two reversed", str(`["id-b","id-a"]`), str(`["id-a","id-b"]`)},
+		{"whitespace in JSON", str(`[ "id-b" , "id-a" ]`), str(`["id-a","id-b"]`)},
+		{"three reversed", str(`["c","b","a"]`), str(`["a","b","c"]`)},
+		{"deduped", str(`["a","b","a"]`), str(`["a","b"]`)},
+		{"deduped singleton→bare", str(`["a","a"]`), str(`a`)},
+		// idempotent: already-normalized value unchanged
+		{"idempotent multi", str(`["a","b","c"]`), str(`["a","b","c"]`)},
+		{"idempotent bare", str(`id-x`), str(`id-x`)},
+	}
+	for _, tc := range cases {
+		t.Run(tc.name, func(t *testing.T) {
+			got := normalizeLogForwarder(tc.input)
+			if tc.want == nil {
+				if got != nil {
+					t.Fatalf("want nil, got %q", *got)
+				}
+				return
+			}
+			if got == nil {
+				t.Fatal("got nil, want non-nil")
+			}
+			if *got != *tc.want {
+				t.Fatalf("got %q, want %q", *got, *tc.want)
+			}
+		})
+	}
+}
+
+func TestWorkspaceSettingsLogForwarderConvergence(t *testing.T) {
+	t.Run("multi reversed whitespace", func(t *testing.T) {
+		srv, f := newWorkspaceServer(t)
+		// Program writes a two-element JSON array in reversed order.
+		raw := property.NewMap(map[string]property.Value{
+			"defaultLogForwarder": property.New(`["id-b","id-a"]`),
+		})
+		chk, err := srv.Check(p.CheckRequest{Urn: urnFor(wsTok), Inputs: raw})
+		if err != nil || len(chk.Failures) > 0 {
+			t.Fatalf("check: %v %v", err, chk.Failures)
+		}
+		inputs := chk.Inputs
+		// After Check, must be sorted canonical JSON.
+		if v := inputs.Get("defaultLogForwarder").AsString(); v != `["id-a","id-b"]` {
+			t.Fatalf("check did not normalize: %q", v)
+		}
+		id, state := create(t, srv, wsTok, inputs)
+		// Backend returns whitespace-formatted reversed JSON.
+		f.mu.Lock()
+		f.settings["defaultLogForwarder"] = `[ "id-a" , "id-b" ]`
+		f.mu.Unlock()
+		for i := 0; i < 3; i++ {
+			var changed bool
+			inputs, state, changed = cycle(t, srv, wsTok, id, inputs, state)
+			if changed {
+				t.Fatalf("cycle %d: reversed/whitespace backend caused spurious diff", i)
+			}
+		}
+	})
+
+	t.Run("singleton array normalizes to bare string", func(t *testing.T) {
+		srv, f := newWorkspaceServer(t)
+		// Program sets a singleton JSON array; Check must collapse to bare string.
+		raw := property.NewMap(map[string]property.Value{
+			"defaultLogForwarder": property.New(`["id-a"]`),
+		})
+		chk, err := srv.Check(p.CheckRequest{Urn: urnFor(wsTok), Inputs: raw})
+		if err != nil || len(chk.Failures) > 0 {
+			t.Fatalf("check: %v %v", err, chk.Failures)
+		}
+		inputs := chk.Inputs
+		if v := inputs.Get("defaultLogForwarder").AsString(); v != `id-a` {
+			t.Fatalf("singleton not collapsed to bare string: %q", v)
+		}
+		id, state := create(t, srv, wsTok, inputs)
+		// Backend stores and returns a bare string for a single forwarder.
+		f.mu.Lock()
+		f.settings["defaultLogForwarder"] = `id-a`
+		f.mu.Unlock()
+		for i := 0; i < 3; i++ {
+			var changed bool
+			inputs, state, changed = cycle(t, srv, wsTok, id, inputs, state)
+			if changed {
+				t.Fatalf("cycle %d: singleton bare string caused spurious diff", i)
+			}
+		}
+	})
+
+	t.Run("deduplication no spurious diff", func(t *testing.T) {
+		srv, f := newWorkspaceServer(t)
+		raw := property.NewMap(map[string]property.Value{
+			"defaultLogForwarder": property.New(`["a","b","a"]`),
+		})
+		chk, _ := srv.Check(p.CheckRequest{Urn: urnFor(wsTok), Inputs: raw})
+		inputs := chk.Inputs
+		if v := inputs.Get("defaultLogForwarder").AsString(); v != `["a","b"]` {
+			t.Fatalf("dedup: got %q", v)
+		}
+		id, state := create(t, srv, wsTok, inputs)
+		f.mu.Lock()
+		f.settings["defaultLogForwarder"] = `["a","b"]`
+		f.mu.Unlock()
+		_, _, changed := cycle(t, srv, wsTok, id, inputs, state)
+		if changed {
+			t.Fatal("deduped array caused spurious diff")
+		}
+	})
+
+	t.Run("explicit clear empty string", func(t *testing.T) {
+		srv, f := newWorkspaceServer(t)
+		inputs := property.NewMap(map[string]property.Value{
+			"defaultLogForwarder": property.New(""),
+		})
+		id, state := create(t, srv, wsTok, inputs)
+		f.mu.Lock()
+		f.settings["defaultLogForwarder"] = ""
+		f.mu.Unlock()
+		_, _, changed := cycle(t, srv, wsTok, id, inputs, state)
+		if changed {
+			t.Fatal("explicit empty string caused spurious diff")
+		}
+	})
+
+	t.Run("check preserves unknown input", func(t *testing.T) {
+		srv, _ := newWorkspaceServer(t)
+		inputs := property.NewMap(map[string]property.Value{
+			"defaultLogForwarder": property.New(property.Computed),
+			"mfaEnabled":          property.New(true),
+		})
+		chk, err := srv.Check(p.CheckRequest{Urn: urnFor(wsTok), Inputs: inputs})
+		if err != nil {
+			t.Fatal(err)
+		}
+		v, ok := chk.Inputs.GetOk("defaultLogForwarder")
+		if !ok || !v.IsComputed() {
+			t.Fatalf("computed defaultLogForwarder not preserved through Check: present=%v value=%v", ok, v)
+		}
+	})
+}
+
+// TestSsoSyncExplicitEmptyGroupsCreate verifies that groups: [] on Create sends []
+// to the server (clears any existing selection) rather than being omitted.
+func TestSsoSyncExplicitEmptyGroupsCreate(t *testing.T) {
+	srv, f := newWorkspaceServer(t)
+	// Seed the server with an existing group selection.
+	f.mu.Lock()
+	f.sso["p-1"] = &SsoSyncReadResponse{
+		ProviderID: "p-1", ProviderType: "google",
+		Groups: []SsoSyncGroup{{ID: "g1", Name: "g1"}, {ID: "g2", Name: "g2"}},
+	}
+	f.mu.Unlock()
+
+	// Create with an explicit empty list.
+	raw := property.NewMap(map[string]property.Value{
+		"providerId": property.New("p-1"),
+		"groups":     strList(), // explicit []
+	})
+	chk, err := srv.Check(p.CheckRequest{Urn: urnFor(ssoTok), Inputs: raw})
+	if err != nil || len(chk.Failures) > 0 {
+		t.Fatalf("check: %v %v", err, chk.Failures)
+	}
+	create(t, srv, ssoTok, chk.Inputs)
+
+	if f.lastSsoBody.Groups == nil {
+		t.Fatal("explicit groups: [] on Create must send [] to server, not omit")
+	}
+	if len(*f.lastSsoBody.Groups) != 0 {
+		t.Fatalf("expected empty slice sent, got %v", *f.lastSsoBody.Groups)
+	}
+	if len(f.sso["p-1"].Groups) != 0 {
+		t.Fatalf("server groups not cleared, still have %v", f.sso["p-1"].Groups)
+	}
+}
+
+// TestSsoSyncExplicitEmptyGroupsDriftDetected verifies that after a Create with
+// groups: [], drift (server gains groups out-of-band) is detected on Read/Diff.
+func TestSsoSyncExplicitEmptyGroupsDriftDetected(t *testing.T) {
+	srv, f := newWorkspaceServer(t)
+	raw := property.NewMap(map[string]property.Value{
+		"providerId": property.New("p-2"),
+		"groups":     strList(), // explicit []
+	})
+	chk, _ := srv.Check(p.CheckRequest{Urn: urnFor(ssoTok), Inputs: raw})
+	id, state := create(t, srv, ssoTok, chk.Inputs)
+
+	// Confirm no diff while server is clean.
+	_, _, changed := cycle(t, srv, ssoTok, id, chk.Inputs, state)
+	if changed {
+		t.Fatal("unexpected diff on clean state")
+	}
+
+	// Server gains a group out-of-band (UI/admin change).
+	f.mu.Lock()
+	f.sso["p-2"].Groups = []SsoSyncGroup{{ID: "z", Name: "z"}}
+	f.mu.Unlock()
+
+	_, _, changed = cycle(t, srv, ssoTok, id, chk.Inputs, state)
+	if !changed {
+		t.Fatal("drift after clearing groups must produce a diff")
+	}
+}
+
 func TestSsoSyncGroupsOmittedWhenUnsetSentWhenEmpty(t *testing.T) {
 	srv, f := newWorkspaceServer(t)
 	create(t, srv, ssoTok, property.NewMap(map[string]property.Value{"providerId": property.New("g-1")}))
 	if f.lastSsoBody.Groups != nil {
 		t.Fatal("unset groups must be omitted")
 	}
-	// Dropping groups from the program clears the persisted list via an explicit [].
+	// Explicit [] sends an empty list to the server, clearing the selection.
 	in1 := property.NewMap(map[string]property.Value{"providerId": property.New("g-2"), "groups": strList("a")})
 	id, st := create(t, srv, ssoTok, in1)
-	in2 := property.NewMap(map[string]property.Value{"providerId": property.New("g-2")})
-	if _, err := srv.Update(p.UpdateRequest{ID: id, Urn: urnFor(ssoTok), State: st, Inputs: in2}); err != nil {
+	inEmpty := property.NewMap(map[string]property.Value{"providerId": property.New("g-2"), "groups": strList()})
+	if _, err := srv.Update(p.UpdateRequest{ID: id, Urn: urnFor(ssoTok), State: st, Inputs: inEmpty}); err != nil {
 		t.Fatal(err)
 	}
 	if f.lastSsoBody.Groups == nil || len(*f.lastSsoBody.Groups) != 0 {
-		t.Fatal("removing groups must send []")
+		t.Fatal("explicit [] must send empty list to server")
+	}
+}
+
+func TestSsoSyncGroupsOmittedAfterManagedLeavesUntouched(t *testing.T) {
+	srv, f := newWorkspaceServer(t)
+	in1 := property.NewMap(map[string]property.Value{"providerId": property.New("g-3"), "groups": strList("a")})
+	id, st := create(t, srv, ssoTok, in1)
+	f.mu.Lock()
+	beforeGroups := f.sso["g-3"].Groups
+	f.mu.Unlock()
+
+	// Drop groups key entirely from program (now unmanaged).
+	inOmit := property.NewMap(map[string]property.Value{"providerId": property.New("g-3")})
+	if _, err := srv.Update(p.UpdateRequest{ID: id, Urn: urnFor(ssoTok), State: st, Inputs: inOmit}); err != nil {
+		t.Fatal(err)
+	}
+	if f.lastSsoBody.Groups != nil {
+		t.Fatal("omitted groups must not send [] to server")
+	}
+	f.mu.Lock()
+	afterGroups := f.sso["g-3"].Groups
+	f.mu.Unlock()
+	if len(afterGroups) != len(beforeGroups) {
+		t.Fatalf("server groups changed when groups were omitted: before=%v after=%v", beforeGroups, afterGroups)
 	}
 }

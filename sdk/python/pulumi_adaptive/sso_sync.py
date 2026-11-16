@@ -30,7 +30,7 @@ class SsoSyncArgs:
 
         :param pulumi.Input[_builtins.str] provider_id: Id of the SSO integration (resource) whose group sync is managed (google, azureactivedirectory, jumpcloud or onelogin). Changing it replaces the resource.
         :param pulumi.Input[_builtins.bool] auto_sync_enabled: Whether automatic sync is enabled for this provider. Unset leaves it untouched.
-        :param pulumi.Input[Sequence[pulumi.Input[_builtins.str]]] groups: IdP group ids included in SSO sync. Order does not matter. The set replaces the persisted selection. An empty list (or unset) means no persisted selection, so auto sync falls back to its legacy behaviour. Supported provider types: google, azureactivedirectory, jumpcloud, onelogin; okta and LDAP are rejected by the server.
+        :param pulumi.Input[Sequence[pulumi.Input[_builtins.str]]] groups: IdP group ids included in SSO sync. Order does not matter. When set, the list replaces and manages the persisted selection, including an explicit empty list. Unset leaves the selection untouched and unmanaged. An empty persisted selection makes auto sync fall back to its legacy behaviour; it does not disable synchronization. Supported provider types: google, azureactivedirectory, jumpcloud, onelogin; okta and LDAP are rejected by the server.
         :param pulumi.Input[_builtins.bool] login_enabled: Whether login through this SSO provider is enabled. Unset leaves it untouched.
         :param pulumi.Input[_builtins.bool] role_sync_enabled: Whether roles are synced from the IdP. Unset leaves it untouched.
         :param pulumi.Input[_builtins.bool] sync_on_apply: Trigger a sync after applying (default true).
@@ -75,7 +75,7 @@ class SsoSyncArgs:
     @pulumi.getter
     def groups(self) -> Optional[pulumi.Input[Sequence[pulumi.Input[_builtins.str]]]]:
         """
-        IdP group ids included in SSO sync. Order does not matter. The set replaces the persisted selection. An empty list (or unset) means no persisted selection, so auto sync falls back to its legacy behaviour. Supported provider types: google, azureactivedirectory, jumpcloud, onelogin; okta and LDAP are rejected by the server.
+        IdP group ids included in SSO sync. Order does not matter. When set, the list replaces and manages the persisted selection, including an explicit empty list. Unset leaves the selection untouched and unmanaged. An empty persisted selection makes auto sync fall back to its legacy behaviour; it does not disable synchronization. Supported provider types: google, azureactivedirectory, jumpcloud, onelogin; okta and LDAP are rejected by the server.
         """
         return pulumi.get(self, "groups")
 
@@ -139,7 +139,7 @@ class SsoSync(pulumi.CustomResource):
         :param str resource_name: The name of the resource.
         :param pulumi.ResourceOptions opts: Options for the resource.
         :param pulumi.Input[_builtins.bool] auto_sync_enabled: Whether automatic sync is enabled for this provider. Unset leaves it untouched.
-        :param pulumi.Input[Sequence[pulumi.Input[_builtins.str]]] groups: IdP group ids included in SSO sync. Order does not matter. The set replaces the persisted selection. An empty list (or unset) means no persisted selection, so auto sync falls back to its legacy behaviour. Supported provider types: google, azureactivedirectory, jumpcloud, onelogin; okta and LDAP are rejected by the server.
+        :param pulumi.Input[Sequence[pulumi.Input[_builtins.str]]] groups: IdP group ids included in SSO sync. Order does not matter. When set, the list replaces and manages the persisted selection, including an explicit empty list. Unset leaves the selection untouched and unmanaged. An empty persisted selection makes auto sync fall back to its legacy behaviour; it does not disable synchronization. Supported provider types: google, azureactivedirectory, jumpcloud, onelogin; okta and LDAP are rejected by the server.
         :param pulumi.Input[_builtins.bool] login_enabled: Whether login through this SSO provider is enabled. Unset leaves it untouched.
         :param pulumi.Input[_builtins.str] provider_id: Id of the SSO integration (resource) whose group sync is managed (google, azureactivedirectory, jumpcloud or onelogin). Changing it replaces the resource.
         :param pulumi.Input[_builtins.bool] role_sync_enabled: Whether roles are synced from the IdP. Unset leaves it untouched.
@@ -248,7 +248,7 @@ class SsoSync(pulumi.CustomResource):
     @pulumi.getter
     def groups(self) -> pulumi.Output[Optional[Sequence[_builtins.str]]]:
         """
-        IdP group ids included in SSO sync. Order does not matter. The set replaces the persisted selection. An empty list (or unset) means no persisted selection, so auto sync falls back to its legacy behaviour. Supported provider types: google, azureactivedirectory, jumpcloud, onelogin; okta and LDAP are rejected by the server.
+        IdP group ids included in SSO sync. Order does not matter. When set, the list replaces and manages the persisted selection, including an explicit empty list. Unset leaves the selection untouched and unmanaged. An empty persisted selection makes auto sync fall back to its legacy behaviour; it does not disable synchronization. Supported provider types: google, azureactivedirectory, jumpcloud, onelogin; okta and LDAP are rejected by the server.
         """
         return pulumi.get(self, "groups")
 

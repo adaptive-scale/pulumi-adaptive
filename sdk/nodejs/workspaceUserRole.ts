@@ -36,7 +36,7 @@ export class WorkspaceUserRole extends pulumi.CustomResource {
      */
     declare public readonly email: pulumi.Output<string>;
     /**
-     * Local workspace role: workspaceadmin, workspaceuser, workspaceauditor, workspaceapprover, workspaceoperator, or workspacesoc. Independent of IdP roles; active conflicting SSO sync may reject updates.
+     * Local workspace role: workspaceadmin, workspaceuser, workspaceauditor, workspaceapprover, workspaceoperator, or workspacesoc. Independent of IdP roles. Updates are blocked if any enabled workspace IdP owns effective role synchronization, regardless of the member's IdP. Disable role sync separately for all such providers first; this resource never disables it automatically.
      */
     declare public readonly role: pulumi.Output<string>;
     declare public /*out*/ readonly userId: pulumi.Output<string>;
@@ -82,7 +82,7 @@ export interface WorkspaceUserRoleArgs {
      */
     email: pulumi.Input<string>;
     /**
-     * Local workspace role: workspaceadmin, workspaceuser, workspaceauditor, workspaceapprover, workspaceoperator, or workspacesoc. Independent of IdP roles; active conflicting SSO sync may reject updates.
+     * Local workspace role: workspaceadmin, workspaceuser, workspaceauditor, workspaceapprover, workspaceoperator, or workspacesoc. Independent of IdP roles. Updates are blocked if any enabled workspace IdP owns effective role synchronization, regardless of the member's IdP. Disable role sync separately for all such providers first; this resource never disables it automatically.
      */
     role: pulumi.Input<string>;
 }

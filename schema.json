@@ -1790,7 +1790,7 @@
           "items": {
             "type": "string"
           },
-          "description": "IdP group ids included in SSO sync. Order does not matter. The set replaces the persisted selection. An empty list (or unset) means no persisted selection, so auto sync falls back to its legacy behaviour. Supported provider types: google, azureactivedirectory, jumpcloud, onelogin; okta and LDAP are rejected by the server."
+          "description": "IdP group ids included in SSO sync. Order does not matter. When set, the list replaces and manages the persisted selection, including an explicit empty list. Unset leaves the selection untouched and unmanaged. An empty persisted selection makes auto sync fall back to its legacy behaviour; it does not disable synchronization. Supported provider types: google, azureactivedirectory, jumpcloud, onelogin; okta and LDAP are rejected by the server."
         },
         "loginEnabled": {
           "type": "boolean",
@@ -1827,7 +1827,7 @@
           "items": {
             "type": "string"
           },
-          "description": "IdP group ids included in SSO sync. Order does not matter. The set replaces the persisted selection. An empty list (or unset) means no persisted selection, so auto sync falls back to its legacy behaviour. Supported provider types: google, azureactivedirectory, jumpcloud, onelogin; okta and LDAP are rejected by the server."
+          "description": "IdP group ids included in SSO sync. Order does not matter. When set, the list replaces and manages the persisted selection, including an explicit empty list. Unset leaves the selection untouched and unmanaged. An empty persisted selection makes auto sync fall back to its legacy behaviour; it does not disable synchronization. Supported provider types: google, azureactivedirectory, jumpcloud, onelogin; okta and LDAP are rejected by the server."
         },
         "loginEnabled": {
           "type": "boolean",
@@ -2026,7 +2026,7 @@
         },
         "role": {
           "type": "string",
-          "description": "Local workspace role: workspaceadmin, workspaceuser, workspaceauditor, workspaceapprover, workspaceoperator, or workspacesoc. Independent of IdP roles; active conflicting SSO sync may reject updates."
+          "description": "Local workspace role: workspaceadmin, workspaceuser, workspaceauditor, workspaceapprover, workspaceoperator, or workspacesoc. Independent of IdP roles. Updates are blocked if any enabled workspace IdP owns effective role synchronization, regardless of the member's IdP. Disable role sync separately for all such providers first; this resource never disables it automatically."
         },
         "userId": {
           "type": "string"
@@ -2045,7 +2045,7 @@
         },
         "role": {
           "type": "string",
-          "description": "Local workspace role: workspaceadmin, workspaceuser, workspaceauditor, workspaceapprover, workspaceoperator, or workspacesoc. Independent of IdP roles; active conflicting SSO sync may reject updates."
+          "description": "Local workspace role: workspaceadmin, workspaceuser, workspaceauditor, workspaceapprover, workspaceoperator, or workspacesoc. Independent of IdP roles. Updates are blocked if any enabled workspace IdP owns effective role synchronization, regardless of the member's IdP. Disable role sync separately for all such providers first; this resource never disables it automatically."
         }
       },
       "requiredInputs": [

@@ -40,7 +40,7 @@ adaptive.WorkspaceUserRole("member-role",
     role="workspaceapprover")
 ```
 
-Supported local roles are `workspaceadmin`, `workspaceuser`, `workspaceauditor`, `workspaceapprover`, `workspaceoperator`, and `workspacesoc`. These local roles are independent of IdP roles. The member must already exist. `email` must identify an existing workspace member. Deleting this resource leaves the member's role unchanged. Email changes replace the resource. If SSO role sync is enabled for the user's IdP, disable it separately before managing that user's local role. This resource does not disable sync automatically.
+Supported local roles are `workspaceadmin`, `workspaceuser`, `workspaceauditor`, `workspaceapprover`, `workspaceoperator`, and `workspacesoc`. These local roles are independent of IdP roles. The member must already exist. `email` must identify an existing workspace member. Deleting this resource leaves the member's role unchanged. Email changes replace the resource. Local role updates are blocked whenever any enabled IdP in the workspace owns effective role synchronization, regardless of the member's IdP. Disable role synchronization separately for all such providers before managing local roles. This resource does not disable sync automatically.
 
 ```python
 adaptive.WorkspaceSettings("workspace",
@@ -56,9 +56,12 @@ adaptive.SsoSync("onelogin-sync",
 
 `WorkspaceSettings` is a singleton: fields you leave unset are never sent and never
 diff, and `pulumi destroy` stops managing the settings without resetting them.
-`SsoSync` replaces the persisted group selection; destroying it clears the
-selection (auto sync falls back to its legacy behaviour) and does not delete
-teams, users or disable login. Requires a backend that exposes the
+`SsoSync` replaces and manages the persisted group selection when `groups` is set.
+An explicit `groups=[]` clears the selection and detects later selection drift.
+Omitting `groups`, including removing it from the program, leaves the selection
+untouched and unmanaged. An empty persisted selection makes auto sync fall back
+to its legacy behaviour, not stop syncing users. Destroying the resource clears
+the selection and does not delete teams, users or disable login. Requires a backend that exposes the
 `/terraform/workspace/settings` and `/terraform/sso-sync` routes.
 
 ### Data protection (masking)

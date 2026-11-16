@@ -40,7 +40,7 @@ export class SsoSync extends pulumi.CustomResource {
      */
     declare public /*out*/ readonly groupNames: pulumi.Output<{[key: string]: string} | undefined>;
     /**
-     * IdP group ids included in SSO sync. Order does not matter. The set replaces the persisted selection. An empty list (or unset) means no persisted selection, so auto sync falls back to its legacy behaviour. Supported provider types: google, azureactivedirectory, jumpcloud, onelogin; okta and LDAP are rejected by the server.
+     * IdP group ids included in SSO sync. Order does not matter. When set, the list replaces and manages the persisted selection, including an explicit empty list. Unset leaves the selection untouched and unmanaged. An empty persisted selection makes auto sync fall back to its legacy behaviour; it does not disable synchronization. Supported provider types: google, azureactivedirectory, jumpcloud, onelogin; okta and LDAP are rejected by the server.
      */
     declare public readonly groups: pulumi.Output<string[] | undefined>;
     /**
@@ -112,7 +112,7 @@ export interface SsoSyncArgs {
      */
     autoSyncEnabled?: pulumi.Input<boolean>;
     /**
-     * IdP group ids included in SSO sync. Order does not matter. The set replaces the persisted selection. An empty list (or unset) means no persisted selection, so auto sync falls back to its legacy behaviour. Supported provider types: google, azureactivedirectory, jumpcloud, onelogin; okta and LDAP are rejected by the server.
+     * IdP group ids included in SSO sync. Order does not matter. When set, the list replaces and manages the persisted selection, including an explicit empty list. Unset leaves the selection untouched and unmanaged. An empty persisted selection makes auto sync fall back to its legacy behaviour; it does not disable synchronization. Supported provider types: google, azureactivedirectory, jumpcloud, onelogin; okta and LDAP are rejected by the server.
      */
     groups?: pulumi.Input<pulumi.Input<string>[]>;
     /**

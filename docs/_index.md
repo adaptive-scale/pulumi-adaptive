@@ -64,8 +64,9 @@ adaptive.WorkspaceUserRole("member-role",
     email="member@example.com",
     role="workspaceapprover")
 
-# email must identify an existing workspace member. If that member's IdP role
-# sync is enabled, disable it separately before managing their local role.
+# email must identify an existing workspace member. Local role updates are blocked
+# if any enabled workspace IdP owns effective role synchronization, regardless of
+# the member's IdP. Disable role sync separately for all such providers first.
 # WorkspaceUserRole does not disable sync automatically.
 
 db = adaptive.Resource("my-db",

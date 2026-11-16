@@ -17,7 +17,7 @@ type WorkspaceUserRole struct {
 
 	// Email of an existing workspace member. Changing it replaces this resource.
 	Email pulumi.StringOutput `pulumi:"email"`
-	// Local workspace role: workspaceadmin, workspaceuser, workspaceauditor, workspaceapprover, workspaceoperator, or workspacesoc. Independent of IdP roles; active conflicting SSO sync may reject updates.
+	// Local workspace role: workspaceadmin, workspaceuser, workspaceauditor, workspaceapprover, workspaceoperator, or workspacesoc. Independent of IdP roles. Updates are blocked if any enabled workspace IdP owns effective role synchronization, regardless of the member's IdP. Disable role sync separately for all such providers first; this resource never disables it automatically.
 	Role   pulumi.StringOutput `pulumi:"role"`
 	UserId pulumi.StringOutput `pulumi:"userId"`
 }
@@ -74,7 +74,7 @@ func (WorkspaceUserRoleState) ElementType() reflect.Type {
 type workspaceUserRoleArgs struct {
 	// Email of an existing workspace member. Changing it replaces this resource.
 	Email string `pulumi:"email"`
-	// Local workspace role: workspaceadmin, workspaceuser, workspaceauditor, workspaceapprover, workspaceoperator, or workspacesoc. Independent of IdP roles; active conflicting SSO sync may reject updates.
+	// Local workspace role: workspaceadmin, workspaceuser, workspaceauditor, workspaceapprover, workspaceoperator, or workspacesoc. Independent of IdP roles. Updates are blocked if any enabled workspace IdP owns effective role synchronization, regardless of the member's IdP. Disable role sync separately for all such providers first; this resource never disables it automatically.
 	Role string `pulumi:"role"`
 }
 
@@ -82,7 +82,7 @@ type workspaceUserRoleArgs struct {
 type WorkspaceUserRoleArgs struct {
 	// Email of an existing workspace member. Changing it replaces this resource.
 	Email pulumi.StringInput
-	// Local workspace role: workspaceadmin, workspaceuser, workspaceauditor, workspaceapprover, workspaceoperator, or workspacesoc. Independent of IdP roles; active conflicting SSO sync may reject updates.
+	// Local workspace role: workspaceadmin, workspaceuser, workspaceauditor, workspaceapprover, workspaceoperator, or workspacesoc. Independent of IdP roles. Updates are blocked if any enabled workspace IdP owns effective role synchronization, regardless of the member's IdP. Disable role sync separately for all such providers first; this resource never disables it automatically.
 	Role pulumi.StringInput
 }
 
@@ -178,7 +178,7 @@ func (o WorkspaceUserRoleOutput) Email() pulumi.StringOutput {
 	return o.ApplyT(func(v *WorkspaceUserRole) pulumi.StringOutput { return v.Email }).(pulumi.StringOutput)
 }
 
-// Local workspace role: workspaceadmin, workspaceuser, workspaceauditor, workspaceapprover, workspaceoperator, or workspacesoc. Independent of IdP roles; active conflicting SSO sync may reject updates.
+// Local workspace role: workspaceadmin, workspaceuser, workspaceauditor, workspaceapprover, workspaceoperator, or workspacesoc. Independent of IdP roles. Updates are blocked if any enabled workspace IdP owns effective role synchronization, regardless of the member's IdP. Disable role sync separately for all such providers first; this resource never disables it automatically.
 func (o WorkspaceUserRoleOutput) Role() pulumi.StringOutput {
 	return o.ApplyT(func(v *WorkspaceUserRole) pulumi.StringOutput { return v.Role }).(pulumi.StringOutput)
 }

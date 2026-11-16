@@ -2,6 +2,7 @@ package adaptive
 
 import (
 	"context"
+	"encoding/json"
 	"fmt"
 	"net/mail"
 	"sort"
@@ -124,7 +125,7 @@ func applyWorkspaceSettingsRead(prior WorkspaceSettingsArgs, r *WorkspaceSetting
 		RemoveSsoDeletedUsersFromEndpoints: ptrOpt(prior.RemoveSsoDeletedUsersFromEndpoints, r.RemoveSsoDeletedUsersFromEndpoints, isImport),
 		DefaultChatProviderId:              ptrOpt(prior.DefaultChatProviderId, r.DefaultChatProviderId, isImport),
 		DefaultTicketProviderId:            ptrOpt(prior.DefaultTicketProviderId, r.DefaultTicketProviderId, isImport),
-		DefaultLogForwarder:                ptrOpt(prior.DefaultLogForwarder, r.DefaultLogForwarder, isImport),
+		DefaultLogForwarder:                ptrOpt(normalizeLogForwarder(prior.DefaultLogForwarder), normalizeLogForwarder(r.DefaultLogForwarder), isImport),
 		SessionTimeout:                     ptrOpt(prior.SessionTimeout, r.SessionTimeout, isImport),
 		EndpointSleepTimeout:               ptrOpt(prior.EndpointSleepTimeout, r.EndpointSleepTimeout, isImport),
 		IntegrationProbeInterval:           ptrOpt(prior.IntegrationProbeInterval, r.IntegrationProbeInterval, isImport),
@@ -138,6 +139,7 @@ func (*WorkspaceSettings) Check(ctx context.Context, req infer.CheckRequest) (in
 	if err != nil {
 		return infer.CheckResponse[WorkspaceSettingsArgs]{}, err
 	}
+	args.DefaultLogForwarder = normalizeLogForwarder(args.DefaultLogForwarder)
 	if len(failures) == 0 && args.isEmpty() {
 		failures = append(failures, p.CheckFailure{
 			Property: "defaultCluster",
@@ -225,7 +227,7 @@ var workspaceRoles = map[string]bool{
 
 func (a *WorkspaceUserRoleArgs) Annotate(n infer.Annotator) {
 	n.Describe(&a.Email, "Email of an existing workspace member. Changing it replaces this resource.")
-	n.Describe(&a.Role, "Local workspace role: workspaceadmin, workspaceuser, workspaceauditor, workspaceapprover, workspaceoperator, or workspacesoc. Independent of IdP roles; active conflicting SSO sync may reject updates.")
+	n.Describe(&a.Role, "Local workspace role: workspaceadmin, workspaceuser, workspaceauditor, workspaceapprover, workspaceoperator, or workspacesoc. Independent of IdP roles. Updates are blocked if any enabled workspace IdP owns effective role synchronization, regardless of the member's IdP. Disable role sync separately for all such providers first; this resource never disables it automatically.")
 }
 
 func (*WorkspaceUserRole) Check(ctx context.Context, req infer.CheckRequest) (infer.CheckResponse[WorkspaceUserRoleArgs], error) {
@@ -321,12 +323,14 @@ func (*WorkspaceUserRole) Delete(ctx context.Context, _ infer.DeleteRequest[Work
 type SsoSync struct{}
 
 type SsoSyncArgs struct {
-	ProviderId      string   `pulumi:"providerId" provider:"replaceOnChanges"`
-	LoginEnabled    *bool    `pulumi:"loginEnabled,optional"`
-	AutoSyncEnabled *bool    `pulumi:"autoSyncEnabled,optional"`
-	RoleSyncEnabled *bool    `pulumi:"roleSyncEnabled,optional"`
-	Groups          []string `pulumi:"groups,optional"`
-	SyncOnApply     *bool    `pulumi:"syncOnApply,optional"`
+	ProviderId      string `pulumi:"providerId" provider:"replaceOnChanges"`
+	LoginEnabled    *bool  `pulumi:"loginEnabled,optional"`
+	AutoSyncEnabled *bool  `pulumi:"autoSyncEnabled,optional"`
+	RoleSyncEnabled *bool  `pulumi:"roleSyncEnabled,optional"`
+	// Groups is a pointer so nil (omitted) is distinct from &[]string{} (explicit empty).
+	// infer allocates the pointer when the property key is present, even for an empty array.
+	Groups      *[]string `pulumi:"groups,optional"`
+	SyncOnApply *bool     `pulumi:"syncOnApply,optional"`
 }
 
 type SsoSyncState struct {
@@ -340,7 +344,7 @@ func (s *SsoSyncArgs) Annotate(a infer.Annotator) {
 	a.Describe(&s.LoginEnabled, "Whether login through this SSO provider is enabled. Unset leaves it untouched.")
 	a.Describe(&s.AutoSyncEnabled, "Whether automatic sync is enabled for this provider. Unset leaves it untouched.")
 	a.Describe(&s.RoleSyncEnabled, "Whether roles are synced from the IdP. Unset leaves it untouched.")
-	a.Describe(&s.Groups, "IdP group ids included in SSO sync. Order does not matter. The set replaces the persisted selection. An empty list (or unset) means no persisted selection, so auto sync falls back to its legacy behaviour. Supported provider types: google, azureactivedirectory, jumpcloud, onelogin; okta and LDAP are rejected by the server.")
+	a.Describe(&s.Groups, "IdP group ids included in SSO sync. Order does not matter. When set, the list replaces and manages the persisted selection, including an explicit empty list. Unset leaves the selection untouched and unmanaged. An empty persisted selection makes auto sync fall back to its legacy behaviour; it does not disable synchronization. Supported provider types: google, azureactivedirectory, jumpcloud, onelogin; okta and LDAP are rejected by the server.")
 	a.Describe(&s.SyncOnApply, "Trigger a sync after applying (default true).")
 }
 
@@ -349,14 +353,70 @@ func (s *SsoSyncState) Annotate(a infer.Annotator) {
 	a.Describe(&s.GroupNames, "Map of synced group id to group name.")
 }
 
-// normalizeGroups sorts and de-duplicates ids so ordering never produces a diff.
-func normalizeGroups(in []string) []string {
+// normalizeLogForwarder canonicalizes a defaultLogForwarder value to match the
+// backend's FormatDefaultLogForwarderIDs contract so that ordering, whitespace,
+// and singleton-vs-array formatting never produce a spurious diff.
+//
+//   - nil        → nil        (field unset; ptrOpt leaves it alone)
+//   - ""         → ""         (explicit clear; sent to backend as-is)
+//   - plain str  → trimmed    (single id stored as a bare string by the backend)
+//   - JSON array → dedupe + trim + sort → plain string if 1 element, compact
+//     JSON array if 2+
+//
+// The backend stores a single forwarder as a bare string, not `["id"]`, so we
+// collapse a singleton array to a plain string here so both sides compare equal.
+func normalizeLogForwarder(s *string) *string {
+	if s == nil || *s == "" {
+		return s
+	}
+	raw := strings.TrimSpace(*s)
+	// Try to parse as a JSON array.
+	var parsed []string
+	if err := json.Unmarshal([]byte(raw), &parsed); err != nil {
+		// Plain string (single id). Trim and return.
+		out := raw
+		return &out
+	}
+	// Deduplicate and trim individual elements.
+	seen := make(map[string]struct{}, len(parsed))
+	ids := make([]string, 0, len(parsed))
+	for _, id := range parsed {
+		id = strings.TrimSpace(id)
+		if id == "" {
+			continue
+		}
+		if _, ok := seen[id]; ok {
+			continue
+		}
+		seen[id] = struct{}{}
+		ids = append(ids, id)
+	}
+	if len(ids) == 0 {
+		out := ""
+		return &out
+	}
+	sort.Strings(ids)
+	if len(ids) == 1 {
+		// Backend stores a single forwarder as a bare string.
+		return &ids[0]
+	}
+	b, err := json.Marshal(ids)
+	if err != nil {
+		return s
+	}
+	out := string(b)
+	return &out
+}
+
+// normalizeGroups sorts and de-duplicates ids. A nil pointer (omitted) is
+// returned unchanged; a non-nil pointer (explicit, possibly empty) is normalised in place.
+func normalizeGroups(in *[]string) *[]string {
 	if in == nil {
 		return nil
 	}
-	seen := make(map[string]struct{}, len(in))
-	out := make([]string, 0, len(in))
-	for _, g := range in {
+	seen := make(map[string]struct{}, len(*in))
+	out := make([]string, 0, len(*in))
+	for _, g := range *in {
 		if _, ok := seen[g]; ok {
 			continue
 		}
@@ -364,7 +424,7 @@ func normalizeGroups(in []string) []string {
 		out = append(out, g)
 	}
 	sort.Strings(out)
-	return out
+	return &out
 }
 
 func (*SsoSync) Check(ctx context.Context, req infer.CheckRequest) (infer.CheckResponse[SsoSyncArgs], error) {
@@ -377,9 +437,19 @@ func (*SsoSync) Check(ctx context.Context, req infer.CheckRequest) (infer.CheckR
 }
 
 func (a SsoSyncArgs) toRequest() SsoSyncUpdateRequest {
+	var groups *[]string
+	if a.Groups != nil {
+		// Ensure a non-nil pointer always carries a non-nil slice (infer may
+		// allocate the pointer but leave the inner slice nil for an empty array).
+		g := *a.Groups
+		if g == nil {
+			g = []string{}
+		}
+		groups = &g
+	}
 	return SsoSyncUpdateRequest{
 		LoginEnabled: a.LoginEnabled, AutoSyncEnabled: a.AutoSyncEnabled,
-		RoleSyncEnabled: a.RoleSyncEnabled, Groups: groupsPtr(a.Groups),
+		RoleSyncEnabled: a.RoleSyncEnabled, Groups: groups,
 		SyncNow: a.SyncOnApply == nil || *a.SyncOnApply,
 	}
 }
@@ -419,12 +489,6 @@ func (*SsoSync) Update(ctx context.Context, req infer.UpdateRequest[SsoSyncArgs,
 		return out, err
 	}
 	body := req.Inputs.toRequest()
-	// Removing groups from the program (or setting []) must clear the persisted
-	// list; infer decodes an empty list as nil, so send [] explicitly.
-	if body.Groups == nil && len(req.State.Groups) > 0 {
-		empty := []string{}
-		body.Groups = &empty
-	}
 	r, err := c.UpdateSsoSync(ctx, req.Inputs.ProviderId, body)
 	if err != nil {
 		return out, err
@@ -450,14 +514,14 @@ func applySsoSyncRead(prior SsoSyncArgs, r *SsoSyncReadResponse, isImport bool) 
 	for _, g := range r.Groups {
 		ids = append(ids, g.ID)
 	}
-	ids = normalizeGroups(ids)
-	// groups are always managed once the resource exists; order never matters.
+	normIDs := normalizeGroups(&ids)
+	// nil Groups means unmanaged; non-nil (even &[]) means managed.
 	if !isImport && prior.Groups == nil {
-		a.Groups = nil // groups not managed by the program
-	} else if !isImport && sameSet(prior.Groups, ids) {
+		a.Groups = nil // not managed by program
+	} else if !isImport && sameSet(*prior.Groups, *normIDs) {
 		a.Groups = prior.Groups
 	} else {
-		a.Groups = ids
+		a.Groups = normIDs
 	}
 	return a
 }
@@ -496,13 +560,4 @@ func (*SsoSync) Delete(ctx context.Context, req infer.DeleteRequest[SsoSyncState
 		return infer.DeleteResponse{}, err
 	}
 	return infer.DeleteResponse{}, c.DeleteSsoSync(ctx, req.ID)
-}
-
-// groupsPtr maps unset (nil) to omitted, so the server leaves the persisted
-// list alone, while an explicit empty list is sent and empties it.
-func groupsPtr(g []string) *[]string {
-	if g == nil {
-		return nil
-	}
-	return &g
 }

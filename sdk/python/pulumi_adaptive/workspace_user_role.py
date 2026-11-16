@@ -25,7 +25,7 @@ class WorkspaceUserRoleArgs:
         The set of arguments for constructing a WorkspaceUserRole resource.
 
         :param pulumi.Input[_builtins.str] email: Email of an existing workspace member. Changing it replaces this resource.
-        :param pulumi.Input[_builtins.str] role: Local workspace role: workspaceadmin, workspaceuser, workspaceauditor, workspaceapprover, workspaceoperator, or workspacesoc. Independent of IdP roles; active conflicting SSO sync may reject updates.
+        :param pulumi.Input[_builtins.str] role: Local workspace role: workspaceadmin, workspaceuser, workspaceauditor, workspaceapprover, workspaceoperator, or workspacesoc. Independent of IdP roles. Updates are blocked if any enabled workspace IdP owns effective role synchronization, regardless of the member's IdP. Disable role sync separately for all such providers first; this resource never disables it automatically.
         """
         pulumi.set(__self__, "email", email)
         pulumi.set(__self__, "role", role)
@@ -46,7 +46,7 @@ class WorkspaceUserRoleArgs:
     @pulumi.getter
     def role(self) -> pulumi.Input[_builtins.str]:
         """
-        Local workspace role: workspaceadmin, workspaceuser, workspaceauditor, workspaceapprover, workspaceoperator, or workspacesoc. Independent of IdP roles; active conflicting SSO sync may reject updates.
+        Local workspace role: workspaceadmin, workspaceuser, workspaceauditor, workspaceapprover, workspaceoperator, or workspacesoc. Independent of IdP roles. Updates are blocked if any enabled workspace IdP owns effective role synchronization, regardless of the member's IdP. Disable role sync separately for all such providers first; this resource never disables it automatically.
         """
         return pulumi.get(self, "role")
 
@@ -70,7 +70,7 @@ class WorkspaceUserRole(pulumi.CustomResource):
         :param str resource_name: The name of the resource.
         :param pulumi.ResourceOptions opts: Options for the resource.
         :param pulumi.Input[_builtins.str] email: Email of an existing workspace member. Changing it replaces this resource.
-        :param pulumi.Input[_builtins.str] role: Local workspace role: workspaceadmin, workspaceuser, workspaceauditor, workspaceapprover, workspaceoperator, or workspacesoc. Independent of IdP roles; active conflicting SSO sync may reject updates.
+        :param pulumi.Input[_builtins.str] role: Local workspace role: workspaceadmin, workspaceuser, workspaceauditor, workspaceapprover, workspaceoperator, or workspacesoc. Independent of IdP roles. Updates are blocked if any enabled workspace IdP owns effective role synchronization, regardless of the member's IdP. Disable role sync separately for all such providers first; this resource never disables it automatically.
         """
         ...
     @overload
@@ -155,7 +155,7 @@ class WorkspaceUserRole(pulumi.CustomResource):
     @pulumi.getter
     def role(self) -> pulumi.Output[_builtins.str]:
         """
-        Local workspace role: workspaceadmin, workspaceuser, workspaceauditor, workspaceapprover, workspaceoperator, or workspacesoc. Independent of IdP roles; active conflicting SSO sync may reject updates.
+        Local workspace role: workspaceadmin, workspaceuser, workspaceauditor, workspaceapprover, workspaceoperator, or workspacesoc. Independent of IdP roles. Updates are blocked if any enabled workspace IdP owns effective role synchronization, regardless of the member's IdP. Disable role sync separately for all such providers first; this resource never disables it automatically.
         """
         return pulumi.get(self, "role")
 

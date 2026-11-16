@@ -19,7 +19,7 @@ type SsoSync struct {
 	AutoSyncEnabled pulumi.BoolPtrOutput `pulumi:"autoSyncEnabled"`
 	// Map of synced group id to group name.
 	GroupNames pulumi.StringMapOutput `pulumi:"groupNames"`
-	// IdP group ids included in SSO sync. Order does not matter. The set replaces the persisted selection. An empty list (or unset) means no persisted selection, so auto sync falls back to its legacy behaviour. Supported provider types: google, azureactivedirectory, jumpcloud, onelogin; okta and LDAP are rejected by the server.
+	// IdP group ids included in SSO sync. Order does not matter. When set, the list replaces and manages the persisted selection, including an explicit empty list. Unset leaves the selection untouched and unmanaged. An empty persisted selection makes auto sync fall back to its legacy behaviour; it does not disable synchronization. Supported provider types: google, azureactivedirectory, jumpcloud, onelogin; okta and LDAP are rejected by the server.
 	Groups pulumi.StringArrayOutput `pulumi:"groups"`
 	// Whether login through this SSO provider is enabled. Unset leaves it untouched.
 	LoginEnabled pulumi.BoolPtrOutput `pulumi:"loginEnabled"`
@@ -82,7 +82,7 @@ func (SsoSyncState) ElementType() reflect.Type {
 type ssoSyncArgs struct {
 	// Whether automatic sync is enabled for this provider. Unset leaves it untouched.
 	AutoSyncEnabled *bool `pulumi:"autoSyncEnabled"`
-	// IdP group ids included in SSO sync. Order does not matter. The set replaces the persisted selection. An empty list (or unset) means no persisted selection, so auto sync falls back to its legacy behaviour. Supported provider types: google, azureactivedirectory, jumpcloud, onelogin; okta and LDAP are rejected by the server.
+	// IdP group ids included in SSO sync. Order does not matter. When set, the list replaces and manages the persisted selection, including an explicit empty list. Unset leaves the selection untouched and unmanaged. An empty persisted selection makes auto sync fall back to its legacy behaviour; it does not disable synchronization. Supported provider types: google, azureactivedirectory, jumpcloud, onelogin; okta and LDAP are rejected by the server.
 	Groups []string `pulumi:"groups"`
 	// Whether login through this SSO provider is enabled. Unset leaves it untouched.
 	LoginEnabled *bool `pulumi:"loginEnabled"`
@@ -98,7 +98,7 @@ type ssoSyncArgs struct {
 type SsoSyncArgs struct {
 	// Whether automatic sync is enabled for this provider. Unset leaves it untouched.
 	AutoSyncEnabled pulumi.BoolPtrInput
-	// IdP group ids included in SSO sync. Order does not matter. The set replaces the persisted selection. An empty list (or unset) means no persisted selection, so auto sync falls back to its legacy behaviour. Supported provider types: google, azureactivedirectory, jumpcloud, onelogin; okta and LDAP are rejected by the server.
+	// IdP group ids included in SSO sync. Order does not matter. When set, the list replaces and manages the persisted selection, including an explicit empty list. Unset leaves the selection untouched and unmanaged. An empty persisted selection makes auto sync fall back to its legacy behaviour; it does not disable synchronization. Supported provider types: google, azureactivedirectory, jumpcloud, onelogin; okta and LDAP are rejected by the server.
 	Groups pulumi.StringArrayInput
 	// Whether login through this SSO provider is enabled. Unset leaves it untouched.
 	LoginEnabled pulumi.BoolPtrInput
@@ -207,7 +207,7 @@ func (o SsoSyncOutput) GroupNames() pulumi.StringMapOutput {
 	return o.ApplyT(func(v *SsoSync) pulumi.StringMapOutput { return v.GroupNames }).(pulumi.StringMapOutput)
 }
 
-// IdP group ids included in SSO sync. Order does not matter. The set replaces the persisted selection. An empty list (or unset) means no persisted selection, so auto sync falls back to its legacy behaviour. Supported provider types: google, azureactivedirectory, jumpcloud, onelogin; okta and LDAP are rejected by the server.
+// IdP group ids included in SSO sync. Order does not matter. When set, the list replaces and manages the persisted selection, including an explicit empty list. Unset leaves the selection untouched and unmanaged. An empty persisted selection makes auto sync fall back to its legacy behaviour; it does not disable synchronization. Supported provider types: google, azureactivedirectory, jumpcloud, onelogin; okta and LDAP are rejected by the server.
 func (o SsoSyncOutput) Groups() pulumi.StringArrayOutput {
 	return o.ApplyT(func(v *SsoSync) pulumi.StringArrayOutput { return v.Groups }).(pulumi.StringArrayOutput)
 }
