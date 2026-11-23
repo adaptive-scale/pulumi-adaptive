@@ -23,6 +23,12 @@ and other infrastructure. This provider manages that surface declaratively:
 - `adaptive.Schedule` — an auto-approval schedule window for users, groups, and endpoints.
 - `adaptive.DataProtection` — a data-masking policy for a resource.
 
+## Secret management
+
+Read the [secret management guide](./secret-management.md) before importing or
+updating credential-bearing integrations. It explains secret config, explicit
+clears, held-value safety checks, external rotations, and recovery workflows.
+
 ## Example
 
 {{< chooser language "typescript,python,go,csharp" >}}

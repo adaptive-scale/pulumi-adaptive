@@ -153,12 +153,12 @@ func TestApplyIntegrationConfigRedaction(t *testing.T) {
 }
 
 func TestApplyIntegrationConfigClearsEmptyTLSSecrets(t *testing.T) {
-	empty := ""
+	previous := "previously-set-secret"
 	a := ResourceArgs{
 		Type:        "postgres",
-		TLSRootCert: &empty,
-		TLSCertFile: &empty,
-		TLSKeyFile:  &empty,
+		TLSRootCert: &previous,
+		TLSCertFile: &previous,
+		TLSKeyFile:  &previous,
 	}
 	applyIntegrationConfig(&a, "postgres", map[string]any{
 		"rootCert": "",

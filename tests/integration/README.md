@@ -1,9 +1,29 @@
 # Integration tests
 
-These drive the real provider against a real Adaptive backend: every test creates
-objects, verifies them, and destroys them. Nothing is mocked, which is the point
-— secret fingerprints only move server-side, and state-shape regressions only
-appear when Pulumi decodes state written by an earlier run.
+Most tests drive the real provider against a real Adaptive backend: they create
+objects, verify them, and destroy them. The credential-free engine regression
+below instead runs real Pulumi operations against an isolated fake API; it does
+not establish live-backend compatibility.
+
+## Credential-free engine regression
+
+From the repository root, build the provider and run only the isolated fixture:
+
+```sh
+make build
+go -C tests/integration test -tags=integration -run '^TestEmptySecretBaselineEngine$' -count=1 -v -timeout 8m .
+```
+
+This pins `provider/bin` on the test's PATH and uses a temporary file state
+backend and synthetic credentials/fingerprints. It checks three refresh/preview
+cycles after a remote password appears, rejects an omitted held password before
+mutation, applies an explicit clear, verifies convergence, and destroys the
+fixture. It does not load Adaptive credentials.
+
+`TestSecretDriftExplicitEmptyBaseline` is the opt-in live-backend counterpart.
+It creates one disposable PostgreSQL integration, rotates its stored password,
+checks repeated drift and explicit-clear convergence, and verifies deletion.
+Use the live-backend setup below and select that exact test name to run it.
 
 ## Two credential tiers
 
