@@ -22,6 +22,9 @@ and other infrastructure. This provider manages that surface declaratively:
 - `adaptive.Script` — a command attached to an endpoint.
 - `adaptive.Schedule` — an auto-approval schedule window for users, groups, and endpoints.
 - `adaptive.DataProtection` — a data-masking policy for a resource.
+- `adaptive.WorkspaceSettings` — the workspace settings singleton (only fields you set are managed).
+- `adaptive.WorkspaceUserRole` — a local role for an existing workspace member; independent of IdP roles.
+- `adaptive.SsoSync` — the IdP groups included in SSO sync for an SSO provider.
 
 ## Secret management
 
@@ -62,6 +65,15 @@ const endpoint = new adaptive.Endpoint("my-db-access", {
 
 ```python
 import pulumi_adaptive as adaptive
+
+adaptive.WorkspaceUserRole("member-role",
+    email="member@example.com",
+    role="workspaceapprover")
+
+# email must identify an existing workspace member. Local role updates are blocked
+# if any enabled workspace IdP owns effective role synchronization, regardless of
+# the member's IdP. Disable role sync separately for all such providers first.
+# WorkspaceUserRole does not disable sync automatically.
 
 db = adaptive.Resource("my-db",
     name="staging-postgres",
